@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MdMenu, MdChevronLeft, MdChevronRight, MdLogout } from 'react-icons/md';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
+import Button from './common/Button';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -103,13 +104,13 @@ export default function DashboardLayout() {
 
             {/* Right section with logout button */}
             <div>
-              <button
+              <Button
+                variant="default"
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border-none"
               >
                 <MdLogout className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
+              </Button>
             </div>
           </div>
         </header>
