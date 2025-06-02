@@ -4,6 +4,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import ProductsPage from "./pages/dashboard/ProductsPage";
+import CategoriesPage from "./pages/dashboard/CategoriesPage";
+import OrdersPage from "./pages/dashboard/OrdersPage";
+import CustomersPage from "./pages/dashboard/CustomersPage";
 
 export default function App() {
   return (
@@ -23,8 +26,9 @@ export default function App() {
         }>
           <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
-          <Route path="orders" element={<div>Orders Page (Coming Soon)</div>} />
-          <Route path="customers" element={<div>Customers Page (Coming Soon)</div>} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="customers" element={<CustomersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

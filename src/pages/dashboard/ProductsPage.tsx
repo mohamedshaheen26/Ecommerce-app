@@ -1,15 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MdAdd, MdEdit, MdDelete, MdCloudUpload } from 'react-icons/md';
+import { MdAdd } from 'react-icons/md';
+import { IoSwapVerticalOutline } from "react-icons/io5";
+import AddEditProductModal from '../../components/products/AddEditProductModal';
+import DeleteProductModal from '../../components/products/DeleteProductModal';
+import Table from '../../components/common/Table';
+import DropdownMenu from '../../components/common/DropdownMenu';
+import Button from '../../components/common/Button';
 
 interface Product {
   id: string;
-  name: string;
-  description: string;
+  title: string;
   price: number;
+  description: string;
   category_id: string;
-  image_url: string;
+  slug: string;
+  sku: string;
+  stock_status: 'in_stock' | 'out_of_stock' | 'low_stock';
+  available_quantity: number;
+  images: string[];
+  colors: string[];
+  sizes: string[];
   created_at: string;
+  category: {
+    name: string;
+  };
 }
 
 interface Category {
@@ -17,28 +32,57 @@ interface Category {
   name: string;
 }
 
-const STORAGE_BUCKET = 'products';
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category_id: '',
-    image_url: ''
-  });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 10;
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [currentPage, searchQuery]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('products')
+        .select(`
+          *,
+          category:category_id (
+            name
+          )
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      // Apply search filter if searchQuery exists
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
+      }
+
+      // Apply pagination
+      const { data, error, count } = await query
+        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+
+      if (error) throw error;
+      setProducts(data || []);
+      setFilteredProducts(data || []);
+      setTotalItems(count || 0);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -54,349 +98,196 @@ export default function ProductsPage() {
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories:category_id (
-            name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleDelete = async () => {
+    if (!selectedProduct) return;
 
     try {
-      setUploadingImage(true);
-      
-      // Generate a unique file name
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      setDeleting(true);
 
-      // Upload the file to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
+      // Delete images from storage
+      if (selectedProduct.images.length > 0) {
+        const imagePaths = selectedProduct.images.map(url => {
+          const path = url.split('/').pop();
+          return `products/${path}`;
         });
 
-      if (uploadError) {
-        console.error('Upload error details:', uploadError);
-        throw uploadError;
-      }
+        const { error: storageError } = await supabase.storage
+          .from('images')
+          .remove(imagePaths);
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(fileName);
-
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error uploading image. Please try again. Check console for details.');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const productData = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        category_id: formData.category_id,
-        image_url: formData.image_url
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('products')
-          .insert([productData]);
-
-        if (error) throw error;
-      }
-
-      setIsModalOpen(false);
-      setEditingProduct(null);
-      setFormData({ name: '', description: '', price: '', category_id: '', image_url: '' });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error saving product:', error);
-    }
-  };
-
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price.toString(),
-      category_id: product.category_id,
-      image_url: product.image_url
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        // Delete the image from storage if it exists
-        if (products.find(p => p.id === id)?.image_url) {
-          const imagePath = products.find(p => p.id === id)?.image_url.split('/').pop();
-          if (imagePath) {
-            const { error: deleteError } = await supabase.storage
-              .from(STORAGE_BUCKET)
-              .remove([imagePath]);
-            
-            if (deleteError) {
-              console.error('Error deleting image:', deleteError);
-            }
-          }
+        if (storageError) {
+          console.error('Error deleting images:', storageError);
         }
-
-        // Delete the product record
-        const { error } = await supabase
-          .from('products')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-        fetchProducts();
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        alert('Error deleting product. Check console for details.');
       }
+
+      // Delete product from database
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', selectedProduct.id);
+
+      if (error) throw error;
+
+      setProducts(products.filter(p => p.id !== selectedProduct.id));
+      setIsDeleteModalOpen(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Error deleting product. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
+
+  const columns = [
+    {
+      header: <IoSwapVerticalOutline />,
+      accessor: (product: Product) => (
+        <div className="flex items-center">
+          <div className="h-10 w-10 flex-shrink-0">
+            <img
+              className="h-10 w-10 rounded-full object-cover"
+              src={product.images[0]}
+              alt={product.title}
+            />
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Name',
+      accessor: (product: Product) => (
+        <div className="flex items-center">
+          <div className="text-sm font-medium text-gray-900">
+            {product.title}
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'SKU',
+      accessor: (product: Product) => (
+        <div className="flex items-center">
+          <div className="text-sm font-medium text-gray-900">
+            {product.sku}
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Price',
+      accessor: (product: Product) => (
+        <div className="text-sm text-gray-900">${product.price}</div>
+      )
+    },
+    {
+      header: 'Stock',
+      accessor: (product: Product) => (
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+          ${product.stock_status === 'in_stock' ? 'bg-green-100 text-green-800' : 
+            product.stock_status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' : 
+            'bg-red-100 text-red-800'}`}
+        >
+          {product.stock_status.replace('_', ' ')}
+        </span>
+      )
+    },
+    {
+      header: 'Category',
+      accessor: (product: Product) => (
+        <div className="text-sm text-gray-900">{product.category.name}</div>
+      )
+    },
+    {
+      header: '',
+      accessor: (product: Product) => (
+        <div className="flex justify-end">
+          <DropdownMenu
+            items={[
+              {
+                label: 'Edit',
+                onClick: () => {
+                  setSelectedProduct(product);
+                  setIsAddModalOpen(true);
+                },
+              },
+              {
+                label: 'Delete',
+                onClick: () => {
+                  setSelectedProduct(product);
+                  setIsDeleteModalOpen(true);
+                },
+              }
+            ]}
+          />
+        </div>
+      ),
+      className: 'w-10'
+    }
+  ];
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Products</h1>
-        <button
-          onClick={() => {
-            setEditingProduct(null);
-            setFormData({ name: '', description: '', price: '', category_id: '', image_url: '' });
-            setIsModalOpen(true);
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center space-x-2 hover:bg-blue-600"
-        >
-          <MdAdd className="w-5 h-5" />
-          <span>Add Product</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="secondary"
+            leftIcon={<MdAdd className="w-5 h-5" />}
+            onClick={() => {
+              setSelectedProduct(null);
+              setIsAddModalOpen(true);
+            }}
+          >
+            Add Product
+          </Button>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product: any) => (
-                <tr key={product.id}>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="h-16 w-16 flex-shrink-0">
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name}
-                          className="h-16 w-16 rounded-lg object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '';
-                          }}
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        <div className="text-sm text-gray-500">{product.description}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.categories?.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <MdEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <MdDelete className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table
+        data={filteredProducts}
+        columns={columns}
+        isLoading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  rows={3}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Price</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  step="0.01"
-                  min="0"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Product Image</label>
-                <div className="mt-1 flex items-center">
-                  {formData.image_url && (
-                    <div className="mr-3">
-                      <img
-                        src={formData.image_url}
-                        alt="Preview"
-                        className="h-16 w-16 object-cover rounded"
-                      />
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    disabled={uploadingImage}
-                  >
-                    <MdCloudUpload className="w-5 h-5 mr-2" />
-                    {uploadingImage ? 'Uploading...' : 'Upload Image'}
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  {editingProduct ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddEditProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        onSuccess={() => {
+          fetchProducts();
+          setIsAddModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        editingProduct={selectedProduct}
+        categories={categories}
+      />
+
+      <DeleteProductModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        onConfirm={handleDelete}
+        productTitle={selectedProduct?.title || ''}
+      />
     </div>
   );
 } 
