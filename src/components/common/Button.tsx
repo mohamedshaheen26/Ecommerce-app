@@ -25,9 +25,9 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors duration-200';
   
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'px-3 py-1.5 text-sm min-h-[32px]',
+    md: 'px-4 py-2 text-sm min-h-[40px]',
+    lg: 'px-6 py-3 text-base min-h-[48px]'
   };
 
   const variantStyles = {
@@ -98,9 +98,9 @@ export default function Button({
         </div>
       )}
       <span className="flex items-center">
-        {leftIcon && <span className="mr-2">{leftIcon}</span>}
-        {children}
-        {rightIcon && <span className="ml-2">{rightIcon}</span>}
+        {leftIcon && <span className="mr-2 flex-shrink-0">{leftIcon}</span>}
+        <span className="text-center">{children}</span>
+        {rightIcon && <span className="ml-2 flex-shrink-0">{rightIcon}</span>}
       </span>
     </button>
   );

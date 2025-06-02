@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MdLocalShipping } from 'react-icons/md';
+import { IoSearchOutline } from "react-icons/io5";
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 
 interface OrderItem {
   id: string;
@@ -58,7 +59,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -195,9 +195,14 @@ export default function OrdersPage() {
     return colors[status];
   };
 
-  const filteredOrders = statusFilter === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === statusFilter);
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = searchQuery === '' || 
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.user_full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.user_email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesSearch;
+  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -292,24 +297,11 @@ export default function OrdersPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Orders</h1>
         <div className="flex items-center space-x-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <input
-            type="text"
+          <Input
             placeholder="Search orders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            leftIcon={<IoSearchOutline className="w-5 h-5" />}
           />
         </div>
       </div>

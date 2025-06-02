@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MdPhone, MdLocationOn } from 'react-icons/md';
+import { IoSearchOutline } from "react-icons/io5";
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 
 interface Order {
   id: string;
@@ -129,7 +131,9 @@ export default function CustomersPage() {
 
   const filteredCustomers = customers.filter(customer => 
     customer.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.phone && customer.phone.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (customer.address && customer.address.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleEditCustomer = async () => {
@@ -281,12 +285,11 @@ export default function CustomersPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
         <div className="flex items-center space-x-4">
-          <input
-            type="text"
+          <Input
             placeholder="Search customers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            leftIcon={<IoSearchOutline className="w-5 h-5" />}
           />
         </div>
       </div>

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MdAdd } from 'react-icons/md';
+import { IoSearchOutline } from "react-icons/io5";
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 
 interface Category {
   id: string;
@@ -17,6 +19,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -152,25 +155,38 @@ export default function CategoriesPage() {
     }
   ];
 
+  // Add filtered categories
+  const filteredCategories = categories.filter(category => 
+    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    category.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Categories</h1>
-        <Button
-          variant='secondary'
-          leftIcon={<MdAdd className="w-5 h-5" />}
-          onClick={() => {
-            setEditingCategory(null);
-            setFormData({ name: '', description: '' });
-            setIsModalOpen(true);
-          }}
-        >
-          Add Category
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button
+            variant='secondary'
+            onClick={() => {
+              setEditingCategory(null);
+              setFormData({ name: '', description: '' });
+              setIsModalOpen(true);
+            }}
+          >
+            Add Category
+          </Button>
+          <Input
+            placeholder="Search categories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<IoSearchOutline className="w-5 h-5" />}
+          />
+        </div>
       </div>
 
       <Table
-        data={categories}
+        data={filteredCategories}
         columns={columns}
         isLoading={loading}
       />

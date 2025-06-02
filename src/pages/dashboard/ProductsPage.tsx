@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MdAdd } from 'react-icons/md';
 import { IoSwapVerticalOutline } from "react-icons/io5";
+import { IoSearchOutline } from "react-icons/io5";
 import AddEditProductModal from '../../components/products/AddEditProductModal';
 import DeleteProductModal from '../../components/products/DeleteProductModal';
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 
 interface Product {
   id: string;
@@ -233,7 +235,6 @@ export default function ProductsPage() {
         <div className="flex items-center space-x-4">
           <Button
             variant="secondary"
-            leftIcon={<MdAdd className="w-5 h-5" />}
             onClick={() => {
               setSelectedProduct(null);
               setIsAddModalOpen(true);
@@ -241,15 +242,14 @@ export default function ProductsPage() {
           >
             Add Product
           </Button>
-          <input
-            type="text"
+          <Input
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setCurrentPage(1); // Reset to first page when searching
+              setCurrentPage(1);
             }}
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            leftIcon={<IoSearchOutline className="w-5 h-5" />}
           />
         </div>
       </div>

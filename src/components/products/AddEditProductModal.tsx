@@ -5,6 +5,9 @@ import Modal from '../common/Modal';
 import Grid from '../common/Grid';
 import FormField from '../common/FormField';
 import Button from '../common/Button';
+import Input from '../common/Input';
+import Select from '../common/Select';
+import TextArea from '../common/TextArea';
 
 interface Category {
   id: string;
@@ -251,21 +254,19 @@ export default function AddEditProductModal({
       <form onSubmit={handleSubmit} className="space-y-6">
         <Grid>
           <FormField label="Title" required>
-            <input
+            <Input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </FormField>
 
           <FormField label="Price" required>
-            <input
+            <Input
               type="number"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
               min="0"
               step="0.01"
@@ -273,50 +274,47 @@ export default function AddEditProductModal({
           </FormField>
 
           <FormField label="Category" required>
-            <select
+            <Select
               value={form.category_id}
               onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
-            >
-              <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Select a category' },
+                ...categories.map(category => ({
+                  value: category.id,
+                  label: category.name
+                }))
+              ]}
+            />
           </FormField>
 
           <FormField label="SKU" required>
-            <input
+            <Input
               type="text"
               value={form.sku}
               onChange={(e) => setForm({ ...form, sku: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </FormField>
 
           <FormField label="Stock Status" required>
-            <select
+            <Select
               value={form.stock_status}
               onChange={(e) => setForm({ ...form, stock_status: e.target.value as any })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
-            >
-              <option value="in_stock">In Stock</option>
-              <option value="low_stock">Low Stock</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
+              options={[
+                { value: 'in_stock', label: 'In Stock' },
+                { value: 'low_stock', label: 'Low Stock' },
+                { value: 'out_of_stock', label: 'Out of Stock' }
+              ]}
+            />
           </FormField>
 
           <FormField label="Available Quantity" required>
-            <input
+            <Input
               type="number"
               value={form.available_quantity}
               onChange={(e) => setForm({ ...form, available_quantity: parseInt(e.target.value) })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
               min="0"
             />
@@ -324,11 +322,9 @@ export default function AddEditProductModal({
         </Grid>
 
         <FormField label="Description" required>
-          <textarea
+          <TextArea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required
           />
         </FormField>
