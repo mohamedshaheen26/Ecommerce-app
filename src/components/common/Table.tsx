@@ -142,12 +142,12 @@ export default function Table<T>({
               <nav className="relative z-0 inline-flex gap-1" aria-label="Pagination">
                 <Button
                   size='lg'
-                  variant="default"
+                  variant="outline"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center justify-center w-10 h-10 border-none hover:bg-gray-50 rounded-lg disabled:cursor-default disabled:hover:bg-transparent disabled:opacity-30"
                 >
-                  <MdChevronLeft className="w-8 h-8" />
+                  <MdChevronLeft className="w-7 h-7" />
                 </Button>
                 
                 {[...Array(totalPages)].map((_, index) => {
@@ -176,7 +176,7 @@ export default function Table<T>({
                   return (
                     <Button
                       key={page}
-                      variant={'default'}
+                      variant='outline'
                       onClick={() => handlePageChange(page)}
                       className={`relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg border-none disabled:cursor-default disabled:hover:bg-transparent
                         ${currentPage === page 
@@ -190,12 +190,12 @@ export default function Table<T>({
                 })}
 
                 <Button
-                  variant="default"
+                  variant="outline"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="relative inline-flex items-center justify-center w-10 h-10 border-none rounded-lg disabled:cursor-default disabled:hover:bg-transparent disabled:opacity-30"
                 >
-                  <MdChevronRight className="w-8 h-8" />
+                  <MdChevronRight className="w-7 h-7" />
                 </Button>
               </nav>
             </div>

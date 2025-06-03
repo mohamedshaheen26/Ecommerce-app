@@ -86,10 +86,7 @@ export default function Sidebar({ isOpen, isDesktopOpen = true, onClose }: Sideb
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:w-2 
-        [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 
-        [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 
-        hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
         {navigationItems.map((item) => (
           <NavLink
             key={item.path}

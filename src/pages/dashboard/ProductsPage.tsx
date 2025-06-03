@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MdAdd } from 'react-icons/md';
 import { IoSwapVerticalOutline } from "react-icons/io5";
 import { IoSearchOutline } from "react-icons/io5";
 import AddEditProductModal from '../../components/products/AddEditProductModal';
-import DeleteProductModal from '../../components/products/DeleteProductModal';
+import DeleteModal from '../../components/common/DeleteModal';
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
@@ -133,9 +132,12 @@ export default function ProductsPage() {
 
         if (error) throw error;
 
-        setProducts(products.filter(p => p.id !== selectedProduct.id));
+        // Close modal and reset selection first
         setIsDeleteModalOpen(false);
         setSelectedProduct(null);
+        
+        // Then fetch fresh data
+        await fetchProducts();
         resolve('Product deleted successfully');
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -291,14 +293,17 @@ export default function ProductsPage() {
         categories={categories}
       />
 
-      <DeleteProductModal
+      <DeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
           setSelectedProduct(null);
         }}
         onConfirm={handleDelete}
-        productTitle={selectedProduct?.title || ''}
+        title="Delete Product"
+        itemType="product"
+        itemName={selectedProduct?.title || ''}
+        isDeleting={deleting}
       />
     </div>
   );

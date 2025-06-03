@@ -105,7 +105,7 @@ export default function DashboardLayout() {
             {/* Right section with logout button */}
             <div>
               <Button
-                variant="default"
+                variant="outline"
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border-none"
               >

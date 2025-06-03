@@ -70,54 +70,57 @@ export default function AddEditProductModal({
 }: AddEditProductModalProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<ProductForm>({
-    title: editingProduct?.title || '',
-    price: editingProduct?.price || 0,
-    description: editingProduct?.description || '',
-    category_id: editingProduct?.category_id || '',
-    slug: editingProduct?.slug || '',
-    sku: editingProduct?.sku || '',
-    stock_status: editingProduct?.stock_status || 'in_stock',
-    available_quantity: editingProduct?.available_quantity || 0,
-    colors: editingProduct?.colors || [],
-    sizes: editingProduct?.sizes || [],
+    title: '',
+    price: 0,
+    description: '',
+    category_id: '',
+    slug: '',
+    sku: '',
+    stock_status: 'in_stock',
+    available_quantity: 0,
+    colors: [],
+    sizes: [],
     images: [],
-    imageUrls: editingProduct?.images || []
+    imageUrls: []
   });
 
-  // Update form when editingProduct changes
+  // Reset form when opening add modal or switching between add/edit
   useEffect(() => {
-    if (editingProduct) {
-      setForm({
-        title: editingProduct.title,
-        price: editingProduct.price,
-        description: editingProduct.description,
-        category_id: editingProduct.category_id,
-        slug: editingProduct.slug,
-        sku: editingProduct.sku,
-        stock_status: editingProduct.stock_status,
-        available_quantity: editingProduct.available_quantity,
-        colors: editingProduct.colors,
-        sizes: editingProduct.sizes,
-        images: [],
-        imageUrls: editingProduct.images
-      });
-    } else {
-      setForm({
-        title: '',
-        price: 0,
-        description: '',
-        category_id: '',
-        slug: '',
-        sku: '',
-        stock_status: 'in_stock',
-        available_quantity: 0,
-        colors: [],
-        sizes: [],
-        images: [],
-        imageUrls: []
-      });
+    if (isOpen) {
+      if (editingProduct) {
+        setForm({
+          title: editingProduct.title,
+          price: editingProduct.price,
+          description: editingProduct.description,
+          category_id: editingProduct.category_id,
+          slug: editingProduct.slug,
+          sku: editingProduct.sku,
+          stock_status: editingProduct.stock_status,
+          available_quantity: editingProduct.available_quantity,
+          colors: editingProduct.colors,
+          sizes: editingProduct.sizes,
+          images: [],
+          imageUrls: editingProduct.images
+        });
+      } else {
+        // Reset form for new product
+        setForm({
+          title: '',
+          price: 0,
+          description: '',
+          category_id: '',
+          slug: '',
+          sku: '',
+          stock_status: 'in_stock',
+          available_quantity: 0,
+          colors: [],
+          sizes: [],
+          images: [],
+          imageUrls: []
+        });
+      }
     }
-  }, [editingProduct]);
+  }, [isOpen, editingProduct]);
 
   const handleImageUpload = async (files: FileList) => {
     const newFiles = Array.from(files);
@@ -152,8 +155,10 @@ export default function AddEditProductModal({
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     
     const savePromise = new Promise(async (resolve, reject) => {
       try {
@@ -254,58 +259,60 @@ export default function AddEditProductModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      onConfirm={handleSubmit}
       title={editingProduct ? 'Edit Product' : 'Add Product'}
       maxWidth="max-w-4xl"
+      isSubmitting={loading}
+      confirmText={editingProduct ? 'Update Product' : 'Create Product'}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        
         <Grid>
           <Grid columns={1}>
             <FormField label="Title" required>
-                <Input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  required
-                />
-              </FormField>
+              <Input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                required
+              />
+            </FormField>
 
-              <FormField label="Price" required>
-                <Input
-                  type="number"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-                  required
-                  min="0"
-                  step="0.01"
-                />
-              </FormField>
+            <FormField label="Price" required>
+              <Input
+                type="number"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
+                required
+                min="0"
+                step="0.01"
+              />
+            </FormField>
 
-              <FormField label="Category" required>
-                <Select
-                  value={form.category_id}
-                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                  required
-                  options={[
-                    { value: '', label: 'Select a category' },
-                    ...categories.map(category => ({
-                      value: category.id,
-                      label: category.name
-                    }))
-                  ]}
-                />
-              </FormField>
+            <FormField label="Category" required>
+              <Select
+                value={form.category_id}
+                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                required
+                options={[
+                  { value: '', label: 'Select a category' },
+                  ...categories.map(category => ({
+                    value: category.id,
+                    label: category.name
+                  }))
+                ]}
+              />
+            </FormField>
 
-              <FormField label="SKU" required>
-                <Input
-                  type="text"
-                  value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  required
-                />
-              </FormField>
-              
-              <FormField label="Description" required>
+            <FormField label="SKU" required>
+              <Input
+                type="text"
+                value={form.sku}
+                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                required
+              />
+            </FormField>
+
+            <FormField label="Description" required>
               <TextArea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -338,22 +345,22 @@ export default function AddEditProductModal({
             </FormField>
 
             <FormField label="Colors">
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_COLORS.map((color) => (
-              <button
-                key={color.value}
-                type="button"
-                onClick={() => toggleColor(color.value)}
-                className={`w-8 h-8 rounded-full border-2 ${
-                  form.colors.includes(color.value)
-                    ? 'border-blue-500'
-                    : 'border-transparent'
-                }`}
-                style={{ backgroundColor: color.value }}
-                title={color.name}
-              />
-            ))}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {AVAILABLE_COLORS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => toggleColor(color.value)}
+                    className={`w-8 h-8 rounded-full border-2 ${
+                      form.colors.includes(color.value)
+                        ? 'border-blue-500'
+                        : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
             </FormField>
 
             <FormField label="Sizes">
@@ -410,22 +417,6 @@ export default function AddEditProductModal({
             </FormField>
           </Grid>
         </Grid>
-
-        <div className="flex justify-end space-x-3">
-          <Button
-            variant="default"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="secondary"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : 'Save Product'}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

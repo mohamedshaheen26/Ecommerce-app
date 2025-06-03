@@ -6,6 +6,8 @@ import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import TextArea from '../../components/common/TextArea';
+import DeleteModal from '../../components/common/DeleteModal';
+import Modal from '../../components/common/Modal';
 import toast from 'react-hot-toast';
 
 interface Category {
@@ -19,8 +21,12 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -53,9 +59,12 @@ export default function CategoriesPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     
+    setIsSaving(true);
     const savePromise = new Promise(async (resolve, reject) => {
       try {
         const categoryData = {
@@ -87,6 +96,8 @@ export default function CategoriesPage() {
       } catch (error) {
         console.error('Error saving category:', error);
         reject(error instanceof Error ? error.message : 'Failed to save category');
+      } finally {
+        setIsSaving(false);
       }
     });
 
@@ -106,30 +117,35 @@ export default function CategoriesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      const deletePromise = new Promise(async (resolve, reject) => {
-        try {
-          const { error } = await supabase
-            .from('categories')
-            .delete()
-            .eq('id', id);
+  const handleDelete = async () => {
+    if (!deletingCategory) return;
 
-          if (error) throw error;
-          await fetchCategories();
-          resolve('Category deleted successfully');
-        } catch (error) {
-          console.error('Error deleting category:', error);
-          reject(error instanceof Error ? error.message : 'Failed to delete category');
-        }
-      });
+    const deletePromise = new Promise(async (resolve, reject) => {
+      try {
+        setDeleting(true);
+        const { error } = await supabase
+          .from('categories')
+          .delete()
+          .eq('id', deletingCategory.id);
 
-      toast.promise(deletePromise, {
-        loading: 'Deleting category...',
-        success: (message) => message as string,
-        error: (err) => `Error: ${err}`,
-      });
-    }
+        if (error) throw error;
+        await fetchCategories();
+        setIsDeleteModalOpen(false);
+        setDeletingCategory(null);
+        resolve('Category deleted successfully');
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        reject(error instanceof Error ? error.message : 'Failed to delete category');
+      } finally {
+        setDeleting(false);
+      }
+    });
+
+    toast.promise(deletePromise, {
+      loading: 'Deleting category...',
+      success: (message) => message as string,
+      error: (err) => `Error: ${err}`,
+    });
   };
 
   const columns = [
@@ -169,7 +185,10 @@ export default function CategoriesPage() {
               },
               {
                 label: 'Delete',
-                onClick: () => handleDelete(category.id),
+                onClick: () => {
+                  setDeletingCategory(category);
+                  setIsDeleteModalOpen(true);
+                },
               }
             ]}
           />
@@ -216,46 +235,47 @@ export default function CategoriesPage() {
         isLoading={loading}
       />
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingCategory ? 'Edit Category' : 'Add New Category'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                label='Name'
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-                <TextArea
-                  label='Description'
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  required
-                />
-              <div className="flex justify-end space-x-3 mt-6">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingCategory ? 'Update' : 'Create'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleSubmit}
+        title={editingCategory ? 'Edit Category' : 'Add New Category'}
+        maxWidth="max-w-md"
+        isSubmitting={isSaving}
+        confirmText={editingCategory ? 'Update' : 'Create'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label='Name'
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
+          <TextArea
+            label='Description'
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={3}
+            required
+          />
+        </form>
+      </Modal>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingCategory(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete Category"
+        itemType="category"
+        itemName={deletingCategory?.name || ''}
+        isDeleting={deleting}
+      />
     </div>
   );
 } 
