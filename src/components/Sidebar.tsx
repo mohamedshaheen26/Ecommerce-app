@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   MdDashboard, 
   MdInventory,
@@ -11,6 +11,7 @@ import {
   MdClose
 } from 'react-icons/md';
 import type { IconType } from 'react-icons';
+import Button from './common/Button';
 
 interface NavItem {
   path: string;
@@ -63,6 +64,18 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, isDesktopOpen = true, onClose }: SidebarProps) {
+  const location = useLocation();
+
+  // Function to determine if a nav item should be active
+  const isNavItemActive = (path: string) => {
+    // Dashboard link should be active for exactly /dashboard
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    // Other links should match their paths exactly
+    return location.pathname === path;
+  };
+
   return (
     <div className="flex h-full flex-col border-r border-gray-200">
       {/* Sidebar header */}
@@ -92,9 +105,9 @@ export default function Sidebar({ isOpen, isDesktopOpen = true, onClose }: Sideb
             key={item.path}
             to={item.path}
             onClick={onClose}
-            className={({ isActive }) =>
+            className={() =>
               `flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors
-              ${isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+              ${isNavItemActive(item.path) ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
               ${!isDesktopOpen && 'justify-center px-2'}
               `
             }
@@ -106,17 +119,15 @@ export default function Sidebar({ isOpen, isDesktopOpen = true, onClose }: Sideb
         ))}
 
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            className={`
-              flex items-center rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900
-              ${!isDesktopOpen && 'justify-center px-2 w-full'}
-            `}
-            title="Extras"
+          <Button
+            fullWidth={true}
+            variant="outline"
+            className='border-none justify-start'
+            onClick={() => {}}
+            leftIcon={<MdAdd className={`h-5 w-5 flex-shrink-0 ${isDesktopOpen ? 'mr-3' : ''}`} />}
           >
-            <MdAdd className={`h-5 w-5 flex-shrink-0 ${isDesktopOpen ? 'mr-3' : ''}`} />
             {isDesktopOpen && <span>Extras</span>}
-          </button>
+          </Button>
         </div>
       </nav>
     </div>

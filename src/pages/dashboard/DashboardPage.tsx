@@ -88,18 +88,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-2">
-          <span className="text-gray-500">Admin</span>
-          <span className="text-gray-400">/</span>
-          <span className="font-medium">Dashboard</span>
-        </div>
-      </div>
-
+    <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Total Sales Card */}
-        <div className="bg-white p-6 rounded-lg">
+        <div className="bg-white p-6 border border-gray-200 rounded-lg overflow-hidden">
           <div className="mb-4">
             <h3 className="text-sm text-gray-500 uppercase">Total Sales</h3>
             <p className="text-gray-400 text-xs mt-1">THIS MONTH</p>
@@ -111,7 +103,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Customers Card */}
-        <div className="bg-white p-6 rounded-lg">
+        <div className="bg-white p-6 border border-gray-200 rounded-lg overflow-hidden">
           <div className="mb-4">
             <h3 className="text-sm text-gray-500 uppercase">Customers</h3>
             <p className="text-gray-400 text-xs mt-1">THIS MONTH</p>
@@ -123,7 +115,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Orders Card */}
-        <div className="bg-white p-6 rounded-lg">
+        <div className="bg-white p-6 border border-gray-200 rounded-lg overflow-hidden">
           <div className="mb-4">
             <h3 className="text-sm text-gray-500 uppercase">Orders</h3>
             <p className="text-gray-400 text-xs mt-1">MONTHLY GOALS: 1,000</p>
@@ -143,7 +135,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Best Selling Products */}
-        <div className="bg-white p-6 rounded-lg">
+        <div className="bg-white p-6 border border-gray-200 rounded-lg overflow-hidden">
           <div className="mb-6">
             <h3 className="text-sm text-gray-500 uppercase">Best Selling</h3>
             <p className="text-gray-400 text-xs mt-1">THIS MONTH</p>
@@ -161,7 +153,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white p-6 rounded-lg">
+        <div className="bg-white p-6 border border-gray-200 rounded-lg overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm text-gray-500 uppercase">Recent Orders</h3>
             <button className="text-sm text-blue-500 hover:text-blue-600">View All</button>
@@ -198,6 +190,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 } 

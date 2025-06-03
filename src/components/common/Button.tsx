@@ -24,7 +24,7 @@ export default function Button({
   loadingText,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors duration-200';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors duration-200 cursor-pointer';
   
   const sizeStyles = {
     sm: 'px-3 py-1.5 text-sm min-h-[32px]',
