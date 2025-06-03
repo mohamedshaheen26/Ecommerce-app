@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BsThreeDotsVertical } from 'react-icons/bs';
+import { BsThreeDots } from 'react-icons/bs';
 
 interface MenuItem {
   label: string;
@@ -61,7 +61,7 @@ export default function DropdownMenu({ items }: DropdownMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 rounded-full hover:bg-gray-100 focus:outline-none cursor-pointer"
       >
-        <BsThreeDotsVertical className="w-5 h-5 text-gray-500" />
+        <BsThreeDots className="w-5 h-5 text-gray-500" />
       </button>
 
       {isOpen && createPortal(

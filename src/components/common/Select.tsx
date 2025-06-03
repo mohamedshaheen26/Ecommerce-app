@@ -29,7 +29,7 @@ export default function Select({
       )}
       <select
         className={`
-          block p-2 rounded-lg border-gray-300 shadow-sm
+          block p-2 rounded-lg border border-gray-300
           focus:border-blue-500 focus:ring-blue-500
           disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500
           ${error ? 'border-red-500' : ''}

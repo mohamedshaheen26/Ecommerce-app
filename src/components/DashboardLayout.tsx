@@ -44,7 +44,7 @@ export default function DashboardLayout() {
           fixed inset-y-0 left-0 z-30 bg-white transform transition-all duration-300 ease-in-out
           lg:translate-x-0 lg:static lg:z-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${isDesktopSidebarOpen ? 'w-72' : 'w-20'}
+          ${isDesktopSidebarOpen ? 'w-65' : 'w-20'}
         `}
       >
         <Sidebar 
@@ -69,7 +69,7 @@ export default function DashboardLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-10">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             {/* Left section with menu button and breadcrumbs */}
             <div className="flex items-center gap-4">

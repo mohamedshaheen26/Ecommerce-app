@@ -162,8 +162,8 @@ export default function CategoriesPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="flex justify-between items-center py-6 px-8 border-b border-gray-200">
         <h1 className="text-2xl font-semibold text-gray-800">Categories</h1>
         <div className="flex items-center space-x-4">
           <Button
@@ -177,6 +177,7 @@ export default function CategoriesPage() {
             Add Category
           </Button>
           <Input
+            fullWidth={false}
             placeholder="Search categories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

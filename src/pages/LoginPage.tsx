@@ -86,7 +86,6 @@ export default function LoginPage() {
               <Input 
                 label='Email'
                 required={false}
-                fullWidth={true}
                 id="username"
                 name="username"
                 type="text" 
@@ -100,7 +99,6 @@ export default function LoginPage() {
               <Input
                 label='Password'
                 required={false}
-                fullWidth={true}
                 id="password"
                 name="password"
                 type="password"

@@ -252,84 +252,86 @@ export default function AddEditProductModal({
       maxWidth="max-w-4xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        
         <Grid>
-          <FormField label="Title" required>
-            <Input
-              type="text"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              required
-            />
-          </FormField>
+          <Grid columns={1}>
+            <FormField label="Title" required>
+                <Input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
+              </FormField>
 
-          <FormField label="Price" required>
-            <Input
-              type="number"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-              required
-              min="0"
-              step="0.01"
-            />
-          </FormField>
+              <FormField label="Price" required>
+                <Input
+                  type="number"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </FormField>
 
-          <FormField label="Category" required>
-            <Select
-              value={form.category_id}
-              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-              required
-              options={[
-                { value: '', label: 'Select a category' },
-                ...categories.map(category => ({
-                  value: category.id,
-                  label: category.name
-                }))
-              ]}
-            />
-          </FormField>
+              <FormField label="Category" required>
+                <Select
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                  required
+                  options={[
+                    { value: '', label: 'Select a category' },
+                    ...categories.map(category => ({
+                      value: category.id,
+                      label: category.name
+                    }))
+                  ]}
+                />
+              </FormField>
 
-          <FormField label="SKU" required>
-            <Input
-              type="text"
-              value={form.sku}
-              onChange={(e) => setForm({ ...form, sku: e.target.value })}
-              required
-            />
-          </FormField>
+              <FormField label="SKU" required>
+                <Input
+                  type="text"
+                  value={form.sku}
+                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                  required
+                />
+              </FormField>
+              
+              <FormField label="Description" required>
+              <TextArea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                required
+              />
+            </FormField>
+          </Grid>
+          <Grid columns={1}>
+            <FormField label="Stock Status" required>
+              <Select
+                value={form.stock_status}
+                onChange={(e) => setForm({ ...form, stock_status: e.target.value as any })}
+                required
+                options={[
+                  { value: 'in_stock', label: 'In Stock' },
+                  { value: 'low_stock', label: 'Low Stock' },
+                  { value: 'out_of_stock', label: 'Out of Stock' }
+                ]}
+              />
+            </FormField>
 
-          <FormField label="Stock Status" required>
-            <Select
-              value={form.stock_status}
-              onChange={(e) => setForm({ ...form, stock_status: e.target.value as any })}
-              required
-              options={[
-                { value: 'in_stock', label: 'In Stock' },
-                { value: 'low_stock', label: 'Low Stock' },
-                { value: 'out_of_stock', label: 'Out of Stock' }
-              ]}
-            />
-          </FormField>
+            <FormField label="Available Quantity" required>
+              <Input
+                type="number"
+                value={form.available_quantity}
+                onChange={(e) => setForm({ ...form, available_quantity: parseInt(e.target.value) })}
+                required
+                min="0"
+              />
+            </FormField>
 
-          <FormField label="Available Quantity" required>
-            <Input
-              type="number"
-              value={form.available_quantity}
-              onChange={(e) => setForm({ ...form, available_quantity: parseInt(e.target.value) })}
-              required
-              min="0"
-            />
-          </FormField>
-        </Grid>
-
-        <FormField label="Description" required>
-          <TextArea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
-          />
-        </FormField>
-
-        <FormField label="Colors">
+            <FormField label="Colors">
           <div className="flex flex-wrap gap-2">
             {AVAILABLE_COLORS.map((color) => (
               <button
@@ -346,64 +348,62 @@ export default function AddEditProductModal({
               />
             ))}
           </div>
-        </FormField>
+            </FormField>
 
-        <FormField label="Sizes">
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_SIZES.map((size) => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => toggleSize(size)}
-                className={`px-4 py-2 rounded-md border ${
-                  form.sizes.includes(size)
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'border-gray-300 text-gray-700 hover:border-blue-500'
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </FormField>
-
-        <FormField label="Images">
-          <div className="flex items-center space-x-4">
-            <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-              Choose Files
-              <input
-                type="file"
-                className="hidden"
-                multiple
-                accept="image/*"
-                onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-              />
-            </label>
-            <span className="text-sm text-gray-500">
-              {form.images.length} files selected
-            </span>
-          </div>
-          <div className="mt-4">
-            <Grid columns={6} gap={4}>
-              {form.images.map((file, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`Preview ${index + 1}`}
-                    className="h-24 w-24 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            <FormField label="Sizes">
+              <div className="flex flex-wrap gap-2">
+                {AVAILABLE_SIZES.map((size) => (
+                  <Button
+                    className='rounded-sm'
+                    key={size}
+                    variant={form.sizes.includes(size) ? "secondary" : "outline"}
+                    onClick={() => toggleSize(size)}
                   >
-                    <MdClose className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </Grid>
-          </div>
-        </FormField>
+                    {size}
+                  </Button>
+                ))}
+              </div>
+            </FormField>
+
+            <FormField label="Images">
+              <div className="flex items-center space-x-4">
+                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Choose Files
+                  <input
+                    type="file"
+                    className="hidden"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                  />
+                </label>
+                <span className="text-sm text-gray-500">
+                  {form.images.length} files selected
+                </span>
+              </div>
+              <div className="mt-4">
+                <Grid columns={4} gap={4}>
+                  {form.images.map((file, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index + 1}`}
+                        className="h-24 w-24 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <MdClose className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </Grid>
+              </div>
+            </FormField>
+          </Grid>
+        </Grid>
 
         <div className="flex justify-end space-x-3">
           <Button
