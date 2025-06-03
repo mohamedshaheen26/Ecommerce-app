@@ -8,6 +8,7 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import Select from '../common/Select';
 import TextArea from '../common/TextArea';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: string;
@@ -153,95 +154,100 @@ export default function AddEditProductModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setLoading(true);
+    
+    const savePromise = new Promise(async (resolve, reject) => {
+      try {
+        setLoading(true);
+        // Upload new images if any
+        let newImageUrls = [];
+        if (form.images.length > 0) {
+          for (const file of form.images) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `products/${fileName}`;
 
-      // First, upload new images to storage if any
-      const newImageUrls = await Promise.all(
-        form.images.map(async (file) => {
-          const fileExt = file.name.split('.').pop();
-          const uniqueId = Math.random().toString(36).substring(2);
-          const fileName = `${uniqueId}-${Date.now()}.${fileExt}`;
-          const filePath = `products/${fileName}`;
+            const { error: uploadError } = await supabase.storage
+              .from(bucket_productsImg)
+              .upload(filePath, file);
 
-          const { error: uploadError } = await supabase.storage
-            .from(bucket_productsImg)
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
+            if (uploadError) {
+              throw uploadError;
+            }
 
-          if (uploadError) {
-            console.error('Error uploading:', uploadError);
-            throw uploadError;
+            const { data: urlData } = supabase.storage
+              .from(bucket_productsImg)
+              .getPublicUrl(filePath);
+
+            newImageUrls.push(urlData.publicUrl);
           }
+        }
 
-          const { data: { publicUrl } } = supabase.storage
-            .from(bucket_productsImg)
-            .getPublicUrl(`products/${fileName}`);
+        const productData = {
+          title: form.title,
+          price: form.price,
+          description: form.description,
+          category_id: form.category_id,
+          slug: form.slug || form.title.toLowerCase().replace(/ /g, '-'),
+          sku: form.sku,
+          stock_status: form.stock_status,
+          available_quantity: form.available_quantity,
+          images: [...form.imageUrls, ...newImageUrls],
+          colors: form.colors,
+          sizes: form.sizes
+        };
 
-          return publicUrl;
-        })
-      );
+        let error;
+        if (editingProduct) {
+          // Update existing product
+          const { error: updateError } = await supabase
+            .from('products')
+            .update(productData)
+            .eq('id', editingProduct.id);
+          error = updateError;
+          if (!error) resolve('Product updated successfully');
+        } else {
+          // Create new product
+          const { error: insertError } = await supabase
+            .from('products')
+            .insert([productData]);
+          error = insertError;
+          if (!error) resolve('Product created successfully');
+        }
 
-      const productData = {
-        title: form.title,
-        price: form.price,
-        description: form.description,
-        category_id: form.category_id,
-        slug: form.slug || form.title.toLowerCase().replace(/ /g, '-'),
-        sku: form.sku,
-        stock_status: form.stock_status,
-        available_quantity: form.available_quantity,
-        images: [...form.imageUrls, ...newImageUrls],
-        colors: form.colors,
-        sizes: form.sizes
-      };
+        if (error) {
+          throw error;
+        }
 
-      let error;
-      if (editingProduct) {
-        // Update existing product
-        const { error: updateError } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-        error = updateError;
-      } else {
-        // Create new product
-        const { error: insertError } = await supabase
-          .from('products')
-          .insert([productData]);
-        error = insertError;
-      }
-
-      if (error) {
+        // Reset form and close modal
+        setForm({
+          title: '',
+          price: 0,
+          description: '',
+          category_id: '',
+          slug: '',
+          sku: '',
+          stock_status: 'in_stock',
+          available_quantity: 0,
+          colors: [],
+          sizes: [],
+          images: [],
+          imageUrls: []
+        });
+        onClose();
+        onSuccess();
+      } catch (error) {
         console.error('Error saving product:', error);
-        throw error;
+        reject(error instanceof Error ? error.message : 'Failed to save product');
+      } finally {
+        setLoading(false);
       }
+    });
 
-      // Reset form and close modal
-      setForm({
-        title: '',
-        price: 0,
-        description: '',
-        category_id: '',
-        slug: '',
-        sku: '',
-        stock_status: 'in_stock',
-        available_quantity: 0,
-        colors: [],
-        sizes: [],
-        images: [],
-        imageUrls: []
-      });
-      onClose();
-      onSuccess();
-    } catch (error) {
-      console.error('Error saving product:', error);
-      alert('Error saving product. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    toast.promise(savePromise, {
+      loading: editingProduct ? 'Updating product...' : 'Creating product...',
+      success: (message) => message as string,
+      error: (err) => `Error: ${err}`,
+    });
   };
 
   return (

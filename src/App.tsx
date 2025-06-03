@@ -8,32 +8,59 @@ import CategoriesPage from "./pages/dashboard/CategoriesPage";
 import OrdersPage from "./pages/dashboard/OrdersPage";
 import CustomersPage from "./pages/dashboard/CustomersPage";
 import { AuthProvider } from "./context/AuthContext";
+import { SettingsProvider } from "./context/SettingsContext";
+import SettingsPage from "./pages/dashboard/SettingsPage";
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Protected routes */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          {/* Dashboard routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<DashboardPage />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="customers" element={<CustomersPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <SettingsProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Protected routes */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* Dashboard routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="customers" element={<CustomersPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+            </Route>
+          </Routes>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+              success: {
+                style: {
+                  background: '#059669',
+                },
+              },
+              error: {
+                style: {
+                  background: '#DC2626',
+                },
+                duration: 5000,
+              },
+            }}
+          />
+        </BrowserRouter>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

@@ -9,6 +9,7 @@ import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import toast from 'react-hot-toast';
 
 interface Product {
   id: string;
@@ -81,6 +82,7 @@ export default function ProductsPage() {
       setTotalItems(count || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
+      toast.error('Failed to fetch products');
     } finally {
       setLoading(false);
     }
@@ -103,42 +105,51 @@ export default function ProductsPage() {
   const handleDelete = async () => {
     if (!selectedProduct) return;
 
-    try {
-      setDeleting(true);
+    const deletePromise = new Promise(async (resolve, reject) => {
+      try {
+        setDeleting(true);
 
-      // Delete images from storage
-      if (selectedProduct.images.length > 0) {
-        const imagePaths = selectedProduct.images.map(url => {
-          const path = url.split('/').pop();
-          return `products/${path}`;
-        });
+        // Delete images from storage
+        if (selectedProduct.images.length > 0) {
+          const imagePaths = selectedProduct.images.map(url => {
+            const path = url.split('/').pop();
+            return `products/${path}`;
+          });
 
-        const { error: storageError } = await supabase.storage
-          .from('images')
-          .remove(imagePaths);
+          const { error: storageError } = await supabase.storage
+            .from('images')
+            .remove(imagePaths);
 
-        if (storageError) {
-          console.error('Error deleting images:', storageError);
+          if (storageError) {
+            console.error('Error deleting images:', storageError);
+          }
         }
+
+        // Delete product from database
+        const { error } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', selectedProduct.id);
+
+        if (error) throw error;
+
+        setProducts(products.filter(p => p.id !== selectedProduct.id));
+        setIsDeleteModalOpen(false);
+        setSelectedProduct(null);
+        resolve('Product deleted successfully');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        reject(error instanceof Error ? error.message : 'Failed to delete product');
+      } finally {
+        setDeleting(false);
       }
+    });
 
-      // Delete product from database
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', selectedProduct.id);
-
-      if (error) throw error;
-
-      setProducts(products.filter(p => p.id !== selectedProduct.id));
-      setIsDeleteModalOpen(false);
-      setSelectedProduct(null);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Error deleting product. Please try again.');
-    } finally {
-      setDeleting(false);
-    }
+    toast.promise(deletePromise, {
+      loading: 'Deleting product...',
+      success: (message) => message as string,
+      error: (err) => `Error: ${err}`,
+    });
   };
 
   const columns = [

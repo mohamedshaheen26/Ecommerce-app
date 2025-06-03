@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MdAdd } from 'react-icons/md';
 import { IoSearchOutline } from "react-icons/io5";
 import Table from '../../components/common/Table';
 import DropdownMenu from '../../components/common/DropdownMenu';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import TextArea from '../../components/common/TextArea';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: string;
@@ -41,6 +42,7 @@ export default function CategoriesPage() {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      toast.error('Failed to fetch categories');
     } finally {
       setLoading(false);
     }
@@ -53,34 +55,46 @@ export default function CategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const categoryData = {
-        name: formData.name,
-        description: formData.description
-      };
+    
+    const savePromise = new Promise(async (resolve, reject) => {
+      try {
+        const categoryData = {
+          name: formData.name,
+          description: formData.description
+        };
 
-      if (editingCategory) {
-        const { error } = await supabase
-          .from('categories')
-          .update(categoryData)
-          .eq('id', editingCategory.id);
+        if (editingCategory) {
+          const { error } = await supabase
+            .from('categories')
+            .update(categoryData)
+            .eq('id', editingCategory.id);
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('categories')
-          .insert([categoryData]);
+          if (error) throw error;
+          resolve('Category updated successfully');
+        } else {
+          const { error } = await supabase
+            .from('categories')
+            .insert([categoryData]);
 
-        if (error) throw error;
+          if (error) throw error;
+          resolve('Category created successfully');
+        }
+
+        setIsModalOpen(false);
+        setEditingCategory(null);
+        setFormData({ name: '', description: '' });
+        fetchCategories();
+      } catch (error) {
+        console.error('Error saving category:', error);
+        reject(error instanceof Error ? error.message : 'Failed to save category');
       }
+    });
 
-      setIsModalOpen(false);
-      setEditingCategory(null);
-      setFormData({ name: '', description: '' });
-      fetchCategories();
-    } catch (error) {
-      console.error('Error saving category:', error);
-    }
+    toast.promise(savePromise, {
+      loading: editingCategory ? 'Updating category...' : 'Creating category...',
+      success: (message) => message as string,
+      error: (err) => `Error: ${err}`,
+    });
   };
 
   const handleEdit = (category: Category) => {
@@ -94,17 +108,27 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        const { error } = await supabase
-          .from('categories')
-          .delete()
-          .eq('id', id);
+      const deletePromise = new Promise(async (resolve, reject) => {
+        try {
+          const { error } = await supabase
+            .from('categories')
+            .delete()
+            .eq('id', id);
 
-        if (error) throw error;
-        fetchCategories();
-      } catch (error) {
-        console.error('Error deleting category:', error);
-      }
+          if (error) throw error;
+          await fetchCategories();
+          resolve('Category deleted successfully');
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          reject(error instanceof Error ? error.message : 'Failed to delete category');
+        }
+      });
+
+      toast.promise(deletePromise, {
+        loading: 'Deleting category...',
+        success: (message) => message as string,
+        error: (err) => `Error: ${err}`,
+      });
     }
   };
 
@@ -200,28 +224,22 @@ export default function CategoriesPage() {
               {editingCategory ? 'Edit Category' : 'Add New Category'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
+                <Input
+                label='Name'
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
+                <TextArea
+                  label='Description'
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   rows={3}
                   required
                 />
-              </div>
               <div className="flex justify-end space-x-3 mt-6">
                 <Button
                   variant="outline"

@@ -1,3 +1,4 @@
+import Button from '../common/Button';
 import Modal from '../common/Modal';
 
 interface DeleteProductModalProps {
@@ -27,18 +28,18 @@ export default function DeleteProductModal({
       </div>
 
       <div className="flex justify-end space-x-3">
-        <button
+        <Button
           onClick={onClose}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          variant="secondary"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onConfirm}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+          variant="danger"
         >
           Delete
-        </button>
+        </Button>
       </div>
     </Modal>
   );
