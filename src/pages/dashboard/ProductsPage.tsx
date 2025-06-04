@@ -35,7 +35,6 @@ interface Category {
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -76,7 +75,6 @@ export default function ProductsPage() {
         .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       if (error) throw error;
-      setProducts(data || []);
       setFilteredProducts(data || []);
       setTotalItems(count || 0);
     } catch (error) {
@@ -156,12 +154,12 @@ export default function ProductsPage() {
 
   const columns = [
     {
-      header: <IoSwapVerticalOutline />,
+      header: <IoSwapVerticalOutline className="w-5 h-5" />,
       accessor: (product: Product) => (
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0">
             <img
-              className="h-10 w-10 rounded-full object-cover"
+              className="h-10 w-10 rounded-lg object-cover"
               src={product.images[0]}
               alt={product.title}
             />
@@ -214,7 +212,7 @@ export default function ProductsPage() {
       )
     },
     {
-      header: '',
+      header: 'Actions',
       accessor: (product: Product) => (
         <div className="flex justify-end">
           <DropdownMenu
