@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import { IoSwapVerticalOutline } from "react-icons/io5";
 import { IoSearchOutline } from "react-icons/io5";
-import AddEditProductModal from '../../components/products/AddEditProductModal';
-import DeleteModal from '../../components/common/DeleteModal';
-import Table from '../../components/common/Table';
-import DropdownMenu from '../../components/common/DropdownMenu';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import toast from 'react-hot-toast';
+import AddEditProductModal from "../../components/products/AddEditProductModal";
+import DeleteModal from "../../components/common/DeleteModal";
+import Table from "../../components/common/Table";
+import DropdownMenu from "../../components/common/DropdownMenu";
+import Button from "../../components/common/Button";
+import Input from "../../components/common/Input";
+import toast from "react-hot-toast";
 
 interface Product {
   id: string;
@@ -18,7 +18,7 @@ interface Product {
   category_id: string;
   slug: string;
   sku: string;
-  stock_status: 'in_stock' | 'out_of_stock' | 'low_stock';
+  stock_status: "in_stock" | "out_of_stock" | "low_stock";
   available_quantity: number;
   images: string[];
   colors: string[];
@@ -40,7 +40,7 @@ export default function ProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,30 +56,37 @@ export default function ProductsPage() {
     try {
       setLoading(true);
       let query = supabase
-        .from('products')
-        .select(`
+        .from("products")
+        .select(
+          `
           *,
           category:category_id (
             name
           )
-        `, { count: 'exact' })
-        .order('created_at', { ascending: false });
+        `,
+          { count: "exact" }
+        )
+        .order("created_at", { ascending: false });
 
       // Apply search filter if searchQuery exists
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
+        query = query.or(
+          `title.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`
+        );
       }
 
       // Apply pagination
-      const { data, error, count } = await query
-        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+      const { data, error, count } = await query.range(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize - 1
+      );
 
       if (error) throw error;
       setFilteredProducts(data || []);
       setTotalItems(count || 0);
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to fetch products');
+      console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
@@ -88,14 +95,14 @@ export default function ProductsPage() {
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+        .from("categories")
+        .select("*")
+        .order("name");
 
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -108,45 +115,47 @@ export default function ProductsPage() {
 
         // Delete images from storage
         if (selectedProduct.images.length > 0) {
-          const imagePaths = selectedProduct.images.map(url => {
-            const path = url.split('/').pop();
+          const imagePaths = selectedProduct.images.map((url) => {
+            const path = url.split("/").pop();
             return `products/${path}`;
           });
 
           const { error: storageError } = await supabase.storage
-            .from('images')
+            .from("images")
             .remove(imagePaths);
 
           if (storageError) {
-            console.error('Error deleting images:', storageError);
+            console.error("Error deleting images:", storageError);
           }
         }
 
         // Delete product from database
         const { error } = await supabase
-          .from('products')
+          .from("products")
           .delete()
-          .eq('id', selectedProduct.id);
+          .eq("id", selectedProduct.id);
 
         if (error) throw error;
 
         // Close modal and reset selection first
         setIsDeleteModalOpen(false);
         setSelectedProduct(null);
-        
+
         // Then fetch fresh data
         await fetchProducts();
-        resolve('Product deleted successfully');
+        resolve("Product deleted successfully");
       } catch (error) {
-        console.error('Error deleting product:', error);
-        reject(error instanceof Error ? error.message : 'Failed to delete product');
+        console.error("Error deleting product:", error);
+        reject(
+          error instanceof Error ? error.message : "Failed to delete product"
+        );
       } finally {
         setDeleting(false);
       }
     });
 
     toast.promise(deletePromise, {
-      loading: 'Deleting product...',
+      loading: "Deleting product...",
       success: (message) => message as string,
       error: (err) => `Error: ${err}`,
     });
@@ -154,98 +163,102 @@ export default function ProductsPage() {
 
   const columns = [
     {
-      header: <IoSwapVerticalOutline className="w-5 h-5" />,
+      header: <IoSwapVerticalOutline className='w-5 h-5' />,
       accessor: (product: Product) => (
-        <div className="flex items-center">
-          <div className="h-10 w-10 flex-shrink-0">
+        <div className='flex items-center'>
+          <div className='h-12 w-12 flex-shrink-0 bg-[#F6F6F6] rounded-lg overflow-hidden p-1'>
             <img
-              className="h-10 w-10 rounded-lg object-cover"
+              className='rounded-lg object-cover w-full h-full'
               src={product.images[0]}
               alt={product.title}
             />
           </div>
         </div>
-      )
+      ),
+      className: "w-10",
     },
     {
-      header: 'Name',
+      header: "Name",
       accessor: (product: Product) => (
-        <div className="flex items-center">
-          <div className="text-sm font-medium text-gray-900">
+        <div className='flex items-center'>
+          <div className='text-sm font-medium text-gray-900'>
             {product.title}
           </div>
         </div>
-      )
+      ),
     },
     {
-      header: 'SKU',
+      header: "SKU",
       accessor: (product: Product) => (
-        <div className="flex items-center">
-          <div className="text-sm font-medium text-gray-900">
-            {product.sku}
-          </div>
+        <div className='flex items-center'>
+          <div className='text-sm font-medium text-gray-900'>{product.sku}</div>
         </div>
-      )
+      ),
     },
     {
-      header: 'Price',
+      header: "Price",
       accessor: (product: Product) => (
-        <div className="text-sm text-gray-900">${product.price}</div>
-      )
+        <div className='text-sm text-gray-900'>${product.price}</div>
+      ),
     },
     {
-      header: 'Stock',
+      header: "Stock",
       accessor: (product: Product) => (
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-          ${product.stock_status === 'in_stock' ? 'bg-green-100 text-green-800' : 
-            product.stock_status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' : 
-            'bg-red-100 text-red-800'}`}
+        <span
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+          ${
+            product.stock_status === "in_stock"
+              ? "bg-green-100 text-green-800"
+              : product.stock_status === "low_stock"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
         >
-          {product.stock_status.replace('_', ' ')}
+          {product.stock_status.replace("_", " ")}
         </span>
-      )
+      ),
     },
     {
-      header: 'Category',
+      header: "Category",
       accessor: (product: Product) => (
-        <div className="text-sm text-gray-900">{product.category.name}</div>
-      )
+        <div className='text-sm text-gray-900'>{product.category.name}</div>
+      ),
     },
     {
-      header: 'Actions',
+      header: "Actions",
       accessor: (product: Product) => (
-        <div className="flex justify-end">
+        <div className='flex justify-end'>
           <DropdownMenu
             items={[
               {
-                label: 'Edit',
+                label: "Edit",
                 onClick: () => {
                   setSelectedProduct(product);
                   setIsAddModalOpen(true);
                 },
               },
               {
-                label: 'Delete',
+                label: "Delete",
                 onClick: () => {
                   setSelectedProduct(product);
                   setIsDeleteModalOpen(true);
                 },
-              }
+              },
             ]}
           />
         </div>
       ),
-      className: 'w-10'
-    }
+      className: "w-10",
+    },
   ];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex justify-between items-center py-6 px-8 border-b border-gray-200">
-        <h1 className="text-2xl font-semibold text-gray-800">Products</h1>
-        <div className="flex items-center space-x-4">
+    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
+      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
+        <h1 className='text-2xl font-semibold text-gray-800'>Products</h1>
+        <div className='flex items-center space-x-4'>
           <Button
-            variant="secondary"
+            variant='secondary'
             onClick={() => {
               setSelectedProduct(null);
               setIsAddModalOpen(true);
@@ -255,13 +268,13 @@ export default function ProductsPage() {
           </Button>
           <Input
             fullWidth={false}
-            placeholder="Search products..."
+            placeholder='Search products...'
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            leftIcon={<IoSearchOutline className="w-5 h-5" />}
+            leftIcon={<IoSearchOutline className='w-5 h-5' />}
           />
         </div>
       </div>
@@ -298,11 +311,11 @@ export default function ProductsPage() {
           setSelectedProduct(null);
         }}
         onConfirm={handleDelete}
-        title="Delete Product"
-        itemType="product"
-        itemName={selectedProduct?.title || ''}
+        title='Delete Product'
+        itemType='product'
+        itemName={selectedProduct?.title || ""}
         isDeleting={deleting}
       />
     </div>
   );
-} 
+}
