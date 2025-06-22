@@ -257,8 +257,6 @@ export default function AddEditProductModal({
     });
   };
 
-  console.log(categories);
-
   return (
     <Modal
       isOpen={isOpen}
