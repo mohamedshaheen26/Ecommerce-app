@@ -11,6 +11,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import { Toaster } from 'react-hot-toast';
+import ReviewsPage from "./pages/dashboard/ReviewsPage";
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="products" element={<ProductsPage />} />
               <Route path="customers" element={<CustomersPage />} />
               <Route path="categories" element={<CategoriesPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
           </Routes>
           <Toaster
