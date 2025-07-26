@@ -9,39 +9,16 @@ import DropdownMenu from "../../components/common/DropdownMenu";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import toast from "react-hot-toast";
-
-interface Product {
-  id: string;
-  title: string;
-  price: number;
-  description: string;
-  category_id: string;
-  slug: string;
-  sku: string;
-  stock_status: "in_stock" | "out_of_stock" | "low_stock";
-  available_quantity: number;
-  images: string[];
-  colors: string[];
-  sizes: string[];
-  created_at: string;
-  category: {
-    name: string;
-  };
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import type { ICategory, IProduct } from "../../types";
 
 export default function ProductsPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -164,7 +141,7 @@ export default function ProductsPage() {
   const columns = [
     {
       header: <IoSwapVerticalOutline className='w-5 h-5' />,
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='flex items-center'>
           <div className='h-12 w-12 flex-shrink-0 bg-[#F6F6F6] rounded-lg overflow-hidden p-1'>
             <img
@@ -179,7 +156,7 @@ export default function ProductsPage() {
     },
     {
       header: "Name",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='flex items-center'>
           <div className='text-sm font-medium text-gray-900'>
             {product.title}
@@ -189,7 +166,7 @@ export default function ProductsPage() {
     },
     {
       header: "SKU",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='flex items-center'>
           <div className='text-sm font-medium text-gray-900'>{product.sku}</div>
         </div>
@@ -197,13 +174,13 @@ export default function ProductsPage() {
     },
     {
       header: "Price",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='text-sm text-gray-900'>${product.price}</div>
       ),
     },
     {
       header: "Stock",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
           ${
@@ -220,13 +197,13 @@ export default function ProductsPage() {
     },
     {
       header: "Category",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='text-sm text-gray-900'>{product.category.name}</div>
       ),
     },
     {
       header: "Actions",
-      accessor: (product: Product) => (
+      accessor: (product: IProduct) => (
         <div className='flex justify-end'>
           <DropdownMenu
             items={[

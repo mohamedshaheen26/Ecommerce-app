@@ -9,26 +9,7 @@ import Input from "../common/Input";
 import Select from "../common/Select";
 import TextArea from "../common/TextArea";
 import toast from "react-hot-toast";
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface ProductForm {
-  title: string;
-  price: number;
-  description: string;
-  category_id: string;
-  slug: string;
-  sku: string;
-  stock_status: "in_stock" | "out_of_stock" | "low_stock";
-  available_quantity: number;
-  colors: string[];
-  sizes: string[];
-  images: File[];
-  imageUrls: string[];
-}
+import type { ICategory, IProductFormValues } from "../../types";
 
 const AVAILABLE_COLORS = [
   { name: "Light Blue", value: "#ADD8E6" },
@@ -44,7 +25,7 @@ interface AddEditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  categories: Category[];
+  categories: ICategory[];
   editingProduct?: {
     id: string;
     title: string;
@@ -69,7 +50,7 @@ export default function AddEditProductModal({
   editingProduct,
 }: AddEditProductModalProps) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<ProductForm>({
+  const [form, setForm] = useState<IProductFormValues>({
     title: "",
     price: 0,
     description: "",
@@ -257,8 +238,6 @@ export default function AddEditProductModal({
     });
   };
 
-  console.log(categories);
-
   return (
     <Modal
       isOpen={isOpen}
@@ -339,6 +318,59 @@ export default function AddEditProductModal({
               ]}
             />
           </FormField>
+          <FormField label='Colors'>
+            <div className='flex flex-wrap gap-2'>
+              {AVAILABLE_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  type='button'
+                  onClick={() => toggleColor(color.value)}
+                  className={`w-8 h-8 rounded-full border-2 ${
+                    form.colors.includes(color.value)
+                      ? "border-blue-500"
+                      : "border-transparent"
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </FormField>
+        </Grid>
+        <Grid columns={2}>
+          <FormField label='SKU' required>
+            <Input
+              type='text'
+              value={form.sku}
+              onChange={(e) => setForm({ ...form, sku: e.target.value })}
+              required
+            />
+          </FormField>
+          <FormField label='Sizes'>
+            <div className='flex flex-wrap gap-2'>
+              {AVAILABLE_SIZES.map((size) => (
+                <Button
+                  className='rounded-sm'
+                  key={size}
+                  variant={form.sizes.includes(size) ? "secondary" : "outline"}
+                  onClick={() => toggleSize(size)}
+                >
+                  {size}
+                </Button>
+              ))}
+            </div>
+          </FormField>
+        </Grid>
+        <Grid columns={2}>
+          <FormField label='Description' required>
+            <TextArea
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              required
+            />
+          </FormField>
           <FormField label='Images'>
             <div className='flex items-center space-x-4'>
               <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>
@@ -363,11 +395,13 @@ export default function AddEditProductModal({
               <Grid columns={4} gap={4}>
                 {form.imageUrls.map((url, index) => (
                   <div key={`url-${index}`} className='relative'>
-                    <img
-                      src={url}
-                      alt={`Uploaded ${index + 1}`}
-                      className='h-24 w-24 object-cover rounded-lg'
-                    />
+                    <div className='h-22 w-22 object-cover rounded-lg bg-[#F6F6F6] flex items-center justify-center'>
+                      <img
+                        src={url}
+                        alt={`Uploaded ${index + 1}`}
+                        className='h-18 w-18 object-cover rounded-lg'
+                      />
+                    </div>
                     <button
                       type='button'
                       onClick={() =>
@@ -378,7 +412,7 @@ export default function AddEditProductModal({
                           ),
                         }))
                       }
-                      className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600'
+                      className='absolute -top-2 -right-2 bg-[#F6F6F6] text-black rounded-full border border-gray-300 p-1 hover:bg-red-600 hover:text-white cursor-pointer'
                     >
                       <MdClose className='w-4 h-4' />
                     </button>
@@ -388,74 +422,23 @@ export default function AddEditProductModal({
                 {/* New images from user selection */}
                 {form.images.map((file, index) => (
                   <div key={`file-${index}`} className='relative'>
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Preview ${index + 1}`}
-                      className='h-24 w-24 object-cover rounded-lg'
-                    />
+                    <div className='h-22 w-22 object-cover rounded-lg bg-[#F6F6F6] flex items-center justify-center'>
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index + 1}`}
+                        className='h-24 w-24 object-cover rounded-lg'
+                      />
+                    </div>
                     <button
                       type='button'
                       onClick={() => removeImage(index)}
-                      className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600'
+                      className='absolute -top-2 -right-2 bg-[#F6F6F6] text-black rounded-full border border-gray-300 p-1 hover:bg-red-600 hover:text-white cursor-pointer'
                     >
                       <MdClose className='w-4 h-4' />
                     </button>
                   </div>
                 ))}
               </Grid>
-            </div>
-          </FormField>
-        </Grid>
-        <Grid columns={2}>
-          <FormField label='SKU' required>
-            <Input
-              type='text'
-              value={form.sku}
-              onChange={(e) => setForm({ ...form, sku: e.target.value })}
-              required
-            />
-          </FormField>
-          <FormField label='Colors'>
-            <div className='flex flex-wrap gap-2'>
-              {AVAILABLE_COLORS.map((color) => (
-                <button
-                  key={color.value}
-                  type='button'
-                  onClick={() => toggleColor(color.value)}
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    form.colors.includes(color.value)
-                      ? "border-blue-500"
-                      : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: color.value }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </FormField>
-        </Grid>
-        <Grid columns={2}>
-          <FormField label='Description' required>
-            <TextArea
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              required
-            />
-          </FormField>
-          <FormField label='Sizes'>
-            <div className='flex flex-wrap gap-2'>
-              {AVAILABLE_SIZES.map((size) => (
-                <Button
-                  className='rounded-sm'
-                  key={size}
-                  variant={form.sizes.includes(size) ? "secondary" : "outline"}
-                  onClick={() => toggleSize(size)}
-                >
-                  {size}
-                </Button>
-              ))}
             </div>
           </FormField>
         </Grid>

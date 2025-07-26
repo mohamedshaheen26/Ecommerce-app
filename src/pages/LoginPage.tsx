@@ -50,7 +50,21 @@ export default function LoginPage() {
       if (signInError) throw signInError;
 
       if (data?.user) {
-        login(data.session?.access_token || "");
+        const userId = data.user.id;
+
+        const { data: roleData, error: roleError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", userId)
+          .single();
+
+        if (roleError || !roleData) {
+          throw new Error("Could not fetch user role");
+        }
+
+        const token = data.session?.access_token || "";
+
+        login(token, roleData.role);
         navigate(from, { replace: true });
       }
     } catch (err) {
