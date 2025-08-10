@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -17,6 +16,14 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
 import { useSettings } from "../../context/SettingsContext";
 import Table from "../../components/common/Table";
+import type { IDashboardStats, IRecentOrder } from "../../types/dashboard";
+import {
+  getBestSellingProducts,
+  getCustomerCount,
+  getOrderCountCurrentMonth,
+  getRecentOrders,
+  getTotalSalesCurrentMonth,
+} from "../../api/dashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -30,32 +37,11 @@ ChartJS.register(
   Filler
 );
 
-interface DashboardStats {
-  totalSales: number;
-  customers: number;
-  orders: number;
-  bestSelling: {
-    name: string;
-    sales: number;
-  }[];
-  recentOrders: {
-    item: string;
-    date: string;
-    total: number;
-    status: "Processing" | "Completed";
-  }[];
-}
-
-interface Product {
-  title: string;
-  sales_count: number;
-}
-
-export default function DashboardPage() {
+export default function DashboardRoot() {
   const navigate = useNavigate();
   const { settings, isLoading: settingsLoading } = useSettings();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState<IDashboardStats>({
     totalSales: 0,
     customers: 0,
     orders: 0,
@@ -70,84 +56,21 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-
-      // Fetch total sales
-      const { data: salesData, error: salesError } = await supabase
-        .from("orders")
-        .select("total_amount")
-        .gte("created_at", new Date(new Date().setDate(1)).toISOString()); // Current month
-
-      if (salesError) throw salesError;
-
-      // Fetch customers count
-      const { count: customersCount, error: customersError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true });
-
-      if (customersError) throw customersError;
-
-      // Fetch orders count
-      const { count: ordersCount, error: ordersError } = await supabase
-        .from("orders")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", new Date(new Date().setDate(1)).toISOString()); // Current month
-
-      if (ordersError) throw ordersError;
-
-      // Fetch best selling products
-      const { data: bestSellingData, error: bestSellingError } = (await supabase
-        .from("products")
-        .select("title, sales_count")
-        .order("sales_count", { ascending: false })
-        .limit(3)) as { data: Product[] | null; error: any };
-
-      if (bestSellingError) throw bestSellingError;
-
-      // Fetch recent orders
-      const { data: recentOrdersData, error: recentOrdersError } =
-        await supabase
-          .from("orders")
-          .select(
-            `
-          id,
-          total_amount,
-          status,
-          created_at,
-          items:order_items(
-            product:products(title)
-          )
-        `
-          )
-          .order("created_at", { ascending: false })
-          .limit(5);
-
-      if (recentOrdersError) throw recentOrdersError;
-
-      const totalSales = salesData.reduce(
-        (sum, order) => sum + order.total_amount,
-        0
-      );
+      const [totalSales, customers, orders, bestSelling, recentOrders] =
+        await Promise.all([
+          getTotalSalesCurrentMonth(),
+          getCustomerCount(),
+          getOrderCountCurrentMonth(),
+          getBestSellingProducts(),
+          getRecentOrders(),
+        ]);
 
       setStats({
         totalSales,
-        customers: customersCount || 0,
-        orders: ordersCount || 0,
-        bestSelling:
-          bestSellingData?.map((product) => ({
-            name: product.title,
-            sales: product.sales_count,
-          })) || [],
-        recentOrders:
-          recentOrdersData?.map((order) => ({
-            item: order.items[0]?.product[0]?.title || "Unknown Product",
-            date: new Date(order.created_at).toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }),
-            total: order.total_amount,
-            status: order.status === "completed" ? "Completed" : "Processing",
-          })) || [],
+        customers,
+        orders,
+        bestSelling,
+        recentOrders,
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -216,32 +139,34 @@ export default function DashboardPage() {
     );
   }
 
-  const monthlyGoal = settings.monthlyOrderGoal || 1000;
+  const monthlyGoal = settings.monthly_order_goal || 1000;
   const ordersLeft = Math.max(monthlyGoal - stats.orders, 0);
   const ordersProgress = Math.min((stats.orders / monthlyGoal) * 100, 100);
 
   const dashboardOrderColumns = [
     {
-      header: "Item",
-      accessor: (row: any) => (
-        <div className='text-sm font-medium text-gray-900'>{row.item}</div>
+      header: "Order",
+      accessor: (row: IRecentOrder) => (
+        <div className='text-sm font-medium text-gray-900'>
+          {row.id.slice(0, 8)}
+        </div>
       ),
     },
     {
       header: "Date",
-      accessor: (row: any) => (
-        <div className='text-sm text-gray-500'>{row.date}</div>
+      accessor: (row: IRecentOrder) => (
+        <div className='text-sm text-gray-500'>{row.created_at}</div>
       ),
     },
     {
       header: "Total",
-      accessor: (row: any) => (
+      accessor: (row: IRecentOrder) => (
         <div className='text-sm text-gray-500'>${row.total.toFixed(2)}</div>
       ),
     },
     {
       header: "Status",
-      accessor: (row: any) => (
+      accessor: (row: IRecentOrder) => (
         <span
           className={`px-2 py-1 rounded-full text-xs ${
             row.status === "Completed"
@@ -328,12 +253,16 @@ export default function DashboardPage() {
               <span className='text-gray-500 text-sm'>Total Sales</span>
             </p>
           </div>
-          <div className='space-y-4'>
+          <div className='p-6 space-y-3'>
             {stats.bestSelling.map((product, index) => (
-              <div key={index} className='flex items-center justify-between'>
-                <span className='text-sm text-gray-600'>{product.name}</span>
-                <span className='text-sm text-gray-500'>
-                  ${product.sales} Sales
+              <div
+                key={index}
+                className='py-1 px-5 border border-gray-200 w-fit rounded-full'
+              >
+                <span className='text-sm text-gray-600'>{product.title}</span>
+                <span className='text-sm text-gray-500 mx-2'>-</span>
+                <span className='text-sm text-gray-[#5C5F6A] font-semibold'>
+                  ${product.sales_count} Sales
                 </span>
               </div>
             ))}
@@ -347,7 +276,7 @@ export default function DashboardPage() {
             <Button
               variant='outline'
               className='text-blue-500 hover:text-blue-600'
-              onClick={() => navigate("/dashboard/orders")}
+              onClick={() => navigate("/orders")}
             >
               View All
             </Button>

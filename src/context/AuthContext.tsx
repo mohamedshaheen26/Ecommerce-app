@@ -1,44 +1,159 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-
-enum UserRole {
-  Admin = "admin",
-  User = "user",
-}
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { UserRole } from "../types";
+import { supabase } from "../lib/supabase";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
-  login: (token: string, role: UserRole) => void;
+  isAuthReady: boolean;
+  login: (token: string, role?: UserRole) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem("auth_token");
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<UserRole>(UserRole.User);
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
 
-  const [userRole, setUserRole] = useState<UserRole>(() => {
-    return (localStorage.getItem("user_role") as UserRole) || UserRole.User;
-  });
+  const roleChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
+    null
+  );
 
-  const login = (token: string, role: UserRole) => {
-    localStorage.setItem("auth_token", token);
-    localStorage.setItem("user_role", role);
-    setIsAuthenticated(true);
-    setUserRole(role);
+  const SUPER_ADMIN_EMAILS: string = import.meta.env.VITE_SUPER_ADMIN_EMAILS;
+
+  const isSuperAdmin = (email?: string | null) =>
+    !!email && SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
+
+  const stopRoleSubscription = () => {
+    if (roleChannelRef.current) {
+      roleChannelRef.current.unsubscribe();
+      roleChannelRef.current = null;
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_role");
+  const fetchUserRoleByEmail = async (
+    email: string
+  ): Promise<UserRole | null> => {
+    if (isSuperAdmin(email)) return UserRole.Admin;
+    const { data: employeeData, error: employeeError } = await supabase
+      .from("employees")
+      .select("role")
+      .eq("email", email)
+      .single();
+
+    if (!employeeError && employeeData?.role) {
+      return employeeData.role as UserRole;
+    }
+
+    return null;
+  };
+
+  const subscribeToRoleChanges = (email: string) => {
+    stopRoleSubscription();
+
+    if (isSuperAdmin(email)) {
+      setUserRole(UserRole.Admin);
+      return;
+    }
+
+    const channel = supabase
+      .channel(`role-changes-${email}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "employees",
+          filter: `email=eq.${email}`,
+        },
+        async () => {
+          const nextRole = await fetchUserRoleByEmail(email);
+          if (nextRole) setUserRole(nextRole);
+        }
+      )
+      .subscribe();
+
+    roleChannelRef.current = channel;
+  };
+
+  const initializeAuthState = async () => {
+    setIsAuthReady(false);
+    const { data } = await supabase.auth.getSession();
+    const hasSession = !!data.session;
+    setIsAuthenticated(hasSession);
+
+    if (hasSession) {
+      const userEmail = data.session?.user?.email;
+      if (userEmail) {
+        if (isSuperAdmin(userEmail)) {
+          setUserRole(UserRole.Admin);
+        } else {
+          const roleFromDb = await fetchUserRoleByEmail(userEmail);
+          setUserRole(roleFromDb ?? UserRole.User);
+          subscribeToRoleChanges(userEmail);
+        }
+      }
+    } else {
+      stopRoleSubscription();
+      setUserRole(UserRole.User);
+    }
+    setIsAuthReady(true);
+  };
+
+  useEffect(() => {
+    initializeAuthState();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        const signedIn = !!session;
+        setIsAuthenticated(signedIn);
+
+        const email = session?.user?.email;
+        if (signedIn && email) {
+          if (isSuperAdmin(email)) {
+            setUserRole(UserRole.Admin);
+          } else {
+            fetchUserRoleByEmail(email).then((role) => {
+              setUserRole(role ?? UserRole.User);
+            });
+            subscribeToRoleChanges(email);
+          }
+        } else {
+          stopRoleSubscription();
+          setUserRole(UserRole.User);
+        }
+      }
+    );
+    return () => {
+      listener.subscription.unsubscribe();
+      stopRoleSubscription();
+    };
+  }, []);
+
+  const login = async (_token: string, _role?: UserRole) => {
+    await initializeAuthState();
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    stopRoleSubscription();
     setIsAuthenticated(false);
     setUserRole(UserRole.User);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, userRole, isAuthReady, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

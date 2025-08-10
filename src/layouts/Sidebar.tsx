@@ -12,56 +12,63 @@ import {
 import type { IconType } from "react-icons";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/common/Button";
+import { UserRole } from "../types";
 
 interface NavItem {
   path: string;
   title: string;
   icon: IconType;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 const navigationItems: NavItem[] = [
   {
-    path: "/dashboard",
+    path: "/",
     title: "Dashboard",
     icon: MdDashboard,
-    allowedRoles: ["admin", "user"],
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/dashboard/products",
+    path: "/employees",
+    title: "Employees",
+    icon: MdPeople,
+    allowedRoles: [UserRole.Admin],
+  },
+  {
+    path: "/products",
     title: "Products",
     icon: MdInventory,
-    allowedRoles: ["admin", "user"],
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/dashboard/categories",
+    path: "/categories",
     title: "Categories",
     icon: MdCategory,
-    allowedRoles: ["admin", "user"],
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/dashboard/orders",
+    path: "/orders",
     title: "Orders",
     icon: MdShoppingCart,
-    allowedRoles: ["admin"],
+    allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/dashboard/customers",
+    path: "/customers",
     title: "Customers",
     icon: MdPeople,
-    allowedRoles: ["admin"],
+    allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/dashboard/reviews",
+    path: "/reviews",
     title: "Reviews",
     icon: MdStarBorder,
-    allowedRoles: ["admin"],
+    allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/dashboard/settings",
+    path: "/settings",
     title: "Settings",
     icon: MdSettings,
-    allowedRoles: ["admin"],
+    allowedRoles: [UserRole.Admin],
   },
 ];
 

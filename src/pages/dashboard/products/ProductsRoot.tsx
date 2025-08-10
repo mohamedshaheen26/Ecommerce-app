@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
 import { IoSwapVerticalOutline } from "react-icons/io5";
 import { IoSearchOutline } from "react-icons/io5";
-import AddEditProductModal from "../../components/products/AddEditProductModal";
-import DeleteModal from "../../components/common/DeleteModal";
-import Table from "../../components/common/Table";
-import DropdownMenu from "../../components/common/DropdownMenu";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
+import DeleteModal from "../../../components/common/DeleteModal";
+import Table from "../../../components/common/Table";
+import DropdownMenu from "../../../components/common/DropdownMenu";
+import Button from "../../../components/common/Button";
+import Input from "../../../components/common/Input";
 import toast from "react-hot-toast";
-import type { ICategory, IProduct } from "../../types";
+import type { ICategory, IProduct } from "../../../types";
+import { deleteProduct, fetchProducts } from "../../../api/product";
+import { fetchAllCategories } from "../../../api/categories";
+import ProductsForm from "./ProductsForm";
 
-export default function ProductsPage() {
+export default function ProductsRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -25,40 +26,19 @@ export default function ProductsPage() {
   const pageSize = 10;
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
+    loadProducts();
+    loadCategories();
   }, [currentPage, searchQuery]);
 
-  const fetchProducts = async () => {
+  const loadProducts = async () => {
     try {
       setLoading(true);
-      let query = supabase
-        .from("products")
-        .select(
-          `
-          *,
-          category:category_id (
-            name
-          )
-        `,
-          { count: "exact" }
-        )
-        .order("created_at", { ascending: false });
 
-      // Apply search filter if searchQuery exists
-      if (searchQuery) {
-        query = query.or(
-          `title.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`
-        );
-      }
-
-      // Apply pagination
-      const { data, error, count } = await query.range(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize - 1
+      const { data, count } = await fetchProducts(
+        currentPage,
+        pageSize,
+        searchQuery
       );
-
-      if (error) throw error;
       setFilteredProducts(data || []);
       setTotalItems(count || 0);
     } catch (error) {
@@ -69,14 +49,9 @@ export default function ProductsPage() {
     }
   };
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
-
-      if (error) throw error;
+      const data = await fetchAllCategories();
       setCategories(data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -85,57 +60,19 @@ export default function ProductsPage() {
 
   const handleDelete = async () => {
     if (!selectedProduct) return;
-
-    const deletePromise = new Promise(async (resolve, reject) => {
-      try {
-        setDeleting(true);
-
-        // Delete images from storage
-        if (selectedProduct.images.length > 0) {
-          const imagePaths = selectedProduct.images.map((url) => {
-            const path = url.split("/").pop();
-            return `products/${path}`;
-          });
-
-          const { error: storageError } = await supabase.storage
-            .from("images")
-            .remove(imagePaths);
-
-          if (storageError) {
-            console.error("Error deleting images:", storageError);
-          }
-        }
-
-        // Delete product from database
-        const { error } = await supabase
-          .from("products")
-          .delete()
-          .eq("id", selectedProduct.id);
-
-        if (error) throw error;
-
-        // Close modal and reset selection first
+    setDeleting(true);
+    toast
+      .promise(deleteProduct(selectedProduct), {
+        loading: "Deleting...",
+        success: "Product deleted",
+        error: "Delete failed",
+      })
+      .finally(async () => {
+        setDeleting(false);
         setIsDeleteModalOpen(false);
         setSelectedProduct(null);
-
-        // Then fetch fresh data
-        await fetchProducts();
-        resolve("Product deleted successfully");
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        reject(
-          error instanceof Error ? error.message : "Failed to delete product"
-        );
-      } finally {
-        setDeleting(false);
-      }
-    });
-
-    toast.promise(deletePromise, {
-      loading: "Deleting product...",
-      success: (message) => message as string,
-      error: (err) => `Error: ${err}`,
-    });
+        await loadProducts();
+      });
   };
 
   const columns = [
@@ -266,14 +203,14 @@ export default function ProductsPage() {
         onPageChange={setCurrentPage}
       />
 
-      <AddEditProductModal
+      <ProductsForm
         isOpen={isAddModalOpen}
         onClose={() => {
           setIsAddModalOpen(false);
           setSelectedProduct(null);
         }}
         onSuccess={() => {
-          fetchProducts();
+          loadProducts();
           setIsAddModalOpen(false);
           setSelectedProduct(null);
         }}
