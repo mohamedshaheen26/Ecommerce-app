@@ -1,20 +1,26 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
 import { IoSearchOutline } from "react-icons/io5";
-import Table from "../../components/common/Table";
-import DropdownMenu from "../../components/common/DropdownMenu";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import TextArea from "../../components/common/TextArea";
-import DeleteModal from "../../components/common/DeleteModal";
-import Modal from "../../components/common/Modal";
 import toast from "react-hot-toast";
-import type { ICategory } from "../../types/category";
 
-export default function CategoriesPage() {
+import type { ICategory } from "../../../types";
+
+import {
+  deleteCategoryById,
+  fetchAllCategories,
+} from "../../../api/categories";
+
+import DropdownMenu from "../../../components/common/DropdownMenu";
+import Button from "../../../components/common/Button";
+import Input from "../../../components/common/Input";
+import Table from "../../../components/common/Table";
+import DeleteModal from "../../../components/common/DeleteModal";
+
+import CategoriesForm from "./CategoriesForm";
+
+export default function CategoriesRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ICategory | null>(
     null
@@ -24,26 +30,16 @@ export default function CategoriesPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
 
   useEffect(() => {
-    fetchCategories();
+    loadCategories();
   }, []);
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setCategories(data || []);
+      const data = await fetchAllCategories();
+      setCategories(data);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to fetch categories");
@@ -52,88 +48,21 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-
-    setIsSaving(true);
-    const savePromise = new Promise(async (resolve, reject) => {
-      try {
-        const categoryData = {
-          name: formData.name,
-          description: formData.description,
-        };
-
-        if (editingCategory) {
-          const { error } = await supabase
-            .from("categories")
-            .update(categoryData)
-            .eq("id", editingCategory.id);
-
-          if (error) throw error;
-          resolve("Category updated successfully");
-        } else {
-          const { error } = await supabase
-            .from("categories")
-            .insert([categoryData]);
-
-          if (error) throw error;
-          resolve("Category created successfully");
-        }
-
-        setIsModalOpen(false);
-        setEditingCategory(null);
-        setFormData({ name: "", description: "" });
-        fetchCategories();
-      } catch (error) {
-        console.error("Error saving category:", error);
-        reject(
-          error instanceof Error ? error.message : "Failed to save category"
-        );
-      } finally {
-        setIsSaving(false);
-      }
-    });
-
-    toast.promise(savePromise, {
-      loading: editingCategory
-        ? "Updating category..."
-        : "Creating category...",
-      success: (message) => message as string,
-      error: (err) => `Error: ${err}`,
-    });
-  };
-
   const handleEdit = (category: ICategory) => {
     setEditingCategory(category);
-    setFormData({
-      name: category.name,
-      description: category.description,
-    });
-    setIsModalOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!deletingCategory) return;
+    if (!deletingCategory || !deletingCategory.id) return;
 
     const deletePromise = new Promise(async (resolve, reject) => {
       try {
         setDeleting(true);
-        const { error } = await supabase
-          .from("categories")
-          .delete()
-          .eq("id", deletingCategory.id);
+        await deleteCategoryById(deletingCategory.id!);
 
-        if (error) throw error;
-        await fetchCategories();
+        if (deletingCategory.id) await deleteCategoryById(deletingCategory.id);
+        await loadCategories();
         setIsDeleteModalOpen(false);
         setDeletingCategory(null);
         resolve("Category deleted successfully");
@@ -171,7 +100,9 @@ export default function CategoriesPage() {
       header: "Created",
       accessor: (category: ICategory) => (
         <div className='text-sm text-gray-500'>
-          {new Date(category.created_at).toLocaleDateString()}
+          {category.created_at
+            ? new Date(category.created_at).toLocaleDateString()
+            : "No date"}
         </div>
       ),
     },
@@ -200,7 +131,6 @@ export default function CategoriesPage() {
     },
   ];
 
-  // Add filtered categories
   const filteredCategories = categories.filter(
     (category) =>
       category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -216,8 +146,7 @@ export default function CategoriesPage() {
             variant='secondary'
             onClick={() => {
               setEditingCategory(null);
-              setFormData({ name: "", description: "" });
-              setIsModalOpen(true);
+              setIsFormOpen(true);
             }}
           >
             Add Category
@@ -234,34 +163,18 @@ export default function CategoriesPage() {
 
       <Table data={filteredCategories} columns={columns} isLoading={loading} />
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={handleSubmit}
-        title={editingCategory ? "Edit Category" : "Add New Category"}
-        maxWidth='max-w-md'
-        isSubmitting={isSaving}
-        confirmText={editingCategory ? "Update" : "Create"}
-      >
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <Input
-            label='Name'
-            type='text'
-            name='name'
-            value={formData.name}
-            onChange={handleInputChange}
-            required
-          />
-          <TextArea
-            label='Description'
-            name='description'
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={3}
-            required
-          />
-        </form>
-      </Modal>
+      {isFormOpen && (
+        <CategoriesForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSuccess={async () => {
+            await loadCategories();
+            setIsFormOpen(false);
+            setEditingCategory(null);
+          }}
+          editingCategory={editingCategory}
+        />
+      )}
 
       <DeleteModal
         isOpen={isDeleteModalOpen}

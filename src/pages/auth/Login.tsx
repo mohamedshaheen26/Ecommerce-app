@@ -1,12 +1,19 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import { useAuth } from "../context/AuthContext";
-import Input from "../components/common/Input";
-import Button from "../components/common/Button";
+import { useAuth } from "../../context/AuthContext";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
+import FormField from "../../components/common/FormField";
+import {
+  getCurrentUserEmail,
+  getUserRoleByEmail,
+  signInWithEmailOrUsername,
+  signOut,
+} from "../../api/login";
+import { UserRole } from "../../types";
 
-export default function LoginPage() {
+export default function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,8 +24,7 @@ export default function LoginPage() {
 
   // Get the intended destination from location state, or default to '/dashboard'
   const from =
-    (location.state as { from?: { pathname: string } })?.from?.pathname ||
-    "/dashboard";
+    (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
   // Show success message from signup if it exists
   const message = (location.state as { message?: string })?.message;
@@ -29,50 +35,47 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Look up user by username or email
-      const { data: userData, error: lookupError } = await supabase
-        .from("users")
-        .select("email")
-        .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
-        .single();
-
-      if (lookupError || !userData) {
-        throw new Error("Username or email not found");
-      }
-
-      // Sign in using found email and provided password
-      const { data, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: userData.email,
-          password,
-        });
-
-      if (signInError) throw signInError;
+      const data = await signInWithEmailOrUsername(usernameOrEmail, password);
 
       if (data?.user) {
-        const userId = data.user.id;
+        const token = data.session?.access_token || "";
+        const email = await getCurrentUserEmail();
 
-        const { data: roleData, error: roleError } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", userId)
-          .single();
-
-        if (roleError || !roleData) {
-          throw new Error("Could not fetch user role");
+        if (!email) {
+          setError("Could not retrieve user email.");
+          setLoading(false);
+          return;
         }
 
-        const token = data.session?.access_token || "";
+        const superAdmins = import.meta.env?.VITE_SUPER_ADMIN_EMAILS;
+        const isSuper = !!superAdmins
+          ?.split(",")
+          .map((e: string) => e.trim().toLowerCase())
+          .includes(email.toLowerCase());
 
-        login(token, roleData.role);
+        if (isSuper) {
+          login(token, UserRole.Admin);
+          navigate(from, { replace: true });
+          return;
+        }
+
+        const role = await getUserRoleByEmail(email);
+
+        if (!role) {
+          await signOut();
+          setError(
+            "Your account does not have a role assigned. Contact admin."
+          );
+          setLoading(false);
+          return;
+        }
+
+        login(token);
         navigate(from, { replace: true });
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to login. Please check your credentials."
-      );
+      setError("Invalid username/email or password.");
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -102,29 +105,31 @@ export default function LoginPage() {
 
           <div className='space-y-6'>
             <div className='space-y-1'>
-              <Input
-                label='Username or Email'
-                required={false}
-                id='usernameOrEmail'
-                name='usernameOrEmail'
-                type='text'
-                value={usernameOrEmail}
-                onChange={(e) => setUsernameOrEmail(e.target.value)}
-                disabled={loading}
-              />
+              <FormField htmlFor='usernameOrEmail' label='Username or Email'>
+                <Input
+                  required={false}
+                  id='usernameOrEmail'
+                  name='usernameOrEmail'
+                  type='text'
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </FormField>
             </div>
 
             <div className='space-y-1'>
-              <Input
-                label='Password'
-                required={false}
-                id='password'
-                name='password'
-                type='password'
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
+              <FormField htmlFor='password' label='Password'>
+                <Input
+                  required={false}
+                  id='password'
+                  name='password'
+                  type='password'
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+              </FormField>
             </div>
           </div>
 

@@ -8,8 +8,8 @@ export default function App() {
   const { settings } = useSettings();
 
   useEffect(() => {
-    document.title = settings.siteName || "Admin Dashboard";
-  }, [settings.siteName]);
+    document.title = settings.site_name || "Admin Dashboard";
+  }, [settings.site_name]);
 
   return (
     <BrowserRouter>
