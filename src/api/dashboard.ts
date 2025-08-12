@@ -67,7 +67,7 @@ export async function getRecentOrders(limit = 5): Promise<IRecentOrder[]> {
       id: order.id || "Unknown Order",
       created_at: formatDate(order.created_at),
       total: order.total_amount,
-      status: order.status === "completed" ? "Completed" : "Processing",
+      status: order.status,
     })) || []
   );
 }

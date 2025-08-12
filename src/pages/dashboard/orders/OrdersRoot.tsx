@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import Table from "../../../components/common/Table";
 import DropdownMenu from "../../../components/common/DropdownMenu";
-import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
 import type { IOrderWithUserInfo } from "../../../types";
 import { fetchOrders, updateOrderStatus } from "../../../api/orders";
 import { formatDate } from "../../../utils/formatDate";
 import OrdersForm from "./OrdersForm";
+import { getStatusColor } from "../../../utils/orderStatus";
+import { MdPhone } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
 
 export default function OrdersRoot() {
   const [orders, setOrders] = useState<IOrderWithUserInfo[]>([]);
@@ -17,7 +19,6 @@ export default function OrdersRoot() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,8 @@ export default function OrdersRoot() {
     orderId: string,
     newStatus: IOrderWithUserInfo["status"]
   ) => {
+    console.log(newStatus);
+
     setUpdating(true);
     try {
       await updateOrderStatus(orderId, newStatus);
@@ -61,17 +64,6 @@ export default function OrdersRoot() {
     }
   };
 
-  const getStatusColor = (status: IOrderWithUserInfo["status"]) => {
-    const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      processing: "bg-blue-100 text-blue-800",
-      shipped: "bg-purple-100 text-purple-800",
-      delivered: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
-    };
-    return colors[status];
-  };
-
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -88,7 +80,7 @@ export default function OrdersRoot() {
     {
       header: "Order ID",
       accessor: (order: IOrderWithUserInfo) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           #{order.id.slice(0, 8)}
         </div>
       ),
@@ -97,17 +89,21 @@ export default function OrdersRoot() {
       header: "Customer",
       accessor: (order: IOrderWithUserInfo) => (
         <div>
-          <div className='text-sm text-gray-900'>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
+            <FaUser className='w-4 h-4 mr-1' />
             {order.customer.full_name}
           </div>
-          <div className='text-sm text-gray-500'>{order.customer.phone}</div>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
+            <MdPhone className='w-4 h-4 mr-1' />
+            {order.customer.phone}
+          </div>
         </div>
       ),
     },
     {
       header: "Date",
       accessor: (order: IOrderWithUserInfo) => (
-        <div className='text-sm text-gray-900'>
+        <div className='text-sm text-[var(--text-secondary)]'>
           {formatDate(order.created_at || "")}
         </div>
       ),
@@ -115,30 +111,20 @@ export default function OrdersRoot() {
     {
       header: "Status",
       accessor: (order: IOrderWithUserInfo) => (
-        <select
-          value={order.status}
-          onChange={(e) =>
-            handleStatusChange(
-              order.id,
-              e.target.value as IOrderWithUserInfo["status"]
-            )
-          }
-          className={`text-sm rounded-full px-3 py-1 font-semibold ${getStatusColor(
+        <span
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
             order.status
           )}`}
         >
-          <option value='pending'>Pending</option>
-          <option value='processing'>Processing</option>
-          <option value='shipped'>Shipped</option>
-          <option value='delivered'>Delivered</option>
-          <option value='cancelled'>Cancelled</option>
-        </select>
+          {order.status.replace("_", " ").charAt(0).toUpperCase() +
+            order.status.replace("_", " ").slice(1)}
+        </span>
       ),
     },
     {
       header: "Total",
       accessor: (order: IOrderWithUserInfo) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           ${order.total_amount.toFixed(2)}
         </div>
       ),
@@ -156,11 +142,6 @@ export default function OrdersRoot() {
                   setIsModalOpen(true);
                 },
               },
-              {
-                label: "Shipping",
-                onClick: () => handleStatusChange(order.id, "shipped"),
-                hidden: order.status !== "processing",
-              },
             ]}
           />
         </div>
@@ -170,9 +151,11 @@ export default function OrdersRoot() {
   ];
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Orders</h1>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <div className='flex justify-between items-center py-6 px-8 border-b border-[var(--border-color)]'>
+        <h1 className='text-2xl font-semibold text-[var(--text-secondary)]'>
+          Orders
+        </h1>
         <div className='flex items-center space-x-4'>
           <Input
             placeholder='Search orders...'
@@ -188,58 +171,14 @@ export default function OrdersRoot() {
       {/* Order Details Modal */}
       {isModalOpen && selectedOrder && (
         <OrdersForm
+          isOpen={isModalOpen}
           order={selectedOrder}
           updating={updating}
           onClose={() => {
             setIsModalOpen(false);
           }}
-          changeStatus={() => {
-            handleStatusChange(selectedOrder.id, "processing");
-          }}
+          changeStatus={handleStatusChange}
         />
-      )}
-
-      {/* Status Update Modal */}
-      {isStatusModalOpen && selectedOrder && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
-          <div className='bg-white rounded-lg p-6 w-full max-w-md'>
-            <h2 className='text-xl font-semibold mb-4'>Update Order Status</h2>
-            <div className='space-y-4'>
-              {[
-                "pending",
-                "processing",
-                "shipped",
-                "delivered",
-                "cancelled",
-              ].map((status) => (
-                <Button
-                  key={status}
-                  variant={
-                    selectedOrder.status === status ? "primary" : "outline"
-                  }
-                  fullWidth
-                  onClick={() =>
-                    handleStatusChange(
-                      selectedOrder.id,
-                      status as IOrderWithUserInfo["status"]
-                    )
-                  }
-                  disabled={updating}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              ))}
-            </div>
-            <div className='flex justify-end mt-6'>
-              <Button
-                variant='outline'
-                onClick={() => setIsStatusModalOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

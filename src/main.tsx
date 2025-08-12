@@ -5,12 +5,15 @@ import "./index.css";
 
 import { AuthProvider } from "./context/AuthContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { ThemeProvider } from "./context/ThemeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
       <SettingsProvider>
-        <App />
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </SettingsProvider>
     </AuthProvider>
   </StrictMode>

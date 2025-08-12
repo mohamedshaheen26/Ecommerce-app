@@ -11,7 +11,6 @@ import {
 } from "react-icons/md";
 import type { IconType } from "react-icons";
 import { useAuth } from "../context/AuthContext";
-import Button from "../components/common/Button";
 import { UserRole } from "../types";
 
 interface NavItem {
@@ -35,10 +34,10 @@ const navigationItems: NavItem[] = [
     allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/products",
-    title: "Products",
-    icon: MdInventory,
-    allowedRoles: [UserRole.Admin, UserRole.Employee],
+    path: "/customers",
+    title: "Customers",
+    icon: MdPeople,
+    allowedRoles: [UserRole.Admin],
   },
   {
     path: "/categories",
@@ -47,15 +46,15 @@ const navigationItems: NavItem[] = [
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
+    path: "/products",
+    title: "Products",
+    icon: MdInventory,
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
+  },
+  {
     path: "/orders",
     title: "Orders",
     icon: MdShoppingCart,
-    allowedRoles: [UserRole.Admin],
-  },
-  {
-    path: "/customers",
-    title: "Customers",
-    icon: MdPeople,
     allowedRoles: [UserRole.Admin],
   },
   {
@@ -85,24 +84,21 @@ export default function Sidebar({
   const location = useLocation();
   const { userRole } = useAuth();
 
-  // Function to determine if a nav item should be active
   const isNavItemActive = (path: string) => {
-    // Dashboard link should be active for exactly /dashboard
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
+    if (path === "/") {
+      return location.pathname === "/";
     }
-    // Other links should match their paths exactly
     return location.pathname === path;
   };
 
   return (
-    <div className='flex h-full flex-col border-r border-gray-200'>
+    <div className='flex h-full flex-col border-r bg-[var(--bg-primary)] border-[var(--border-color)]'>
       {/* Sidebar header */}
-      <div className='flex h-16 items-center justify-center px-4 border-b border-gray-200'>
+      <div className='flex h-14 items-center justify-center px-4 border-b border-[var(--border-color)]'>
         <div className='flex items-center space-x-3'>
           <img src='/Logo.svg' alt='Logo' className='w-6 h-6' />
           {isDesktopOpen && (
-            <span className='text-lg font-bold transition-opacity duration-300'>
+            <span className='text-lg font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
               Admin
             </span>
           )}
@@ -124,8 +120,8 @@ export default function Sidebar({
                 `flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors
               ${
                 isNavItemActive(item.path)
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-[var(--accent-primary)] text-[var(--text-primary)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]"
               }
               ${!isDesktopOpen && "justify-center px-2"}
               `
@@ -141,23 +137,19 @@ export default function Sidebar({
             </NavLink>
           ))}
 
-        {userRole === "admin" && (
-          <div className='mt-6 pt-6 border-t border-gray-200'>
-            <Button
-              fullWidth={true}
-              variant='outline'
-              className='border-none justify-start'
+        {userRole === UserRole.Admin && (
+          <div className='mt-6 pt-6 border-t border-[var(--border-color)]'>
+            <button
+              className='flex items-center cursor-pointer rounded-lg px-4 py-2.5 w-full text-sm font-medium transition-colors text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]'
               onClick={() => {}}
-              leftIcon={
-                <MdAdd
-                  className={`h-5 w-5 flex-shrink-0 ${
-                    isDesktopOpen ? "mr-3" : ""
-                  }`}
-                />
-              }
             >
+              <MdAdd
+                className={`h-5 w-5 flex-shrink-0 ${
+                  isDesktopOpen ? "mr-3" : ""
+                }`}
+              />
               {isDesktopOpen && <span>Extras</span>}
-            </Button>
+            </button>
           </div>
         )}
       </nav>

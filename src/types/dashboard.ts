@@ -1,3 +1,5 @@
+import type { OrderStatus } from "./order";
+
 export interface IDashboardStats {
   totalSales: number;
   customers: number;
@@ -15,5 +17,5 @@ export interface IRecentOrder {
   id: string;
   created_at: string;
   total: number;
-  status: "Processing" | "Completed";
+  status: OrderStatus;
 }

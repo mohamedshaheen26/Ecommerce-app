@@ -19,9 +19,7 @@ export async function fetchProducts(
     .order("created_at", { ascending: false });
 
   if (searchQuery) {
-    query = query.or(
-      `title.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`
-    );
+    query = query.or(`title.ilike.%${searchQuery}%`);
   }
 
   const { data, error, count } = await query.range(

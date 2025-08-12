@@ -10,8 +10,6 @@ export interface IProduct {
   price: number;
   description: string;
   category_id: string;
-  slug: string;
-  sku: string;
   stock_status: StockStatus;
   available_quantity: number;
   images: string[];
@@ -28,9 +26,7 @@ export interface IProductFormValues {
   price: number;
   description: string;
   category_id: string;
-  slug: string;
-  sku: string;
-  stock_status: StockStatus;
+  stock_status: StockStatus | "";
   available_quantity: number;
   images: string[];
   colors: string[];
@@ -43,9 +39,7 @@ export interface IProductValidation {
   price: number;
   description: string;
   category_id: string;
-  slug: string;
-  sku: string;
-  stock_status: StockStatus;
+  stock_status: StockStatus | "";
   available_quantity: number;
   images: string[];
   colors: string[];
