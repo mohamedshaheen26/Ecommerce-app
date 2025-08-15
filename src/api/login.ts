@@ -4,19 +4,17 @@ import { UserRole } from "../types";
 
 export async function signInWithEmailOrUsername(identifier: string, password: string) {
   let email = identifier;
-  const superAdminEmails = import.meta.env.VITE_SUPER_ADMIN_EMAILS?.split(",").map((e: string) => e.trim().toLowerCase()) || [];
-  const superAdminUsernames = import.meta.env.VITE_SUPER_ADMIN_USERNAMES?.split(",").map((e: string) => e.trim().toLowerCase()) || [];
-
-
+  const superAdminUsernames = "admin";
+  const superAdminEmails = "admin@example.com";
 
   if (!identifier.includes("@")) {
     if (superAdminUsernames.includes(identifier.toLowerCase())) {
-      email = superAdminEmails[0];
+      email = superAdminEmails;
     } else {
       const { data, error } = await supabase
         .from("employees")
         .select("email")
-        .eq("username", identifier)
+        .ilike("username", identifier)
         .single();
 
       if (error) {

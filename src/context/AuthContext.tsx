@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     null
   );
 
-  const SUPER_ADMIN_EMAILS: string = import.meta.env.VITE_SUPER_ADMIN_EMAILS;
+  const SUPER_ADMIN_EMAILS: string = "admin@example.com";
 
   const isSuperAdmin = (email?: string | null) =>
     !!email && SUPER_ADMIN_EMAILS.includes(email.toLowerCase());

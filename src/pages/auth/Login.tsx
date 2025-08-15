@@ -47,8 +47,8 @@ export default function Login() {
           return;
         }
 
-        const superAdmins = import.meta.env?.VITE_SUPER_ADMIN_EMAILS;
-        const isSuper = !!superAdmins
+        const superAdmins: string = "admin@example.com";
+        const isSuper: boolean = !!superAdmins
           ?.split(",")
           .map((e: string) => e.trim().toLowerCase())
           .includes(email.toLowerCase());
