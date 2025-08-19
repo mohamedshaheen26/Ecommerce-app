@@ -9,6 +9,8 @@ import { deleteProduct, fetchProducts } from "../../../api/product";
 import { fetchAllCategories } from "../../../api/categories";
 import ProductsForm from "./ProductsForm";
 import PageHeader from "../../../components/common/PageHeader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ProductsRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -22,6 +24,8 @@ export default function ProductsRoot() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 10;
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadProducts();
@@ -41,7 +45,6 @@ export default function ProductsRoot() {
       setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
@@ -61,9 +64,9 @@ export default function ProductsRoot() {
     setDeleting(true);
     toast
       .promise(deleteProduct(selectedProduct), {
-        loading: "Deleting...",
-        success: "Product deleted",
-        error: "Delete failed",
+        loading: `${t("Deleting product")}`,
+        success: `${t("Product deleted successfully")}`,
+        error: `${t("Failed to save product")}`,
       })
       .finally(async () => {
         setDeleting(false);
@@ -90,18 +93,17 @@ export default function ProductsRoot() {
       className: "w-10",
     },
     {
-      header: "Name",
+      header: `${t("Name")}`,
       accessor: (product: IProduct) => (
         <div className='flex items-center'>
           <div className='text-sm font-medium text-[var(--text-secondary)]'>
-            {product.title}
+            {currentLang === "ar" ? product.name_ar : product.title}
           </div>
         </div>
       ),
     },
-    // removed SKU column
     {
-      header: "Price",
+      header: `${t("Price")}`,
       accessor: (product: IProduct) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           ${product.price}
@@ -109,7 +111,7 @@ export default function ProductsRoot() {
       ),
     },
     {
-      header: "Stock",
+      header: `${t("Stock Status")}`,
       accessor: (product: IProduct) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -121,33 +123,35 @@ export default function ProductsRoot() {
               : "bg-red-100 text-red-800"
           }`}
         >
-          {product.stock_status.replace(/_/g, " ")}
+          {t(`Stock Statuses.${product.stock_status}`)}
         </span>
       ),
     },
     {
-      header: "Category",
+      header: `${t("Category")}`,
       accessor: (product: IProduct) => (
         <div className='text-sm text-[var(--text-secondary)]'>
-          {product.category.name}
+          {currentLang === "ar"
+            ? product.category.name_ar
+            : product.category.name}
         </div>
       ),
     },
     {
-      header: "Actions",
+      header: `${t("Actions")}`,
       accessor: (product: IProduct) => (
         <div className='flex justify-end'>
           <DropdownMenu
             items={[
               {
-                label: "Edit",
+                label: `${t("Edit")}`,
                 onClick: () => {
                   setSelectedProduct(product);
                   setIsAddModalOpen(true);
                 },
               },
               {
-                label: "Delete",
+                label: `${t("Delete")}`,
                 onClick: () => {
                   setSelectedProduct(product);
                   setIsDeleteModalOpen(true);
@@ -165,7 +169,7 @@ export default function ProductsRoot() {
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
         title='Products'
-        addButtonText='Add Product'
+        addButtonText='Product'
         onAdd={() => {
           setSelectedProduct(null);
           setIsAddModalOpen(true);
@@ -206,8 +210,8 @@ export default function ProductsRoot() {
           setSelectedProduct(null);
         }}
         onConfirm={handleDelete}
-        title='Delete Product'
-        itemType='product'
+        title='Product'
+        itemType='Product'
         itemName={selectedProduct?.title || ""}
         isDeleting={deleting}
       />

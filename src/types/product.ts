@@ -7,8 +7,10 @@ export enum StockStatus {
 export interface IProduct {
   id: string;
   title: string;
+  name_ar: string;
   price: number;
   description: string;
+  description_ar: string;
   category_id: string;
   stock_status: StockStatus;
   available_quantity: number;
@@ -18,13 +20,16 @@ export interface IProduct {
   created_at: string;
   category: {
     name: string;
+    name_ar: string;
   };
 }
 
 export interface IProductFormValues {
   title: string;
+  name_ar: string;
   price: number;
   description: string;
+  description_ar: string;
   category_id: string;
   stock_status: StockStatus | "";
   available_quantity: number;
@@ -36,8 +41,10 @@ export interface IProductFormValues {
 
 export interface IProductValidation {
   title: string;
+  name_ar: string;
   price: number;
   description: string;
+  description_ar: string;
   category_id: string;
   stock_status: StockStatus | "";
   available_quantity: number;

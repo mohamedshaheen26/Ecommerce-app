@@ -1,0 +1,9 @@
+{
+  "name": "ecommerce-api",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/node": "^5.3.13",
+    "@supabase/supabase-js": "^2.49.8"
+  }
+}

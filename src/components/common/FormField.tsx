@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FormFieldProps {
   htmlFor: string;
@@ -15,17 +16,19 @@ export default function FormField({
   children,
   required = false,
 }: FormFieldProps) {
+  const { t } = useTranslation();
+
   return (
-    <div className='space-y-1 mb-2'>
+    <div className='space-y-1 mb-4'>
       <label
         htmlFor={htmlFor}
         className='block text-sm text-[var(--text-secondary)] mb-1'
       >
-        {label}
+        {t(label)}
         {required && <span className='text-red-500 ml-1'>*</span>}
       </label>
       {children}
-      {error && <p className='text-sm text-red-500'>{error}</p>}
+      {error && <p className='text-sm text-red-500'>{t(error)}</p>}
     </div>
   );
 }

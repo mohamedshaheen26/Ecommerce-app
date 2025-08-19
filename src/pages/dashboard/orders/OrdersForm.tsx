@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../components/common/Button";
 import Modal from "../../../components/common/Modal";
 import type { IOrder, IOrderWithUserInfo } from "../../../types";
 import { formatDate } from "../../../utils/formatDate";
+import { useLanguage } from "../../../context/LanguageContext";
 
 interface Props {
   isOpen: boolean;
@@ -18,6 +20,9 @@ const OrdersForm = ({
   changeStatus,
   onClose,
 }: Props) => {
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
+
   return (
     <Modal
       isOpen={isOpen}
@@ -32,7 +37,7 @@ const OrdersForm = ({
               onClick={() => changeStatus(order.id, "processing")}
               isLoading={updating}
             >
-              Process Order
+              {t("Process Order")}
             </Button>
           )}
           {order.status === "processing" && (
@@ -40,7 +45,7 @@ const OrdersForm = ({
               onClick={() => changeStatus(order.id, "shipped")}
               isLoading={updating}
             >
-              Ship Order
+              {t("Ship Order")}
             </Button>
           )}
           {order.status === "shipped" && (
@@ -48,7 +53,7 @@ const OrdersForm = ({
               onClick={() => changeStatus(order.id, "delivered")}
               isLoading={updating}
             >
-              Mark as Delivered
+              {t("Mark as Delivered")}
             </Button>
           )}
           {order.status !== "cancelled" && order.status !== "delivered" && (
@@ -57,7 +62,7 @@ const OrdersForm = ({
               onClick={() => changeStatus(order.id, "cancelled")}
               isLoading={updating}
             >
-              Cancel Order
+              {t("Cancel Order")}
             </Button>
           )}
 
@@ -67,7 +72,7 @@ const OrdersForm = ({
               onClick={() => changeStatus(order.id, "pending")}
               isLoading={updating}
             >
-              Reopen Order (Pending)
+              {t("Reopen Order")} ({t("Pending")})
             </Button>
           )}
         </>
@@ -75,17 +80,24 @@ const OrdersForm = ({
     >
       <div className='flex justify-between items-start mb-6'>
         <p className='text-sm text-[var(--text-muted)]'>
-          Order #{order.id.slice(0, 8)} • {formatDate(order.created_at || "")}
+          <span>
+            {t("Order")} #{order.id.slice(0, 8)} •{" "}
+          </span>
+          <span className='inline-block'>
+            {formatDate(order.created_at || "")}
+          </span>
         </p>
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
         <div>
           <h3 className='font-medium mb-2 text-[var(--text-secondary)]'>
-            Customer Information
+            {t("Customer Information")}
           </h3>
           <p className='text-sm mb-1 text-[var(--text-secondary)]'>
-            {order.customer.full_name}
+            {currentLang === "ar"
+              ? order.customer.name_ar
+              : order.customer.full_name}
           </p>
           <p className='text-sm text-[var(--text-secondary)]'>
             {order.customer.phone}
@@ -93,16 +105,18 @@ const OrdersForm = ({
         </div>
         <div>
           <h3 className='font-medium mb-2 text-[var(--text-secondary)]'>
-            Shipping Address
+            {t("Shipping Address")}
           </h3>
           <p className='text-sm text-[var(--text-secondary)]'>
-            {order.shipping_address}
+            {currentLang === "ar"
+              ? order.customer.address_ar
+              : order.customer.address}
           </p>
         </div>
       </div>
       <div>
         <h3 className='font-medium mb-4 text-[var(--text-secondary)]'>
-          Order Items
+          {t("Order Items")}
         </h3>
         <div className='space-y-4'>
           {order.order_items?.map((item) => (
@@ -110,16 +124,22 @@ const OrdersForm = ({
               <div className='flex-shrink-0 w-16 h-16'>
                 <img
                   src={item.product.image_url}
-                  alt={item.product.title}
+                  alt={
+                    currentLang === "ar"
+                      ? item.product.name_ar
+                      : item.product.title
+                  }
                   className='w-full h-full object-cover rounded-lg'
                 />
               </div>
               <div className='flex-1'>
                 <h4 className='text-sm font-medium text-[var(--text-secondary)]'>
-                  {item.product.title}
+                  {currentLang === "ar"
+                    ? item.product.name_ar
+                    : item.product.title}
                 </h4>
                 <p className='text-sm text-[var(--text-muted)]'>
-                  Quantity: {item.quantity} × ${item.price.toFixed(2)}
+                  {t("Quantity")}: {item.quantity} × ${item.price.toFixed(2)}
                 </p>
               </div>
               <div className='text-sm font-bold text-[var(--text-secondary)]'>
@@ -131,17 +151,17 @@ const OrdersForm = ({
       </div>
       <div className='border-t border-[var(--border-color)] pt-4'>
         <div className='flex justify-between text-sm mb-2'>
-          <span className='text-[var(--text-secondary)]'>Subtotal</span>
+          <span className='text-[var(--text-secondary)]'>{t("Subtotal")}</span>
           <span className='text-[var(--text-secondary)]'>
             ${order.total_amount.toFixed(2)}
           </span>
         </div>
         <div className='flex justify-between text-sm mb-2'>
-          <span className='text-[var(--text-secondary)]'>Shipping</span>
-          <span className='text-[var(--text-secondary)]'>Free</span>
+          <span className='text-[var(--text-secondary)]'>{t("Shipping")}</span>
+          <span className='text-[var(--text-secondary)]'>{t("Free")}</span>
         </div>
         <div className='flex justify-between font-medium text-lg mt-4'>
-          <span className='text-[var(--text-secondary)]'>Total</span>
+          <span className='text-[var(--text-secondary)]'>{t("Total")}</span>
           <span className='text-[var(--text-secondary)]'>
             ${order.total_amount.toFixed(2)}
           </span>

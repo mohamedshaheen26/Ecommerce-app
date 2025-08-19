@@ -14,6 +14,8 @@ import DeleteModal from "../../../components/common/DeleteModal";
 
 import CategoriesForm from "./CategoriesForm";
 import PageHeader from "../../../components/common/PageHeader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function CategoriesRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -28,6 +30,8 @@ export default function CategoriesRoot() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadCategories();
@@ -40,7 +44,6 @@ export default function CategoriesRoot() {
       setCategories(data);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      toast.error("Failed to fetch categories");
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ export default function CategoriesRoot() {
         await loadCategories();
         setIsDeleteModalOpen(false);
         setDeletingCategory(null);
-        resolve("Category deleted successfully");
+        resolve(t("Category deleted successfully"));
       } catch (error) {
         console.error("Error deleting category:", error);
         reject(
@@ -75,7 +78,7 @@ export default function CategoriesRoot() {
     });
 
     toast.promise(deletePromise, {
-      loading: "Deleting category...",
+      loading: `${t("Deleting category")}`,
       success: (message) => message as string,
       error: (err) => `Error: ${err}`,
     });
@@ -83,23 +86,25 @@ export default function CategoriesRoot() {
 
   const columns = [
     {
-      header: "Name",
+      header: `${t("Name")}`,
       accessor: (category: ICategory) => (
         <div className='text-sm font-medium text-[var(--text-secondary)]'>
-          {category.name}
+          {currentLang === "ar" ? category.name_ar : category.name}
         </div>
       ),
     },
     {
-      header: "Description",
+      header: `${t("Description")}`,
       accessor: (category: ICategory) => (
         <div className='text-sm text-[var(--text-secondary)]'>
-          {category.description}
+          {currentLang === "ar"
+            ? category.description_ar
+            : category.description}
         </div>
       ),
     },
     {
-      header: "Created",
+      header: `${t("Created At")}`,
       accessor: (category: ICategory) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           {category.created_at
@@ -109,17 +114,17 @@ export default function CategoriesRoot() {
       ),
     },
     {
-      header: "",
+      header: `${t("Actions")}`,
       accessor: (category: ICategory) => (
         <div className='flex justify-end'>
           <DropdownMenu
             items={[
               {
-                label: "Edit",
+                label: `${t("Edit")}`,
                 onClick: () => handleEdit(category),
               },
               {
-                label: "Delete",
+                label: `${t("Delete")}`,
                 onClick: () => {
                   setDeletingCategory(category);
                   setIsDeleteModalOpen(true);
@@ -143,7 +148,7 @@ export default function CategoriesRoot() {
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
         title='Categories'
-        addButtonText='Add Category'
+        addButtonText='Category'
         onAdd={() => {
           setEditingCategory(null);
           setIsFormOpen(true);
@@ -174,8 +179,8 @@ export default function CategoriesRoot() {
           setDeletingCategory(null);
         }}
         onConfirm={handleDelete}
-        title='Delete Category'
-        itemType='category'
+        title='Category'
+        itemType='Category'
         itemName={deletingCategory?.name || ""}
         isDeleting={deleting}
       />
