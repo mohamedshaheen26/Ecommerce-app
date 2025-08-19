@@ -7,11 +7,12 @@ import {
   MdPeople,
   MdStarBorder,
   MdSettings,
-  MdAdd,
 } from "react-icons/md";
 import type { IconType } from "react-icons";
 import { useAuth } from "../context/AuthContext";
 import { UserRole } from "../types";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../context/LanguageContext";
 
 interface NavItem {
   path: string;
@@ -83,6 +84,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
   const { userRole } = useAuth();
+  const { currentLang } = useLanguage();
+  const { t } = useTranslation();
 
   const isNavItemActive = (path: string) => {
     if (path === "/") {
@@ -99,7 +102,7 @@ export default function Sidebar({
           <img src='/Logo.svg' alt='Logo' className='w-6 h-6' />
           {isDesktopOpen && (
             <span className='text-lg font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
-              Admin
+              {t("Admin")}
             </span>
           )}
         </div>
@@ -126,18 +129,22 @@ export default function Sidebar({
               ${!isDesktopOpen && "justify-center px-2"}
               `
               }
-              title={item.title}
+              title={t(item.title)}
             >
               <item.icon
                 className={`h-5 w-5 flex-shrink-0 ${
-                  isDesktopOpen ? "mr-3" : ""
+                  isDesktopOpen && currentLang === "ar"
+                    ? "ml-3"
+                    : !isDesktopOpen
+                    ? ""
+                    : "mr-3"
                 }`}
               />
-              {isDesktopOpen && <span>{item.title}</span>}
+              {isDesktopOpen && <span>{t(item.title)}</span>}
             </NavLink>
           ))}
 
-        {userRole === UserRole.Admin && (
+        {/* {userRole === UserRole.Admin && (
           <div className='mt-6 pt-6 border-t border-[var(--border-color)]'>
             <button
               className='flex items-center cursor-pointer rounded-lg px-4 py-2.5 w-full text-sm font-medium transition-colors text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]'
@@ -151,7 +158,7 @@ export default function Sidebar({
               {isDesktopOpen && <span>Extras</span>}
             </button>
           </div>
-        )}
+        )} */}
       </nav>
     </div>
   );

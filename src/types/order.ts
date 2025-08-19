@@ -23,6 +23,7 @@ export interface IOrderItem {
   price: number;
   product: {
     title: string;
+    name_ar: string;
     image_url: string;
   };
 }
@@ -30,5 +31,6 @@ export interface IOrderItem {
 export interface IOrderWithUserInfo extends IOrder {
   phone: string;
   full_name: string;
+  name_ar: string;
   order_items?: IOrderItem[];
 }

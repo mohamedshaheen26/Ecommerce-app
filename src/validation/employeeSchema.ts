@@ -1,19 +1,26 @@
-  import * as yup from "yup";
-  import { UserRole, type IEmployeeValidation } from "../types";
+import * as yup from "yup";
+import { UserRole, type IEmployeeValidation } from "../types";
+import { useTranslation } from "react-i18next";
 
-  export const employeeSchema: yup.ObjectSchema<IEmployeeValidation>  = yup.object({
-    full_name: yup.string().required("Full Name is required."),
-    email: yup.string().email("Invalid email.").required("Email is required."),
-    username: yup
+export const getEmployeeSchema = () => {
+  const { t } = useTranslation();
+
+  return yup.object<IEmployeeValidation>({
+    full_name: yup.string().required(t("validations.name_required")),
+    name_ar: yup.string().required(t("validations.name_ar_required")),
+    email: yup
       .string()
-      .min(3, "Username must be at least 3 characters.")
-      .required("Username is required."),
+      .email(t("validations.email_invalid"))
+      .required(t("validations.email_required")),
+    username: yup.string().required(t("validations.username_required")),
     password: yup.string().test({
       name: "password-required-if-not-editing",
       test: function (value) {
         const { isEditing } = this.options.context || {};
         if (!isEditing && (!value || value.length < 6)) {
-          return this.createError({ message: "Password must be at least 6 characters." });
+          return this.createError({
+            message: t("validations.password_min"),
+          });
         }
         return true;
       },
@@ -24,33 +31,34 @@
         const { isEditing } = this.options.context || {};
         const password = this.parent.password;
         if (!isEditing && value !== password) {
-          return this.createError({ message: "Passwords do not match." });
+          return this.createError({
+            message: t("validations.confirm_password_one_of"),
+          });
         }
         return true;
       },
     }),
     role: yup
       .mixed<UserRole>()
-      .oneOf([UserRole.Employee, UserRole.Admin])
-      .required("Role is required."),
+      .transform((curr, orig) => orig === "" ? undefined : curr)
+      .required(t("validations.role_required"))
+      .oneOf([UserRole.Employee, UserRole.Admin], t("validations.role_values", { values: Object.values(UserRole).join(", ") })),
     phone: yup
       .string()
       .test(
         "valid-phone",
-        "Phone number must be 11 digits.",
+        t("validations.phone_required"),
         (value) => !value || /^\d{11}$/.test(value)
       )
-    .notRequired(),
-    address: yup
-      .string()
-      .max(255, "Address cannot exceed 255 characters.")
       .notRequired(),
-    salary: yup 
+    address: yup.string().max(255).notRequired(),
+    address_ar: yup.string().max(255).notRequired(),
+    salary: yup
       .number()
-      .min(0, "Salary must be a positive number.")
+      .min(0, t("validations.salary_positive"))
       .notRequired(),
-    hire_date: yup
-      .date()
-      .max(new Date(), "Hire date cannot be in the future.")
-      .required(),
+    hire_date: yup.date()
+      .transform((curr, orig) => orig === "" ? undefined : curr)
+      .required(t("validations.hire_date_required")),
   });
+};

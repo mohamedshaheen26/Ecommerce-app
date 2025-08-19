@@ -6,7 +6,7 @@ export async function fetchAllCustomers(): Promise<ICustomer[]> {
   const { data, error } = await supabase
     .from("customers")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("id", { ascending: true });
 
   if (error) throw error;
 

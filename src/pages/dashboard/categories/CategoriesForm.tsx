@@ -11,7 +11,8 @@ import TextArea from "../../../components/common/TextArea";
 import Modal from "../../../components/common/Modal";
 
 import { useYupForm } from "../../../hooks/useYupForm";
-import { categorySchema } from "../../../validation/categorySchema";
+import { getCategorySchema } from "../../../validation/categorySchema";
+import Grid from "../../../components/common/Grid";
 
 interface CategoriesFormProps {
   isOpen: boolean;
@@ -31,19 +32,23 @@ export default function CategoriesForm({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useYupForm<ICategoryValidation>(categorySchema, {
+  } = useYupForm<ICategoryValidation>(getCategorySchema() as any, {
     name: editingCategory?.name ?? "",
+    name_ar: editingCategory?.name_ar ?? "",
     description: editingCategory?.description ?? "",
+    description_ar: editingCategory?.description_ar ?? "",
   });
 
   useEffect(() => {
     if (isOpen) {
       reset({
         name: editingCategory?.name ?? "",
+        name_ar: editingCategory?.name_ar ?? "",
         description: editingCategory?.description ?? "",
+        description_ar: editingCategory?.description_ar ?? "",
       });
     }
-  }, [isOpen, editingCategory, reset]);
+  }, [editingCategory, isOpen, reset]);
 
   const onSubmit = async (data: ICategoryValidation) => {
     try {
@@ -71,26 +76,46 @@ export default function CategoriesForm({
       onClose={onClose}
       onConfirm={handleSubmit(onSubmit)}
       title={editingCategory ? "Edit Category" : "Add New Category"}
-      maxWidth='max-w-md'
+      maxWidth='max-w-xl'
       isSubmitting={isSubmitting}
       confirmText={editingCategory ? "Update" : "Create"}
     >
-      <FormField
-        htmlFor='name'
-        label='Name'
-        required
-        error={errors.name?.message}
-      >
-        <Input id='name' {...register("name")} />
-      </FormField>
-      <FormField
-        htmlFor='description'
-        label='Description'
-        required
-        error={errors.description?.message}
-      >
-        <TextArea id='description' {...register("description")} />
-      </FormField>
+      <Grid columns={{ default: 1, md: 2 }}>
+        <FormField
+          htmlFor='name'
+          label='Name'
+          required
+          error={errors.name?.message}
+        >
+          <Input id='name' {...register("name")} />
+        </FormField>
+        <FormField
+          htmlFor='name_ar'
+          label='Arabic Name'
+          required
+          error={errors.name_ar?.message}
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
+        <FormField
+          htmlFor='description'
+          label='Description'
+          required
+          error={errors.description?.message}
+        >
+          <TextArea id='description' {...register("description")} />
+        </FormField>
+        <FormField
+          htmlFor='description_ar'
+          label='Arabic Description'
+          required
+          error={errors.description_ar?.message}
+        >
+          <TextArea id='description_ar' {...register("description_ar")} />
+        </FormField>
+      </Grid>
     </Modal>
   );
 }

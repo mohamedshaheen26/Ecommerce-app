@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { IoSearchOutline } from "react-icons/io5";
 
 import type { ICustomer } from "../../../types";
 import {
@@ -8,12 +7,14 @@ import {
 } from "../../../api/customers";
 import DropdownMenu from "../../../components/common/DropdownMenu";
 import Table from "../../../components/common/Table";
-import Input from "../../../components/common/Input";
 import { MdLocationOn, MdPhone } from "react-icons/md";
 import { formatDate } from "../../../utils/formatDate";
 import CustomersFormDetails from "./CustomersFormDetails";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import DeleteModal from "../../../components/common/DeleteModal";
+import PageHeader from "../../../components/common/PageHeader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function CustomersRoot() {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
@@ -25,12 +26,12 @@ export default function CustomersRoot() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     fetchCustomersWithOrders();
   }, []);
-
-  console.log(customers);
 
   const fetchCustomersWithOrders = async () => {
     try {
@@ -73,33 +74,39 @@ export default function CustomersRoot() {
 
   const columns = [
     {
-      header: "Name",
+      header: `${t("Name")}`,
       accessor: (customer: ICustomer) => (
         <div>
           <div className='text-sm font-medium text-[var(--text-secondary)]'>
-            {customer.full_name}
+            {currentLang === "ar" ? customer.name_ar : customer.full_name}
           </div>
           <div className='text-sm text-gray-500'>{customer.email}</div>
         </div>
       ),
     },
     {
-      header: "Contact",
+      header: `${t("Contact")}`,
       accessor: (customer: ICustomer) => (
-        <div>
+        <div className='flex flex-col gap-1'>
           <div className='text-sm text-[var(--text-secondary)] flex items-center'>
-            <MdLocationOn className='w-4 h-4 mr-1' />
-            {customer.address || "N/A"}
+            <MdLocationOn
+              className={`w-4 h-4 ${currentLang === "ar" ? "ml-1" : "mr-1"}`}
+            />
+            {currentLang === "ar"
+              ? customer.address_ar
+              : customer.address || "N/A"}
           </div>
           <div className='text-sm text-[var(--text-secondary)] flex items-center'>
-            <MdPhone className='w-4 h-4 mr-1' />
+            <MdPhone
+              className={`w-4 h-4 ${currentLang === "ar" ? "ml-1" : "mr-1"}`}
+            />
             {customer.phone || "N/A"}
           </div>
         </div>
       ),
     },
     {
-      header: "Joined",
+      header: `${t("Joined")}`,
       accessor: (customer: ICustomer) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           {formatDate(customer.created_at || "N/A")}
@@ -107,7 +114,7 @@ export default function CustomersRoot() {
       ),
     },
     {
-      header: "Orders",
+      header: `${t("Orders")}`,
       accessor: (customer: ICustomer) => (
         <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {customer.total_orders}
@@ -115,7 +122,7 @@ export default function CustomersRoot() {
       ),
     },
     {
-      header: "Total Spent",
+      header: `${t("Total Spent")}`,
       accessor: (customer: ICustomer) => (
         <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {formatCurrency(customer.total_spent)}
@@ -123,20 +130,20 @@ export default function CustomersRoot() {
       ),
     },
     {
-      header: "",
+      header: `${t("Actions")}`,
       accessor: (customer: ICustomer) => (
         <div className='flex justify-end'>
           <DropdownMenu
             items={[
               {
-                label: "View",
+                label: `${t("View")}`,
                 onClick: () => {
                   setSelectedCustomer(customer);
                   setIsModalOpen(true);
                 },
               },
               {
-                label: "Delete",
+                label: `${t("Delete")}`,
                 onClick: () => {
                   setSelectedCustomer(customer);
                   setIsDeleteModalOpen(true);
@@ -152,19 +159,12 @@ export default function CustomersRoot() {
 
   return (
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-[var(--border-color)]'>
-        <h1 className='text-2xl font-semibold text-[var(--text-secondary)]'>
-          Customers
-        </h1>
-        <div className='flex items-center space-x-4'>
-          <Input
-            placeholder='Search customers...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<IoSearchOutline className='w-5 h-5' />}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title='Customers'
+        showAddButton={false}
+        searchQuery={searchQuery}
+        onSearch={(val) => setSearchQuery(val)}
+      />
 
       <Table data={filteredCustomers} columns={columns} isLoading={loading} />
 
@@ -183,8 +183,8 @@ export default function CustomersRoot() {
           setIsDeleteModalOpen(false);
         }}
         onConfirm={handleDeleteCustomer}
-        title='Delete Customer'
-        itemType='customer'
+        title='Customer'
+        itemType='Customer'
         itemName={selectedCustomer?.full_name || ""}
         isDeleting={deleting}
       />

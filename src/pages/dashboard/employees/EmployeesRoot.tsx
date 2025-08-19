@@ -12,6 +12,8 @@ import DeleteModal from "../../../components/common/DeleteModal";
 import EmployeesForm from "./EmployeesForm";
 import { MdEmail, MdPhone } from "react-icons/md";
 import PageHeader from "../../../components/common/PageHeader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function EmployeesRoot() {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -26,6 +28,8 @@ export default function EmployeesRoot() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadEmployees();
@@ -79,46 +83,50 @@ export default function EmployeesRoot() {
 
   const columns = [
     {
-      header: "Name",
+      header: `${t("Name")}`,
       accessor: (employee: IEmployee) => (
         <div className='text-sm font-medium text-[var(--text-secondary)]'>
-          {employee.full_name}
+          {currentLang === "ar" ? employee.name_ar : employee.full_name}
         </div>
       ),
     },
     {
-      header: "Role",
+      header: `${t("Role")}`,
       accessor: (employee: IEmployee) => (
         <div className='text-sm text-[var(--text-secondary)]'>
-          {employee.role}
+          {t(`UserRole.${employee.role}`)}
         </div>
       ),
     },
     {
-      header: "Contact",
+      header: `${t("Contact")}`,
       accessor: (employee: IEmployee) => (
-        <div>
+        <div className='flex flex-col gap-1'>
           <div className='text-sm text-[var(--text-secondary)] flex items-center'>
-            <MdEmail className='w-4 h-4 mr-1' />
+            <MdEmail
+              className={`w-4 h-4 ${currentLang === "ar" ? "ml-1" : "mr-1"}`}
+            />
             {employee.email || "N/A"}
           </div>
           <div className='text-sm text-[var(--text-secondary)] flex items-center'>
-            <MdPhone className='w-4 h-4 mr-1' />
+            <MdPhone
+              className={`w-4 h-4 ${currentLang === "ar" ? "ml-1" : "mr-1"}`}
+            />
             {employee.phone || "N/A"}
           </div>
         </div>
       ),
     },
     {
-      header: "Address",
+      header: `${t("Address")}`,
       accessor: (employee: IEmployee) => (
         <div className='text-sm text-[var(--text-secondary)]'>
-          {employee.address}
+          {currentLang === "ar" ? employee.address_ar : employee.address}
         </div>
       ),
     },
     {
-      header: "Salary",
+      header: `${t("Salary")}`,
       accessor: (employee: IEmployee) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           ${employee.salary ? employee.salary : "0"}
@@ -126,7 +134,7 @@ export default function EmployeesRoot() {
       ),
     },
     {
-      header: "Hire Date",
+      header: `${t("Hire Date")}`,
       accessor: (employee: IEmployee) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           {employee.hire_date
@@ -136,17 +144,17 @@ export default function EmployeesRoot() {
       ),
     },
     {
-      header: "",
+      header: `${t("Actions")}`,
       accessor: (employee: IEmployee) => (
         <div className='flex justify-end'>
           <DropdownMenu
             items={[
               {
-                label: "Edit",
+                label: `${t("Edit")}`,
                 onClick: () => handleEdit(employee),
               },
               {
-                label: "Delete",
+                label: `${t("Delete")}`,
                 onClick: () => {
                   setDeletingEmployee(employee);
                   setIsDeleteModalOpen(true);
@@ -172,7 +180,7 @@ export default function EmployeesRoot() {
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
         title='Employees'
-        addButtonText='Add Employee'
+        addButtonText='Employee'
         onAdd={() => {
           setEditingEmployee(null);
           setIsFormOpen(true);
@@ -203,8 +211,8 @@ export default function EmployeesRoot() {
           setDeletingEmployee(null);
         }}
         onConfirm={handleDelete}
-        title='Delete Employee'
-        itemType='employee'
+        title='Employee'
+        itemType='Employee'
         itemName={deletingEmployee?.full_name || ""}
         isDeleting={deleting}
       />

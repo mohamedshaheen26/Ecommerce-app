@@ -1,4 +1,6 @@
-import Modal from './Modal';
+import { useTranslation } from "react-i18next";
+import Modal from "./Modal";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface DeleteModalProps {
   isOpen: boolean;
@@ -17,24 +19,32 @@ export default function DeleteModal({
   onConfirm,
   title,
   message,
-  itemType = 'item',
+  itemType = "item",
   itemName,
-  isDeleting = false
+  isDeleting = false,
 }: DeleteModalProps) {
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       onConfirm={onConfirm}
-      title={title || `Delete ${itemType}`}
-      maxWidth="max-w-md"
-      variant="delete"
+      title={`${t("Delete")} ${t(title)}`}
+      maxWidth='max-w-md'
+      variant='delete'
       isSubmitting={isDeleting}
     >
-      <p className="text-gray-600">
-        {message || `Are you sure you want to delete ${itemType} "${itemName}" ?`}
+      <p className='text-gray-600'>
+        {message ||
+          `${t("Are you sure you want to delete")} ${t(
+            itemType
+          )} "${itemName}" ${currentLang === "ar" ? "؟" : "?"}`}
       </p>
-      <span className="text-sm text-red-500">This action cannot be undone.</span>
+      <span className='text-sm text-red-500'>
+        {t("This action cannot be undone.")}
+      </span>
     </Modal>
   );
-} 
+}
