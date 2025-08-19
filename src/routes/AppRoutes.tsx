@@ -33,7 +33,7 @@ export default function AppRoutes() {
         <Route
           path='employees'
           element={
-            <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+            <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
               <EmployeesRoot />
             </ProtectedRoute>
           }

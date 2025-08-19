@@ -30,17 +30,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       if (savedTheme === "dark" || savedTheme === "light") {
         return savedTheme;
       }
-      const systemPrefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      return systemPrefersDark ? "dark" : "light";
+      return "light";
     } catch {
       return "light";
     }
   });
 
   useLayoutEffect(() => {
-    // Apply CSS variables and Tailwind dark mode class before paint
     const root = document.documentElement;
     const themeColors = themes[currentTheme as keyof typeof themes];
 
@@ -56,7 +52,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [currentTheme]);
 
   useEffect(() => {
-    // Save theme preference
     localStorage.setItem("theme", currentTheme);
   }, [currentTheme]);
 

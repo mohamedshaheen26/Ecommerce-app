@@ -6,15 +6,19 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
+import { LanguageProvider } from "./context/LanguageContext.tsx";
+import "./i18n/i18n";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
-      <SettingsProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </SettingsProvider>
+      <ThemeProvider>
+        <SettingsProvider>
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
+        </SettingsProvider>
+      </ThemeProvider>
     </AuthProvider>
   </StrictMode>
 );

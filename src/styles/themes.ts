@@ -18,6 +18,8 @@ export const themes: Record<string, ThemeColors> = {
     "--success": "#10b981",
     "--warning": "#f59e0b",
     "--error": "#ef4444",
+    "--disabled-btn": "#714b6761",
+    "--disabled-input": "#f0f0f0",
     "--shadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
   },
   dark: {
@@ -37,6 +39,8 @@ export const themes: Record<string, ThemeColors> = {
     "--success": "#34d399",
     "--warning": "#fbbf24",
     "--error": "#f87171",
+    "--disabled-btn": "#714b6761",
+    "--disabled-input": "#2d2d33",
     "--shadow": "0 1px 3px 0 rgb(0 0 0 / 0.3)",
   },
 };

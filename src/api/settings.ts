@@ -25,6 +25,7 @@ export async function apiUpdateSettings(newSettings: Partial<ISettings>) {
     .from("settings")
     .update({
       site_name: newSettings.site_name,
+      site_name_ar: newSettings.site_name_ar,
       support_email: newSettings.support_email,
       monthly_order_goal: newSettings.monthly_order_goal,
     })

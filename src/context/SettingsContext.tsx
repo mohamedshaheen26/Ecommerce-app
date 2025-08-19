@@ -17,6 +17,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ISettings>({
     site_name: "",
+    site_name_ar: "",
     support_email: "",
     monthly_order_goal: 1000,
   });
@@ -34,6 +35,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (data) {
         setSettings({
           site_name: data.site_name,
+          site_name_ar: data.site_name_ar,
           support_email: data.support_email,
           monthly_order_goal: data.monthly_order_goal,
         });

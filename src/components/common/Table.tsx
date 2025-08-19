@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import Button from "./Button";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import Loader from "./Loader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface Column<T> {
   header: ReactNode;
@@ -30,6 +32,8 @@ export default function Table<T>({
 }: TableProps<T>) {
   const totalPages = Math.ceil(totalItems / pageSize);
   const showPagination = totalItems > pageSize;
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   const handlePageChange = (page: number) => {
     if (onPageChange && page >= 1 && page <= totalPages) {
@@ -38,88 +42,77 @@ export default function Table<T>({
   };
 
   return (
-    <div className='overflow-x-auto'>
-      <table className='min-w-full divide-y divide-[var(--border-color)]'>
-        <thead>
-          <tr>
-            {columns.map((column, index) => (
-              <th
-                key={index}
-                scope='col'
-                className={`px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider ${
-                  column.className || ""
-                }`}
-              >
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className='bg-[var(--bg-primary)] divide-y divide-[var(--border-color)]'>
-          {isLoading ? (
+    <>
+      <div className='overflow-x-auto'>
+        <table className='min-w-full divide-y divide-[var(--border-color)]'>
+          <thead>
             <tr>
-              <td colSpan={columns.length} className='px-6 py-4 text-center'>
-                <Loader />
-              </td>
+              {columns.map((column, index) => (
+                <th
+                  key={index}
+                  scope='col'
+                  className={`px-6 py-3 ${
+                    currentLang == "ar" ? "text-right" : "text-left"
+                  } text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider ${
+                    column.className || ""
+                  }`}
+                >
+                  {column.header}
+                </th>
+              ))}
             </tr>
-          ) : data.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className='px-6 py-4 text-center text-sm text-gray-500'
-              >
-                No items found
-              </td>
-            </tr>
-          ) : (
-            data.map((item, rowIndex) => (
-              <tr key={rowIndex}>
-                {columns.map((column, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className={`px-6 py-4 whitespace-nowrap ${
-                      column.className || ""
-                    }`}
-                  >
-                    {column.accessor(item)}
-                  </td>
-                ))}
+          </thead>
+          <tbody className='bg-[var(--bg-primary)] divide-y divide-[var(--border-color)]'>
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length} className='px-6 py-4 text-center'>
+                  <Loader />
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : data.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className='px-6 py-4 text-center text-sm text-gray-500'
+                >
+                  No items found
+                </td>
+              </tr>
+            ) : (
+              data.map((item, rowIndex) => (
+                <tr key={rowIndex}>
+                  {columns.map((column, colIndex) => (
+                    <td
+                      key={colIndex}
+                      className={`px-6 py-4 whitespace-nowrap ${
+                        column.className || ""
+                      }`}
+                    >
+                      {column.accessor(item)}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {showPagination && (
         <div className='px-6 py-3 flex items-center justify-between border-t border-[var(--border-color)] bg-[var(--bg-primary)]'>
-          <div className='flex-1 flex justify-between sm:hidden'>
-            <Button
-              variant='outline'
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant='outline'
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-          <div className='hidden sm:flex-1 sm:flex sm:items-center sm:justify-between'>
-            <div>
+          <div className='flex flex-1 flex-col sm:flex-row items-center sm:justify-between'>
+            <div className='mb-2'>
               <p className='text-sm text-[var(--text-muted)]'>
-                Showing{" "}
+                {t("Showing")}{" "}
                 <span className='font-medium'>
                   {(currentPage - 1) * pageSize + 1}
                 </span>{" "}
-                to{" "}
+                {t("to")}{" "}
                 <span className='font-medium'>
                   {Math.min(currentPage * pageSize, totalItems)}
                 </span>{" "}
-                of <span className='font-medium'>{totalItems}</span> results
+                {t("of")} <span className='font-medium'>{totalItems}</span>{" "}
+                {t("results")}
               </p>
             </div>
             <div>
@@ -131,9 +124,13 @@ export default function Table<T>({
                   variant='outline'
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className='w-10 h-10 border-none'
+                  className='w-10 h-10 border-none disabled:bg-transparent'
                 >
-                  <MdChevronLeft className='w-7 h-7' />
+                  {currentLang === "ar" ? (
+                    <MdChevronRight className='w-7 h-7' />
+                  ) : (
+                    <MdChevronLeft className='w-7 h-7' />
+                  )}
                 </Button>
 
                 {[...Array(totalPages)].map((_, index) => {
@@ -181,15 +178,19 @@ export default function Table<T>({
                   variant='outline'
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className=' w-10 h-10 border-none'
+                  className=' w-10 h-10 border-none disabled:bg-transparent'
                 >
-                  <MdChevronRight className='w-7 h-7' />
+                  {currentLang === "ar" ? (
+                    <MdChevronLeft className='w-7 h-7' />
+                  ) : (
+                    <MdChevronRight className='w-7 h-7' />
+                  )}
                 </Button>
               </nav>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

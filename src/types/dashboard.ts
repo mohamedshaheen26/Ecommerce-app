@@ -10,6 +10,7 @@ export interface IDashboardStats {
 
 export interface IBestSellingProduct {
   title: string;
+  name_ar: string;
   sales_count: number;
 }
 

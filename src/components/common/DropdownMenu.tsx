@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface MenuItem {
   label: string;
@@ -15,9 +16,10 @@ interface DropdownMenuProps {
 
 export default function DropdownMenu({ items }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -34,9 +36,11 @@ export default function DropdownMenu({ items }: DropdownMenuProps) {
     function updatePosition() {
       if (buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
+
         setPosition({
           top: rect.bottom + window.scrollY,
-          left: rect.right + window.scrollX,
+          left: rect.left + window.scrollX,
+          right: window.innerWidth - rect.right - window.scrollX,
         });
       }
     }
@@ -54,7 +58,7 @@ export default function DropdownMenu({ items }: DropdownMenuProps) {
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
-  }, [isOpen]);
+  }, [isOpen, currentLang]);
 
   const visibleItems = items.filter((item) => !item.hidden);
 
@@ -75,10 +79,13 @@ export default function DropdownMenu({ items }: DropdownMenuProps) {
             style={{
               position: "absolute",
               top: `${position.top}px`,
-              left: `${position.left}px`,
-              transform: "translateX(-100%)",
+              left: currentLang === "ar" ? "auto" : `${position.left}px`,
+              right: currentLang === "ar" ? `${position.right}px` : "auto",
+              transform: `${
+                currentLang == "ar" ? "translateX(100%)" : "translateX(-100%)"
+              }`,
             }}
-            className='mt-2 w-32 rounded-lg shadow-sm bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+            className='w-32 rounded-lg shadow-sm bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-color)]'
           >
             <div role='menu' aria-orientation='vertical'>
               {visibleItems.map((item, index) => (

@@ -1,4 +1,5 @@
 import type { SelectHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -19,6 +20,8 @@ export default function Select({
   options,
   ...props
 }: SelectProps) {
+  const { t } = useTranslation();
+
   return (
     <div className={`${fullWidth ? "w-full" : ""}`}>
       {label && (
@@ -44,7 +47,7 @@ export default function Select({
             value={value}
             className='text-[var(--text-secondary)] bg-[var(--bg-card)]'
           >
-            {label}
+            {t(label)}
           </option>
         ))}
       </select>

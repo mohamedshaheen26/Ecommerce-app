@@ -8,14 +8,17 @@ export enum UserRole {
 
 export interface IUser {
   id?: string;
+  user_id?: string;
   role: UserRole;
   full_name: string;
+  name_ar: string;
   email: string;
   username: string | null;
   password: string | null;
   confirm_password: string | null;
   phone?: string | null;
   address?: string | null;
+  address_ar?: string | null;
   created_at?: string;
 }
 
@@ -26,13 +29,15 @@ export interface IEmployee extends IUser {
 
 export interface IEmployeeValidation {
   full_name: string;
+  name_ar: string;
   email: string;
   username: string;
   password?: string;
   confirm_password?: string;
-  role: UserRole;
+  role: UserRole | "";
   phone?: string | null;
   address?: string | null;
+  address_ar?: string | null;
   salary?: number | null;
   hire_date: Date | null | string;
 }

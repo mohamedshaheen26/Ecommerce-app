@@ -6,6 +6,8 @@ import Input from "../../../components/common/Input";
 import toast from "react-hot-toast";
 import Button from "../../../components/common/Button";
 import type { ISettings } from "../../../types/setting";
+import { useTranslation } from "react-i18next";
+import Grid from "../../../components/common/Grid";
 
 export default function SettingsRoot() {
   const {
@@ -17,14 +19,17 @@ export default function SettingsRoot() {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<ISettings>({
     site_name: "",
+    site_name_ar: "",
     support_email: "",
     monthly_order_goal: 0,
   });
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isLoading && settings) {
       setFormData({
         site_name: settings.site_name,
+        site_name_ar: settings.site_name_ar,
         support_email: settings.support_email,
         monthly_order_goal: settings.monthly_order_goal,
       });
@@ -39,6 +44,7 @@ export default function SettingsRoot() {
         setIsSaving(true);
         await updateSettings({
           site_name: formData?.site_name,
+          site_name_ar: formData?.site_name_ar,
           support_email: formData?.support_email,
           monthly_order_goal: formData?.monthly_order_goal,
         });
@@ -53,8 +59,8 @@ export default function SettingsRoot() {
     });
 
     toast.promise(updatePromise, {
-      loading: "Saving changes...",
-      success: "Settings updated successfully",
+      loading: t("Saving changes"),
+      success: `${t("Settings updated successfully")}`,
       error: (err) => `Error: ${err}`,
     });
   };
@@ -65,7 +71,7 @@ export default function SettingsRoot() {
       if (!prev) return prev;
       return {
         ...prev,
-        [name]: name === "monthlyOrderGoal" ? Number(value) : value,
+        [name]: name === "monthly_order_goal" ? Number(value) : value,
       };
     });
   };
@@ -74,7 +80,7 @@ export default function SettingsRoot() {
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <div className='flex justify-between items-center py-6 px-8 border-b border-[var(--border-color)]'>
         <h1 className='text-2xl font-semibold text-[var(--text-secondary)]'>
-          Settings
+          {t("Settings")}
         </h1>
       </div>
       {contextError && (
@@ -83,44 +89,58 @@ export default function SettingsRoot() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className='space-y-6 py-6 px-8'>
-        <FormField htmlFor='siteName' label='Site Name'>
-          <Input
-            id='siteName'
-            name='site_name'
-            type='text'
-            value={formData?.site_name}
-            onChange={handleChange}
-            required
-          />
-        </FormField>
+      <form onSubmit={handleSubmit} className='py-6 px-8'>
+        <Grid columns={2} gap={4}>
+          <FormField htmlFor='siteName_ar' label='Site Name'>
+            <Input
+              id='siteName_ar'
+              name='site_name_ar'
+              type='text'
+              value={formData?.site_name_ar}
+              onChange={handleChange}
+              required
+            />
+          </FormField>
+          <FormField htmlFor='siteName' label='Site Name Second Language'>
+            <Input
+              id='siteName'
+              name='site_name'
+              type='text'
+              value={formData?.site_name}
+              onChange={handleChange}
+              required
+            />
+          </FormField>
+        </Grid>
 
-        <FormField htmlFor='supportEmail' label='Support Email'>
-          <Input
-            id='supportEmail'
-            name='support_email'
-            type='email'
-            value={formData?.support_email}
-            onChange={handleChange}
-            required
-          />
-        </FormField>
-
-        <FormField htmlFor='monthlyOrderGoal' label='Monthly Order Goal'>
-          <Input
-            id='monthlyOrderGoal'
-            name='monthly_order_goal'
-            type='number'
-            value={formData?.monthly_order_goal}
-            onChange={handleChange}
-            required
-            min='1'
-          />
-        </FormField>
+        <Grid columns={2} gap={4}>
+          {" "}
+          <FormField htmlFor='supportEmail' label='Support Email'>
+            <Input
+              id='supportEmail'
+              name='support_email'
+              type='email'
+              value={formData?.support_email}
+              onChange={handleChange}
+              required
+            />
+          </FormField>
+          <FormField htmlFor='monthlyOrderGoal' label='Monthly Order Goal'>
+            <Input
+              id='monthlyOrderGoal'
+              name='monthly_order_goal'
+              type='number'
+              value={formData?.monthly_order_goal}
+              onChange={handleChange}
+              required
+              min='1'
+            />
+          </FormField>
+        </Grid>
 
         <div>
           <Button type='submit' variant='primary' disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? t("Saving...") : t("Save Changes")}
           </Button>
         </div>
       </form>

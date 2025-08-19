@@ -12,6 +12,7 @@ import {
   signOut,
 } from "../../api/login";
 import { UserRole } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -21,12 +22,11 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
 
-  // Get the intended destination from location state, or default to '/dashboard'
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
-  // Show success message from signup if it exists
   const message = (location.state as { message?: string })?.message;
 
   const handleSubmit = async (e: FormEvent) => {
@@ -89,19 +89,19 @@ export default function Login() {
             <img src='/Logo.svg' alt='Logo' className='w-full h-full' />
           </div>
           <h1 className='text-xl font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
-            Admin
+            {t("Admin")}
           </h1>
         </div>
 
         <form className='space-y-6' onSubmit={handleSubmit}>
           {message && (
             <div className='p-3 rounded bg-green-50 text-sm text-green-700'>
-              {message}
+              {t(message)}
             </div>
           )}
           {error && (
             <div className='p-3 rounded bg-red-50 text-sm text-red-700'>
-              {error}
+              {t(error)}
             </div>
           )}
 
@@ -141,7 +141,7 @@ export default function Login() {
             disabled={loading}
             isLoading={loading}
           >
-            {loading ? "Signing in..." : "Login"}
+            {loading ? t("Logging") : t("Login")}
           </Button>
         </form>
       </div>

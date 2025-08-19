@@ -1,6 +1,5 @@
 import { supabase } from "../lib/supabase";
 import type { IBestSellingProduct, IRecentOrder } from "../types/dashboard";
-import { formatDate } from "../utils/formatDate";
 
 export async function getTotalSalesCurrentMonth(): Promise<number> {
   const { data, error } = await supabase
@@ -37,7 +36,7 @@ export async function getOrderCountCurrentMonth(): Promise<number> {
 export async function getBestSellingProducts(limit = 3): Promise<IBestSellingProduct[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("title, sales_count")
+    .select("title, name_ar, sales_count")
     .order("sales_count", { ascending: false })
     .limit(limit);
 
@@ -65,7 +64,7 @@ export async function getRecentOrders(limit = 5): Promise<IRecentOrder[]> {
   return (
     data?.map((order) => ({
       id: order.id || "Unknown Order",
-      created_at: formatDate(order.created_at),
+      created_at: order.created_at,
       total: order.total_amount,
       status: order.status,
     })) || []
