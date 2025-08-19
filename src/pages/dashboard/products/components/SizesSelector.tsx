@@ -17,7 +17,7 @@ export default function SizesSelector({
         <Button
           className='rounded-sm'
           key={size}
-          variant={selectedSizes.includes(size) ? "secondary" : "outline"}
+          variant={selectedSizes.includes(size) ? "primary" : "outline"}
           onClick={() => toggleSize(size)}
         >
           {size}

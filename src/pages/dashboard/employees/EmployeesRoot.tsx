@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { IoSearchOutline } from "react-icons/io5";
 import toast from "react-hot-toast";
 
 import type { IEmployee } from "../../../types";
@@ -7,13 +6,12 @@ import type { IEmployee } from "../../../types";
 import { fetchAllEmployees, deleteEmployeeById } from "../../../api/employee";
 
 import DropdownMenu from "../../../components/common/DropdownMenu";
-import Button from "../../../components/common/Button";
-import Input from "../../../components/common/Input";
 import Table from "../../../components/common/Table";
 import DeleteModal from "../../../components/common/DeleteModal";
 
 import EmployeesForm from "./EmployeesForm";
 import { MdEmail, MdPhone } from "react-icons/md";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function EmployeesRoot() {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -83,7 +81,7 @@ export default function EmployeesRoot() {
     {
       header: "Name",
       accessor: (employee: IEmployee) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {employee.full_name}
         </div>
       ),
@@ -91,18 +89,20 @@ export default function EmployeesRoot() {
     {
       header: "Role",
       accessor: (employee: IEmployee) => (
-        <div className='text-sm text-gray-500'>{employee.role}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {employee.role}
+        </div>
       ),
     },
     {
       header: "Contact",
       accessor: (employee: IEmployee) => (
         <div>
-          <div className='text-sm text-gray-900 flex items-center'>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
             <MdEmail className='w-4 h-4 mr-1' />
             {employee.email || "N/A"}
           </div>
-          <div className='text-sm text-gray-500 flex items-center'>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
             <MdPhone className='w-4 h-4 mr-1' />
             {employee.phone || "N/A"}
           </div>
@@ -112,13 +112,15 @@ export default function EmployeesRoot() {
     {
       header: "Address",
       accessor: (employee: IEmployee) => (
-        <div className='text-sm text-gray-500'>{employee.address}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {employee.address}
+        </div>
       ),
     },
     {
       header: "Salary",
       accessor: (employee: IEmployee) => (
-        <div className='text-sm text-gray-500'>
+        <div className='text-sm text-[var(--text-secondary)]'>
           ${employee.salary ? employee.salary : "0"}
         </div>
       ),
@@ -126,7 +128,7 @@ export default function EmployeesRoot() {
     {
       header: "Hire Date",
       accessor: (employee: IEmployee) => (
-        <div className='text-sm text-gray-500'>
+        <div className='text-sm text-[var(--text-secondary)]'>
           {employee.hire_date
             ? new Date(employee.hire_date).toLocaleDateString()
             : "No date"}
@@ -167,28 +169,17 @@ export default function EmployeesRoot() {
   );
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Employees</h1>
-        <div className='flex items-center space-x-4'>
-          <Button
-            variant='secondary'
-            onClick={() => {
-              setEditingEmployee(null);
-              setIsFormOpen(true);
-            }}
-          >
-            Add Employee
-          </Button>
-          <Input
-            fullWidth={false}
-            placeholder='Search employees...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<IoSearchOutline className='w-5 h-5' />}
-          />
-        </div>
-      </div>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <PageHeader
+        title='Employees'
+        addButtonText='Add Employee'
+        onAdd={() => {
+          setEditingEmployee(null);
+          setIsFormOpen(true);
+        }}
+        searchQuery={searchQuery}
+        onSearch={(val) => setSearchQuery(val)}
+      />
 
       <Table data={filteredEmployees} columns={columns} isLoading={loading} />
 

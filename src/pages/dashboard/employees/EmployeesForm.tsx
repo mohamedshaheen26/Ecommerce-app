@@ -192,7 +192,7 @@ export default function EmployeesForm({
           label='Salary'
           error={errors.salary?.message}
         >
-          <Input id='salary' type='number' {...register("salary")} />
+          <Input id='salary' type='number' {...register("salary")} step='any' />
         </FormField>
       </Grid>
       <Grid columns={2}>

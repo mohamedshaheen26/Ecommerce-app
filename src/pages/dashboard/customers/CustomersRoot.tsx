@@ -73,10 +73,10 @@ export default function CustomersRoot() {
 
   const columns = [
     {
-      header: "Customer",
+      header: "Name",
       accessor: (customer: ICustomer) => (
         <div>
-          <div className='text-sm font-medium text-gray-900'>
+          <div className='text-sm font-medium text-[var(--text-secondary)]'>
             {customer.full_name}
           </div>
           <div className='text-sm text-gray-500'>{customer.email}</div>
@@ -87,13 +87,13 @@ export default function CustomersRoot() {
       header: "Contact",
       accessor: (customer: ICustomer) => (
         <div>
-          <div className='text-sm text-gray-900 flex items-center'>
-            <MdPhone className='w-4 h-4 mr-1' />
-            {customer.phone || "N/A"}
-          </div>
-          <div className='text-sm text-gray-500 flex items-center'>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
             <MdLocationOn className='w-4 h-4 mr-1' />
             {customer.address || "N/A"}
+          </div>
+          <div className='text-sm text-[var(--text-secondary)] flex items-center'>
+            <MdPhone className='w-4 h-4 mr-1' />
+            {customer.phone || "N/A"}
           </div>
         </div>
       ),
@@ -101,7 +101,7 @@ export default function CustomersRoot() {
     {
       header: "Joined",
       accessor: (customer: ICustomer) => (
-        <div className='text-sm text-gray-500'>
+        <div className='text-sm text-[var(--text-secondary)]'>
           {formatDate(customer.created_at || "N/A")}
         </div>
       ),
@@ -109,7 +109,7 @@ export default function CustomersRoot() {
     {
       header: "Orders",
       accessor: (customer: ICustomer) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {customer.total_orders}
         </div>
       ),
@@ -117,7 +117,7 @@ export default function CustomersRoot() {
     {
       header: "Total Spent",
       accessor: (customer: ICustomer) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {formatCurrency(customer.total_spent)}
         </div>
       ),
@@ -151,9 +151,11 @@ export default function CustomersRoot() {
   ];
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Customers</h1>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <div className='flex justify-between items-center py-6 px-8 border-b border-[var(--border-color)]'>
+        <h1 className='text-2xl font-semibold text-[var(--text-secondary)]'>
+          Customers
+        </h1>
         <div className='flex items-center space-x-4'>
           <Input
             placeholder='Search customers...'
@@ -169,6 +171,7 @@ export default function CustomersRoot() {
       {/* Customer Details Modal */}
       {isModalOpen && selectedCustomer && (
         <CustomersFormDetails
+          isOpen={isModalOpen}
           customer={selectedCustomer}
           onClose={() => setIsModalOpen(false)}
         />

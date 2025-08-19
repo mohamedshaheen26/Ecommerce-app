@@ -1,28 +1,47 @@
 @import "tailwindcss";
 
-@layer base {
-  * {
-    scrollbar-width: thin;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
 
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
+html {
+  overflow: hidden;
+}
 
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 rounded-full;
-  }
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
 
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
-  }
+::-webkit-scrollbar-track {
+  background-color: var(--bg-secondary);
+  border-radius: 9999px;
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
-  }
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 9999px;
+}
 
-  *:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-primary);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--accent-secondary);
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--bg-secondary);
+}
+
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }

@@ -10,7 +10,7 @@ export default function MainLayout() {
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
   return (
-    <div className='flex h-screen overflow-hidden bg-gray-50'>
+    <div className='flex h-screen overflow-hidden'>
       {/* Mobile backdrop */}
       {isSidebarOpen && (
         <div
@@ -37,7 +37,7 @@ export default function MainLayout() {
         {/* Desktop toggle button */}
         <button
           onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-          className='hidden lg:flex absolute -right-4 top-20 h-8 w-8 items-center justify-center rounded-full bg-white shadow-md border border-gray-200 cursor-pointer hover:bg-gray-50'
+          className='hidden lg:flex absolute -right-4 top-20 h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-primary)] shadow-md border border-[var(--border-color)] cursor-pointer  transition-colors duration-200'
         >
           {isDesktopSidebarOpen ? (
             <MdChevronLeft className='h-5 w-5 text-gray-600' />
@@ -48,17 +48,13 @@ export default function MainLayout() {
       </div>
 
       {/* Main content */}
-      <div className='flex-1 flex flex-col min-w-0'>
+      <div className='overflow-y-auto flex-1 flex flex-col min-w-0 '>
         {/* Header */}
         <Header onToggleSidebar={() => setIsSidebarOpen(true)} />
 
         {/* Page content */}
-        <main className='flex-1 overflow-y-auto'>
-          <div className='py-6'>
-            <div className='px-4 sm:px-6 lg:px-8'>
-              <Outlet />
-            </div>
-          </div>
+        <main className='flex-1 px-4 py-6 sm:px-6 lg:px-8'>
+          <Outlet />
         </main>
       </div>
     </div>

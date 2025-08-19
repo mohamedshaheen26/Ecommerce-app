@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Button from "./Button";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import Loader from "./Loader";
 
 interface Column<T> {
   header: ReactNode;
@@ -38,14 +39,14 @@ export default function Table<T>({
 
   return (
     <div className='overflow-x-auto'>
-      <table className='min-w-full divide-y divide-gray-200'>
+      <table className='min-w-full divide-y divide-[var(--border-color)]'>
         <thead>
           <tr>
             {columns.map((column, index) => (
               <th
                 key={index}
                 scope='col'
-                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                className={`px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider ${
                   column.className || ""
                 }`}
               >
@@ -54,32 +55,11 @@ export default function Table<T>({
             ))}
           </tr>
         </thead>
-        <tbody className='bg-white divide-y divide-gray-200'>
+        <tbody className='bg-[var(--bg-primary)] divide-y divide-[var(--border-color)]'>
           {isLoading ? (
             <tr>
               <td colSpan={columns.length} className='px-6 py-4 text-center'>
-                <div className='flex justify-center'>
-                  <svg
-                    className='animate-spin h-5 w-5 text-blue-500'
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                  >
-                    <circle
-                      className='opacity-25'
-                      cx='12'
-                      cy='12'
-                      r='10'
-                      stroke='currentColor'
-                      strokeWidth='4'
-                    />
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                    />
-                  </svg>
-                </div>
+                <Loader />
               </td>
             </tr>
           ) : data.length === 0 ? (
@@ -111,7 +91,7 @@ export default function Table<T>({
       </table>
 
       {showPagination && (
-        <div className='px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-white'>
+        <div className='px-6 py-3 flex items-center justify-between border-t border-[var(--border-color)] bg-[var(--bg-primary)]'>
           <div className='flex-1 flex justify-between sm:hidden'>
             <Button
               variant='outline'
@@ -130,7 +110,7 @@ export default function Table<T>({
           </div>
           <div className='hidden sm:flex-1 sm:flex sm:items-center sm:justify-between'>
             <div>
-              <p className='text-sm text-gray-700'>
+              <p className='text-sm text-[var(--text-muted)]'>
                 Showing{" "}
                 <span className='font-medium'>
                   {(currentPage - 1) * pageSize + 1}
@@ -148,11 +128,10 @@ export default function Table<T>({
                 aria-label='Pagination'
               >
                 <Button
-                  size='lg'
                   variant='outline'
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className='relative inline-flex items-center justify-center w-10 h-10 border-none hover:bg-gray-50 rounded-lg disabled:cursor-default disabled:hover:bg-transparent disabled:opacity-30'
+                  className='w-10 h-10 border-none'
                 >
                   <MdChevronLeft className='w-7 h-7' />
                 </Button>
@@ -172,7 +151,7 @@ export default function Table<T>({
                       return (
                         <span
                           key={page}
-                          className='relative inline-flex items-center justify-center w-10 h-10 text-gray-700'
+                          className='relative inline-flex items-center justify-center w-10 h-10 text-[var(--text-muted)] bg-[var(--bg-primary)]'
                         >
                           ...
                         </span>
@@ -186,11 +165,11 @@ export default function Table<T>({
                       key={page}
                       variant='outline'
                       onClick={() => handlePageChange(page)}
-                      className={`relative inline-flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg border-none disabled:cursor-default disabled:hover:bg-transparent
+                      className={`border-none
                         ${
                           currentPage === page
-                            ? "bg-gray-100 text-black"
-                            : "bg-white border text-gray-700 hover:bg-gray-50"
+                            ? "bg-[var(--accent-primary)] !text-[var(--text-primary)]"
+                            : ""
                         }`}
                     >
                       {page}
@@ -202,7 +181,7 @@ export default function Table<T>({
                   variant='outline'
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className='relative inline-flex items-center justify-center w-10 h-10 border-none rounded-lg disabled:cursor-default disabled:hover:bg-transparent disabled:opacity-30'
+                  className=' w-10 h-10 border-none'
                 >
                   <MdChevronRight className='w-7 h-7' />
                 </Button>

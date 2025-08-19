@@ -13,7 +13,10 @@ interface ModalProps {
   variant?: "save" | "delete";
   confirmText?: string;
   cancelText?: string;
+  showSaveBtn?: boolean;
+  showCancelBtn?: boolean;
   showActions?: boolean;
+  extraActions?: ReactNode;
 }
 
 export default function Modal({
@@ -27,7 +30,10 @@ export default function Modal({
   variant = "save",
   confirmText,
   cancelText = "Cancel",
+  showSaveBtn = true,
+  showCancelBtn = true,
   showActions = true,
+  extraActions,
 }: ModalProps) {
   if (!isOpen) return null;
 
@@ -35,7 +41,7 @@ export default function Modal({
     if (variant === "delete") {
       return (
         <Button
-          variant='danger'
+          variant='primary'
           onClick={onConfirm}
           disabled={isSubmitting}
           isLoading={isSubmitting}
@@ -48,7 +54,7 @@ export default function Modal({
 
     return (
       <Button
-        variant='secondary'
+        variant='primary'
         type='submit'
         disabled={isSubmitting}
         isLoading={isSubmitting}
@@ -64,16 +70,18 @@ export default function Modal({
   return (
     <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50'>
       <div
-        className={`bg-white rounded-lg w-full ${maxWidth} max-h-[90vh] flex flex-col`}
+        className={`bg-[var(--bg-primary)] rounded-lg w-full ${maxWidth} max-h-[90vh] flex flex-col`}
       >
         {/* Sticky Header */}
-        <div className='border-b border-gray-200 flex justify-between items-center px-6 py-3 sticky top-0 bg-gray-100 z-10'>
-          <h2 className='text-xl font-semibold text-gray-800'>{title}</h2>
+        <div className='bg-[var(--bg-secondary)] border-b border-[var(--border-color)] flex justify-between items-center px-6 py-3 sticky top-0 z-10 rounded-t-lg'>
+          <h2 className='text-xl font-semibold text-[var(--text-secondary)]'>
+            {title}
+          </h2>
           <Button
             variant='outline'
             size='sm'
             onClick={onClose}
-            className=' border-none hover:bg-transparent hover:text-gray-900 bg-gray-100'
+            className=' border-none'
           >
             <MdClose className='w-6 h-6' />
           </Button>
@@ -84,16 +92,21 @@ export default function Modal({
 
           {/* Sticky Footer */}
           {showActions && (
-            <div className='border-t border-gray-200 flex justify-end space-x-3 px-6 py-3 sticky bottom-0 bg-gray-100 z-10'>
-              {getConfirmButton()}
-              <Button
-                className='bg-white'
-                variant='outline'
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
-                {cancelText}
-              </Button>
+            <div className='bg-[var(--bg-secondary)] border-t border-[var(--border-color)] flex justify-end space-x-3 px-6 py-3 sticky bottom-0 z-10 rounded-b-lg'>
+              {extraActions}
+
+              {showSaveBtn && getConfirmButton()}
+
+              {showCancelBtn && (
+                <Button
+                  className=''
+                  variant='danger'
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                >
+                  {cancelText}
+                </Button>
+              )}
             </div>
           )}
         </form>

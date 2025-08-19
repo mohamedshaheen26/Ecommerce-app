@@ -71,9 +71,11 @@ export default function SettingsRoot() {
   };
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Settings</h1>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <div className='flex justify-between items-center py-6 px-8 border-b border-[var(--border-color)]'>
+        <h1 className='text-2xl font-semibold text-[var(--text-secondary)]'>
+          Settings
+        </h1>
       </div>
       {contextError && (
         <div className='mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md'>
@@ -117,7 +119,7 @@ export default function SettingsRoot() {
         </FormField>
 
         <div>
-          <Button type='submit' variant='secondary' disabled={isSaving}>
+          <Button type='submit' variant='primary' disabled={isSaving}>
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>

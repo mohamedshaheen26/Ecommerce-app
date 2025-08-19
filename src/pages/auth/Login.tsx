@@ -82,13 +82,15 @@ export default function Login() {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-      <div className='w-full max-w-[400px] bg-white rounded-lg shadow-sm p-8 space-y-8'>
+    <div className='min-h-screen flex items-center justify-center bg-[var(--bg-secondary)]'>
+      <div className='w-full max-w-[400px] bg-[var(--bg-primary)] rounded-lg shadow-sm p-8 space-y-8'>
         <div className='flex justify-center items-center space-y-2'>
           <div className='w-8 h-8'>
             <img src='/Logo.svg' alt='Logo' className='w-full h-full' />
           </div>
-          <h1 className='text-xl font-bold text-gray-900'>Admin</h1>
+          <h1 className='text-xl font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
+            Admin
+          </h1>
         </div>
 
         <form className='space-y-6' onSubmit={handleSubmit}>
@@ -134,9 +136,10 @@ export default function Login() {
           </div>
 
           <Button
+            fullWidth={true}
             type='submit'
             disabled={loading}
-            className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#111827] hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed'
+            isLoading={loading}
           >
             {loading ? "Signing in..." : "Login"}
           </Button>

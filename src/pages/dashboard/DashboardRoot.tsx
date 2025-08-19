@@ -24,6 +24,8 @@ import {
   getRecentOrders,
   getTotalSalesCurrentMonth,
 } from "../../api/dashboard";
+import { getStatusColor } from "../../utils/orderStatus";
+import Loader from "../../components/common/Loader";
 
 ChartJS.register(
   CategoryScale,
@@ -88,7 +90,7 @@ export default function DashboardRoot() {
           { length: 30 },
           () => Math.floor(Math.random() * 200) + 100
         ),
-        borderColor: "rgb(59, 130, 246)",
+        borderColor: "#714b67",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
         borderWidth: 2,
         fill: true,
@@ -105,7 +107,7 @@ export default function DashboardRoot() {
           { length: 30 },
           () => Math.floor(Math.random() * 100) + 50
         ),
-        borderColor: "rgb(59, 130, 246)",
+        borderColor: "#714b67",
         tension: 0.4,
         pointRadius: 0,
         borderWidth: 2,
@@ -132,11 +134,7 @@ export default function DashboardRoot() {
   };
 
   if (loading || settingsLoading) {
-    return (
-      <div className='flex items-center justify-center h-full'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   const monthlyGoal = settings.monthly_order_goal || 1000;
@@ -147,7 +145,7 @@ export default function DashboardRoot() {
     {
       header: "Order",
       accessor: (row: IRecentOrder) => (
-        <div className='text-sm font-medium text-gray-900'>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {row.id.slice(0, 8)}
         </div>
       ),
@@ -155,26 +153,29 @@ export default function DashboardRoot() {
     {
       header: "Date",
       accessor: (row: IRecentOrder) => (
-        <div className='text-sm text-gray-500'>{row.created_at}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {row.created_at}
+        </div>
       ),
     },
     {
       header: "Total",
       accessor: (row: IRecentOrder) => (
-        <div className='text-sm text-gray-500'>${row.total.toFixed(2)}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          ${row.total.toFixed(2)}
+        </div>
       ),
     },
     {
       header: "Status",
       accessor: (row: IRecentOrder) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            row.status === "Completed"
-              ? "bg-green-100 text-green-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
+          className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+            row.status
+          )}`}
         >
-          {row.status}
+          {row.status.replace("_", " ").charAt(0).toUpperCase() +
+            row.status.replace("_", " ").slice(1)}
         </span>
       ),
     },
@@ -184,14 +185,18 @@ export default function DashboardRoot() {
     <>
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-6'>
         {/* Total Sales Card */}
-        <div className='bg-white p-6 border border-gray-200 rounded-lg overflow-hidden'>
+        <div className='bg-[var(--bg-primary)] p-6 border border-[var(--border-color)] rounded-lg overflow-hidden'>
           <div className='flex justify-between mb-4'>
             <div>
-              <h3 className='text-md text-black font-semibold'>Total Sales</h3>
-              <p className='text-gray-400 text-xs mt-1'>THIS MONTH</p>
+              <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
+                Total Sales
+              </h3>
+              <p className='text-[var(--text-muted)] text-xs mt-1'>
+                THIS MONTH
+              </p>
             </div>
-            <p className='text-2xl font-semibold mt-2'>
-              $ {stats.totalSales.toLocaleString()}
+            <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
+              ${stats.totalSales.toLocaleString()}
             </p>
           </div>
           <div className='h-34'>
@@ -200,13 +205,17 @@ export default function DashboardRoot() {
         </div>
 
         {/* Customers Card */}
-        <div className='bg-white p-6 border border-gray-200 rounded-lg overflow-hidden'>
+        <div className='bg-[var(--bg-primary)] p-6 border border-[var(--border-color)] rounded-lg overflow-hidden'>
           <div className='flex justify-between mb-4'>
             <div>
-              <h3 className='text-md text-black font-semibold'>Customers</h3>
-              <p className='text-gray-400 text-xs mt-1'>THIS MONTH</p>
+              <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
+                Customers
+              </h3>
+              <p className='text-[var(--text-muted)] text-xs mt-1'>
+                THIS MONTH
+              </p>
             </div>
-            <p className='text-2xl font-semibold mt-2'>
+            <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
               {stats.customers.toLocaleString()}
             </p>
           </div>
@@ -216,23 +225,27 @@ export default function DashboardRoot() {
         </div>
 
         {/* Orders Card */}
-        <div className='bg-white p-6 border border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between'>
+        <div className='bg-[var(--bg-primary)] p-6 border border-[var(--border-color)] rounded-lg overflow-hidden flex flex-col justify-between'>
           <div className='flex justify-between mb-4'>
             <div>
-              <h3 className='text-md text-black font-semibold'>Orders</h3>
-              <p className='text-gray-400 text-xs mt-1'>
+              <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
+                Orders
+              </h3>
+              <p className='text-[var(--text-muted)] text-xs mt-1'>
                 MONTHLY GOALS: {monthlyGoal.toLocaleString()}
               </p>
             </div>
-            <p className='text-2xl font-semibold mt-2'>
+            <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
               {stats.orders.toLocaleString()}
             </p>
           </div>
           <div className=''>
-            <p className='text-sm text-gray-500 mb-2'>{ordersLeft} Left</p>
+            <p className='text-sm text-[var(--text-muted)] mb-2'>
+              {ordersLeft} Left
+            </p>
             <div className='h-2 bg-gray-100 rounded-full'>
               <div
-                className='h-2 bg-blue-500 rounded-full'
+                className='h-2 bg-[var(--accent-primary)] rounded-full'
                 style={{ width: `${ordersProgress}%` }}
               />
             </div>
@@ -242,26 +255,32 @@ export default function DashboardRoot() {
 
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
         {/* Best Selling Products */}
-        <div className='md:col-span-1 bg-white border border-gray-200 rounded-lg overflow-hidden'>
-          <div className='p-6 border-b border-gray-200 pb-4'>
-            <h3 className='text-md text-black font-semibold'>Best Selling</h3>
-            <p className='text-gray-400 text-xs mt-1'>THIS MONTH</p>
+        <div className='md:col-span-1 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+          <div className='p-6 border-b border-[var(--border-color)] pb-4'>
+            <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
+              Best Selling
+            </h3>
+            <p className='text-[var(--text-muted)] text-xs mt-1'>THIS MONTH</p>
           </div>
           <div className='p-6'>
-            <p className='text-2xl font-semibold mt-2'>
+            <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
               $2,400 -{" "}
-              <span className='text-gray-500 text-sm'>Total Sales</span>
+              <span className='text-[var(--text-muted)] text-sm'>
+                Total Sales
+              </span>
             </p>
           </div>
           <div className='p-6 space-y-3'>
             {stats.bestSelling.map((product, index) => (
               <div
                 key={index}
-                className='py-1 px-5 border border-gray-200 w-fit rounded-full'
+                className='py-1 px-5 border border-[var(--border-color)] w-fit rounded-full'
               >
-                <span className='text-sm text-gray-600'>{product.title}</span>
-                <span className='text-sm text-gray-500 mx-2'>-</span>
-                <span className='text-sm text-gray-[#5C5F6A] font-semibold'>
+                <span className='text-sm text-[var(--text-muted)]'>
+                  {product.title}
+                </span>
+                <span className='text-sm text-[var(--text-muted)] mx-2'>-</span>
+                <span className='text-sm text-[var(--text-secondary)] font-semibold'>
                   ${product.sales_count} Sales
                 </span>
               </div>
@@ -270,14 +289,12 @@ export default function DashboardRoot() {
         </div>
 
         {/* Recent Orders */}
-        <div className='md:col-span-2 bg-white border border-gray-200 rounded-lg overflow-hidden'>
-          <div className='flex items-center justify-between p-6 border-b border-gray-200'>
-            <h3 className='text-md text-black font-semibold'>Recent Orders</h3>
-            <Button
-              variant='outline'
-              className='text-blue-500 hover:text-blue-600'
-              onClick={() => navigate("/orders")}
-            >
+        <div className='md:col-span-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+          <div className='flex items-center justify-between p-6 border-b border-[var(--border-color)]'>
+            <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
+              Recent Orders
+            </h3>
+            <Button variant='primary' onClick={() => navigate("/orders")}>
               View All
             </Button>
           </div>

@@ -1,4 +1,4 @@
-import type { SelectHTMLAttributes } from 'react';
+import type { SelectHTMLAttributes } from "react";
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -10,45 +10,45 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   }>;
 }
 
-export default function Select({ 
-  label, 
-  error, 
-  className = '', 
+export default function Select({
+  label,
+  error,
+  className = "",
   fullWidth = true,
   required,
   options,
-  ...props 
+  ...props
 }: SelectProps) {
   return (
-    <div className={`${fullWidth ? 'w-full' : ''}`}>
+    <div className={`${fullWidth ? "w-full" : ""}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className='block text-sm font-medium text-gray-700 mb-1'>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className='text-red-500 ml-1'>*</span>}
         </label>
       )}
       <select
         className={`
-          block p-2 rounded-lg border border-gray-300
-          focus:border-blue-500 focus:ring-blue-500
-          disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500
-          ${error ? 'border-red-500' : ''}
-          ${fullWidth ? 'w-full' : ''}
+            block p-2 rounded-md border border-[var(--border-color)]
+            focus:border-[var(--accent-primary)] focus:ring-[var(--accent-primary)]
+            disabled:cursor-not-allowed disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-[var(--text-secondary)]
+          ${error ? "border-red-500" : ""}
+          ${fullWidth ? "w-full" : ""}
           ${className}
         `}
         {...props}
       >
         {options.map(({ value, label }) => (
-          <option key={value} value={value}>
+          <option
+            key={value}
+            value={value}
+            className='text-[var(--text-secondary)] bg-[var(--bg-card)]'
+          >
             {label}
           </option>
         ))}
       </select>
-      {error && (
-        <p className="mt-1 text-sm text-red-500">
-          {error}
-        </p>
-      )}
+      {error && <p className='mt-1 text-sm text-red-500'>{error}</p>}
     </div>
   );
-} 
+}

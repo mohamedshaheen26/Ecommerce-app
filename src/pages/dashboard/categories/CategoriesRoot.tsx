@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { IoSearchOutline } from "react-icons/io5";
 import toast from "react-hot-toast";
 
 import type { ICategory } from "../../../types";
@@ -10,12 +9,11 @@ import {
 } from "../../../api/categories";
 
 import DropdownMenu from "../../../components/common/DropdownMenu";
-import Button from "../../../components/common/Button";
-import Input from "../../../components/common/Input";
 import Table from "../../../components/common/Table";
 import DeleteModal from "../../../components/common/DeleteModal";
 
 import CategoriesForm from "./CategoriesForm";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function CategoriesRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -87,19 +85,23 @@ export default function CategoriesRoot() {
     {
       header: "Name",
       accessor: (category: ICategory) => (
-        <div className='text-sm font-medium text-gray-900'>{category.name}</div>
+        <div className='text-sm font-medium text-[var(--text-secondary)]'>
+          {category.name}
+        </div>
       ),
     },
     {
       header: "Description",
       accessor: (category: ICategory) => (
-        <div className='text-sm text-gray-500'>{category.description}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {category.description}
+        </div>
       ),
     },
     {
       header: "Created",
       accessor: (category: ICategory) => (
-        <div className='text-sm text-gray-500'>
+        <div className='text-sm text-[var(--text-secondary)]'>
           {category.created_at
             ? new Date(category.created_at).toLocaleDateString()
             : "No date"}
@@ -138,28 +140,17 @@ export default function CategoriesRoot() {
   );
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Categories</h1>
-        <div className='flex items-center space-x-4'>
-          <Button
-            variant='secondary'
-            onClick={() => {
-              setEditingCategory(null);
-              setIsFormOpen(true);
-            }}
-          >
-            Add Category
-          </Button>
-          <Input
-            fullWidth={false}
-            placeholder='Search categories...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<IoSearchOutline className='w-5 h-5' />}
-          />
-        </div>
-      </div>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <PageHeader
+        title='Categories'
+        addButtonText='Add Category'
+        onAdd={() => {
+          setEditingCategory(null);
+          setIsFormOpen(true);
+        }}
+        searchQuery={searchQuery}
+        onSearch={(val) => setSearchQuery(val)}
+      />
 
       <Table data={filteredCategories} columns={columns} isLoading={loading} />
 

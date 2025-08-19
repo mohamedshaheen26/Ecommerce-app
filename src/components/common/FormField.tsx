@@ -19,7 +19,7 @@ export default function FormField({
     <div className='space-y-1 mb-2'>
       <label
         htmlFor={htmlFor}
-        className='block text-sm font-medium text-gray-700'
+        className='block text-sm text-[var(--text-secondary)] mb-1'
       >
         {label}
         {required && <span className='text-red-500 ml-1'>*</span>}

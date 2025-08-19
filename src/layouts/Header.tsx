@@ -1,7 +1,8 @@
 import Button from "../components/common/Button";
 import { useNavigate } from "react-router-dom";
-import { MdMenu, MdLogout } from "react-icons/md";
+import { MdMenu, MdLogout, MdLightMode, MdDarkMode } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -10,10 +11,14 @@ interface HeaderProps {
 const Header = ({ onToggleSidebar }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { darkMode, toggleTheme } = useTheme();
 
   // Generate breadcrumbs from current location
   const getBreadcrumbs = () => {
     const paths = location.pathname.split("/").filter(Boolean);
+
+    if (paths.length === 0) return [{ name: "Dashboard", path: "/" }];
+
     return paths.map((path, index) => ({
       name: path.charAt(0).toUpperCase() + path.slice(1),
       path: "/" + paths.slice(0, index + 1).join("/"),
@@ -28,8 +33,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   };
 
   return (
-    <header className='sticky top-0 z-10'>
-      <div className='flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8'>
+    <header className='sticky top-0 z-10 shadow-2xs bg-[var(--bg-primary)]'>
+      <div className='flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8'>
         {/* Left section with menu button and breadcrumbs */}
         <div className='flex items-center gap-4'>
           <button
@@ -50,8 +55,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
                       text-sm font-medium
                       ${
                         index === breadcrumbs.length - 1
-                          ? "text-gray-800"
-                          : "text-gray-500 hover:text-gray-700"
+                          ? "text-[var(--text-secondary)]"
+                          : "text-[var(--text-secondary)] hover:text-gray-700"
                       }
                     `}
                 >
@@ -62,12 +67,27 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
           </nav>
         </div>
 
-        {/* Right section with logout button */}
-        <div>
+        {/* Right section with theme toggle and logout button */}
+        <div className='flex items-center gap-4'>
+          <Button
+            variant='outline'
+            onClick={toggleTheme}
+            size='sm'
+            className=' border-none'
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {darkMode ? (
+              <MdLightMode className='h-5 w-5' />
+            ) : (
+              <MdDarkMode className='h-5 w-5' />
+            )}
+          </Button>
+
           <Button
             variant='outline'
             onClick={handleLogout}
-            className='flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border-none'
+            size='sm'
+            className='border-none'
           >
             <MdLogout className='h-5 w-5' />
           </Button>

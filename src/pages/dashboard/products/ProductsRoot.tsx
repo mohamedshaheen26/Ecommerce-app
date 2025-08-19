@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { IoSwapVerticalOutline } from "react-icons/io5";
-import { IoSearchOutline } from "react-icons/io5";
 import DeleteModal from "../../../components/common/DeleteModal";
 import Table from "../../../components/common/Table";
 import DropdownMenu from "../../../components/common/DropdownMenu";
-import Button from "../../../components/common/Button";
-import Input from "../../../components/common/Input";
 import toast from "react-hot-toast";
 import type { ICategory, IProduct } from "../../../types";
 import { deleteProduct, fetchProducts } from "../../../api/product";
 import { fetchAllCategories } from "../../../api/categories";
 import ProductsForm from "./ProductsForm";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function ProductsRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -80,10 +78,10 @@ export default function ProductsRoot() {
       header: <IoSwapVerticalOutline className='w-5 h-5' />,
       accessor: (product: IProduct) => (
         <div className='flex items-center'>
-          <div className='h-12 w-12 flex-shrink-0 bg-[#F6F6F6] rounded-lg overflow-hidden p-1'>
+          <div className='h-12 w-12 flex-shrink-0 bg-[var(--bg-secondary)] rounded-lg overflow-hidden p-1'>
             <img
               className='rounded-lg object-cover w-full h-full'
-              src={product.images[0]}
+              src={product.images[0] || "/Image_not_Available.jpg"}
               alt={product.title}
             />
           </div>
@@ -95,24 +93,19 @@ export default function ProductsRoot() {
       header: "Name",
       accessor: (product: IProduct) => (
         <div className='flex items-center'>
-          <div className='text-sm font-medium text-gray-900'>
+          <div className='text-sm font-medium text-[var(--text-secondary)]'>
             {product.title}
           </div>
         </div>
       ),
     },
-    {
-      header: "SKU",
-      accessor: (product: IProduct) => (
-        <div className='flex items-center'>
-          <div className='text-sm font-medium text-gray-900'>{product.sku}</div>
-        </div>
-      ),
-    },
+    // removed SKU column
     {
       header: "Price",
       accessor: (product: IProduct) => (
-        <div className='text-sm text-gray-900'>${product.price}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          ${product.price}
+        </div>
       ),
     },
     {
@@ -128,14 +121,16 @@ export default function ProductsRoot() {
               : "bg-red-100 text-red-800"
           }`}
         >
-          {product.stock_status.replace("_", " ")}
+          {product.stock_status.replace(/_/g, " ")}
         </span>
       ),
     },
     {
       header: "Category",
       accessor: (product: IProduct) => (
-        <div className='text-sm text-gray-900'>{product.category.name}</div>
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {product.category.name}
+        </div>
       ),
     },
     {
@@ -167,31 +162,17 @@ export default function ProductsRoot() {
   ];
 
   return (
-    <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <div className='flex justify-between items-center py-6 px-8 border-b border-gray-200'>
-        <h1 className='text-2xl font-semibold text-gray-800'>Products</h1>
-        <div className='flex items-center space-x-4'>
-          <Button
-            variant='secondary'
-            onClick={() => {
-              setSelectedProduct(null);
-              setIsAddModalOpen(true);
-            }}
-          >
-            Add Product
-          </Button>
-          <Input
-            fullWidth={false}
-            placeholder='Search products...'
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            leftIcon={<IoSearchOutline className='w-5 h-5' />}
-          />
-        </div>
-      </div>
+    <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
+      <PageHeader
+        title='Products'
+        addButtonText='Add Product'
+        onAdd={() => {
+          setSelectedProduct(null);
+          setIsAddModalOpen(true);
+        }}
+        searchQuery={searchQuery}
+        onSearch={(val) => setSearchQuery(val)}
+      />
 
       <Table
         data={filteredProducts}

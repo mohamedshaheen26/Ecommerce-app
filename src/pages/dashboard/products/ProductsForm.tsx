@@ -7,7 +7,6 @@ import {
 
 import toast from "react-hot-toast";
 import {
-  StockStatus,
   type ICategory,
   type IProduct,
   type IProductFormValues,
@@ -30,9 +29,7 @@ const INITIAL_FORM_VALUES: IProductFormValues = {
   price: 0,
   description: "",
   category_id: "",
-  slug: "",
-  sku: "",
-  stock_status: StockStatus.IN_STOCK,
+  stock_status: "",
   available_quantity: 0,
   colors: [],
   sizes: [],
@@ -58,22 +55,25 @@ export default function ProductsForm({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useYupForm<IProductValidation>(productSchema, {
     title: editingProduct?.title ?? "",
     price: editingProduct?.price ?? 0,
     description: editingProduct?.description ?? "",
-    slug: editingProduct?.slug ?? "",
-    sku: editingProduct?.sku ?? "",
-    stock_status: editingProduct?.stock_status ?? StockStatus.IN_STOCK,
+    category_id: editingProduct?.category_id ?? "",
+    stock_status: editingProduct?.stock_status ?? "",
     available_quantity: editingProduct?.available_quantity ?? 0,
     images: editingProduct?.images ?? [],
     colors: editingProduct?.colors ?? [],
     sizes: editingProduct?.sizes ?? [],
   });
-
-  const [form, setForm] = useState<IProductFormValues>(INITIAL_FORM_VALUES);
   const [newImages, setNewImages] = useState<File[]>([]);
+  const colors = (watch("colors") ?? []) as string[];
+  const sizes = (watch("sizes") ?? []) as string[];
+  const images = (watch("images") ?? []) as string[];
 
   useEffect(() => {
     if (isOpen) {
@@ -82,14 +82,15 @@ export default function ProductsForm({
         price: editingProduct?.price ?? 0,
         description: editingProduct?.description ?? "",
         category_id: editingProduct?.category_id ?? "",
-        slug: editingProduct?.slug ?? "",
-        sku: editingProduct?.sku ?? "",
-        stock_status: editingProduct?.stock_status ?? StockStatus.IN_STOCK,
+        stock_status: editingProduct?.stock_status ?? "",
         available_quantity: editingProduct?.available_quantity ?? 0,
         colors: editingProduct?.colors ?? [],
         sizes: editingProduct?.sizes ?? [],
         images: editingProduct?.images ?? [],
       });
+
+      // Clear any staged new images when opening
+      setNewImages([]);
     }
   }, [isOpen, editingProduct, reset]);
 
@@ -99,38 +100,26 @@ export default function ProductsForm({
 
   const removeImage = (type: "old" | "new", index: number) => {
     if (type === "old") {
-      updateFormField(
-        "images",
-        form.images.filter((_, i) => i !== index)
-      );
+      const current = (getValues("images") ?? []) as string[];
+      const next = current.filter((_, i) => i !== index);
+      setValue("images", next, { shouldDirty: true, shouldValidate: true });
     } else {
       setNewImages((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
-  const updateFormField = <K extends keyof IProductFormValues>(
-    key: K,
-    value: IProductFormValues[K]
-  ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   const toggleColor = (color: string) => {
-    setForm((prev) => ({
-      ...prev,
-      colors: prev.colors.includes(color)
-        ? prev.colors.filter((c) => c !== color)
-        : [...prev.colors, color],
-    }));
+    const next = colors.includes(color)
+      ? colors.filter((c) => c !== color)
+      : [...colors, color];
+    setValue("colors", next, { shouldDirty: true, shouldValidate: true });
   };
 
   const toggleSize = (size: string) => {
-    setForm((prev) => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter((s) => s !== size)
-        : [...prev.sizes, size],
-    }));
+    const next = sizes.includes(size)
+      ? sizes.filter((s) => s !== size)
+      : [...sizes, size];
+    setValue("sizes", next, { shouldDirty: true, shouldValidate: true });
   };
 
   const onSubmit = async (data: IProductValidation) => {
@@ -140,11 +129,17 @@ export default function ProductsForm({
         uploadedUrls = await uploadImages(newImages);
       }
 
-      const allImages = [...form.images, ...uploadedUrls];
+      const allImages = [
+        ...((getValues("images") ?? []) as string[]),
+        ...uploadedUrls,
+      ];
 
       const productData = {
         ...data,
-        slug: data.slug || data.title.toLowerCase().replace(/ /g, "-"),
+        // Use RHF values
+        description: data.description,
+        colors: data.colors,
+        sizes: data.sizes,
         images: allImages,
       };
 
@@ -177,7 +172,7 @@ export default function ProductsForm({
       title={editingProduct ? "Edit Product" : "Add Product"}
       maxWidth='max-w-4xl'
       isSubmitting={isSubmitting}
-      confirmText={editingProduct ? "Update Product" : "Create Product"}
+      confirmText={editingProduct ? "Update" : "Create"}
     >
       <Grid columns={2}>
         <FormField
@@ -198,6 +193,7 @@ export default function ProductsForm({
             id='stock_status'
             {...register("stock_status")}
             options={[
+              { value: "", label: "Select a Status" },
               { value: "in_stock", label: "In Stock" },
               { value: "low_stock", label: "Low Stock" },
               { value: "out_of_stock", label: "Out of Stock" },
@@ -212,7 +208,13 @@ export default function ProductsForm({
           error={errors.price?.message}
           required
         >
-          <Input id='price' {...register("price")} min='0' type='number' />
+          <Input
+            id='price'
+            {...register("price")}
+            min='0'
+            type='number'
+            step='any'
+          />
         </FormField>
         <FormField
           htmlFor='available_quantity'
@@ -248,69 +250,63 @@ export default function ProductsForm({
           />
         </FormField>
         <FormField htmlFor='colors' label='Colors'>
-          <ColorsSelector
-            selectedColors={form.colors}
-            toggleColor={toggleColor}
-          />
+          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
         </FormField>
       </Grid>
       <Grid columns={2}>
-        <FormField htmlFor='sku' label='SKU'>
-          <Input id='sku' {...register("sku")} />
+        <FormField
+          htmlFor='description'
+          label='Description'
+          error={errors.description?.message}
+        >
+          <TextArea id='description' {...register("description")} />
         </FormField>
-        <FormField htmlFor='sizes' label='Sizes'>
-          <SizesSelector selectedSizes={form.sizes} toggleSize={toggleSize} />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField htmlFor='description' label='Description'>
-          <TextArea
-            id='description'
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </FormField>
-        <FormField htmlFor='images' label='Images'>
-          <div className='flex items-center space-x-4'>
-            <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>
-              Choose Files
-              <input
-                id='images'
-                type='file'
-                className='hidden'
-                multiple
-                accept='image/*'
-                onChange={(e) =>
-                  e.target.files && handleImageUpload(e.target.files)
-                }
-              />
-            </label>
-            <span className='text-sm text-gray-500'>
-              {!editingProduct
-                ? `${newImages.length} images selected`
-                : `${form.images?.length} images selected`}
-            </span>
-          </div>
-          <div className='mt-4'>
-            <Grid columns={4} gap={4}>
-              {form.images.map((url, index) => (
-                <ImagePreview
-                  key={`old-${index}`}
-                  src={url}
-                  onRemove={() => removeImage("old", index)}
+        <Grid columns={1}>
+          <FormField htmlFor='sizes' label='Sizes'>
+            <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
+          </FormField>
+          <FormField htmlFor='images' label='Images'>
+            <div className='flex items-center space-x-4'>
+              <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>
+                Choose Files
+                <input
+                  id='images'
+                  type='file'
+                  className='hidden'
+                  multiple
+                  accept='image/*'
+                  onChange={(e) =>
+                    e.target.files && handleImageUpload(e.target.files)
+                  }
                 />
-              ))}
+              </label>
+              <span className='text-sm text-gray-500'>
+                {!editingProduct
+                  ? `${newImages.length} images selected`
+                  : `${images?.length} images selected`}
+              </span>
+            </div>
+            <div className='mt-4'>
+              <Grid columns={4} gap={4}>
+                {images.map((url, index) => (
+                  <ImagePreview
+                    key={`old-${index}`}
+                    src={url}
+                    onRemove={() => removeImage("old", index)}
+                  />
+                ))}
 
-              {newImages.map((file, index) => (
-                <ImagePreview
-                  key={`new-${index}`}
-                  src={URL.createObjectURL(file)}
-                  onRemove={() => removeImage("new", index)}
-                />
-              ))}
-            </Grid>
-          </div>
-        </FormField>
+                {newImages.map((file, index) => (
+                  <ImagePreview
+                    key={`new-${index}`}
+                    src={URL.createObjectURL(file)}
+                    onRemove={() => removeImage("new", index)}
+                  />
+                ))}
+              </Grid>
+            </div>
+          </FormField>
+        </Grid>
       </Grid>
     </Modal>
   );

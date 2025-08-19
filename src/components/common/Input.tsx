@@ -24,9 +24,9 @@ export default function Input({
       )}
       <input
         className={`
-            block p-2 rounded-md border border-gray-300
-            focus:border-blue-500 focus:ring-blue-500
-            disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500
+            block p-2 rounded-md border border-[var(--border-color)]
+            focus:border-[var(--accent-primary)] focus:ring-[var(--accent-primary)]
+            disabled:cursor-not-allowed disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-[var(--text-secondary)]
             ${error ? "border-red-500" : ""}
             ${fullWidth ? "w-full" : ""}
             ${leftIcon ? "pl-10" : ""}
