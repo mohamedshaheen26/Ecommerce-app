@@ -5,7 +5,7 @@ export async function fetchAllEmployees() {
   const { data, error } = await supabase
     .from('employees')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order("id", { ascending: true });
   if (error) throw error
   return data
 }
@@ -34,11 +34,13 @@ export async function createEmployee(employee: any) {
     .from('employees')
     .insert({
       full_name: employee.full_name,
+      name_ar: employee.name_ar,
       email: employee.email,
       username: employee.username,
       user_id: authData.user?.id,
       phone: employee.phone,
       address: employee.address,
+      address_ar: employee.address_ar,
       role: employee.role,
       hire_date: employee.hire_date,
       salary: employee.salary,
@@ -54,9 +56,11 @@ export async function updateEmployee(id: string, employee: any) {
     .update(
       {
         full_name: employee.full_name,
+        name_ar: employee.name_ar,
         username: employee.username,
         phone: employee.phone,
         address: employee.address,
+        address_ar: employee.address_ar,
         role: employee.role,
         hire_date: employee.hire_date,
         salary: employee.salary,

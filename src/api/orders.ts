@@ -12,8 +12,10 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
         customer_id,
         customer: customers (
           full_name,
+          name_ar,
           phone,
-          address
+          address,
+          address_ar
         ),
         status,
         total_amount,
@@ -23,7 +25,7 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
         notes
     `
     )
-    .order("created_at", { ascending: false });
+    .order("id", { ascending: true });
 
   if (ordersError) throw ordersError;
 
@@ -39,6 +41,7 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
         price,
         product: products (
           title,
+          name_ar,
           image_url
         )
       `)

@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import Modal from "../../../components/common/Modal";
 import type { ICustomer, IOrder } from "../../../types";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate } from "../../../utils/formatDate";
+import { useLanguage } from "../../../context/LanguageContext";
 
 interface Props {
   isOpen: boolean;
@@ -11,6 +13,8 @@ interface Props {
 
 const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
   const selectedCustomer = customer;
+  const { t } = useTranslation();
+  const { currentLang } = useLanguage();
 
   const getStatusColor = (status: IOrder["status"]) => {
     const colors = {
@@ -33,17 +37,21 @@ const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
     >
       <div className='flex justify-between items-start mb-6'>
         <p className='text-sm text-[var(--text-muted)]'>
-          Member since {formatDate(selectedCustomer.created_at || "N/A")}
+          {t("Member since", {
+            date: formatDate(selectedCustomer.created_at || "N/A"),
+          })}
         </p>
       </div>
 
       <div className='grid grid-cols-2 gap-6 mb-6'>
         <div>
           <h3 className='font-medium mb-2 text-[var(--text-secondary)]'>
-            Contact Information
+            {t("Contact Information")}
           </h3>
           <p className='text-sm mb-1 text-[var(--text-secondary)]'>
-            {selectedCustomer.full_name}
+            {currentLang === "ar"
+              ? selectedCustomer.name_ar
+              : selectedCustomer.full_name}
           </p>
           <p className='text-sm text-[var(--text-primary)] mb-1'>
             {selectedCustomer.email}
@@ -52,25 +60,27 @@ const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
             {selectedCustomer.phone || "No phone"}
           </p>
           <p className='text-sm text-[var(--text-secondary)]'>
-            {selectedCustomer.address || "No address"}
+            {currentLang === "ar"
+              ? selectedCustomer.address_ar
+              : selectedCustomer.address || "No address"}
           </p>
         </div>
         <div>
           <h3 className='font-medium mb-2 text-[var(--text-secondary)]'>
-            Order Summary
+            {t("Order Summary")}
           </h3>
           <p className='text-sm mb-1 text-[var(--text-secondary)]'>
-            Total Orders: {selectedCustomer.total_orders}
+            {t("Total Orders")}: {selectedCustomer.total_orders}
           </p>
           <p className='text-sm mb-1 text-[var(--text-secondary)]'>
-            Total Spent: {formatCurrency(selectedCustomer.total_spent)}
+            {t("Total Spent")}: {formatCurrency(selectedCustomer.total_spent)}
           </p>
         </div>
       </div>
 
       <div>
         <h3 className='font-medium mb-4 text-[var(--text-secondary)]'>
-          Recent Orders
+          {t("Recent Orders")}
         </h3>
         <div className='space-y-4'>
           {selectedCustomer.orders?.slice(0, 5).map((order) => (
@@ -80,7 +90,7 @@ const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
             >
               <div>
                 <div className='text-sm font-medium text-[var(--text-secondary)]'>
-                  Order #{order.id.slice(0, 8)}
+                  {t("Order")} #{order.id.slice(0, 8)}
                 </div>
                 <div className='text-sm text-[var(--text-muted)]'>
                   {formatDate(order.created_at)}
@@ -92,7 +102,7 @@ const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
                     order.status
                   )}`}
                 >
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  {t(`statuses.${order.status}`)}
                 </span>
                 <span className='text-sm font-medium text-[var(--text-secondary)]'>
                   {formatCurrency(order.total_amount)}

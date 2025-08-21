@@ -1,8 +1,16 @@
 import Button from "../components/common/Button";
 import { useNavigate } from "react-router-dom";
-import { MdMenu, MdLogout, MdLightMode, MdDarkMode } from "react-icons/md";
+import {
+  MdMenu,
+  MdLogout,
+  MdLightMode,
+  MdDarkMode,
+  MdLanguage,
+} from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -12,6 +20,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
+  const { currentLang, changeLanguage } = useLanguage();
+  const { t } = useTranslation();
 
   // Generate breadcrumbs from current location
   const getBreadcrumbs = () => {
@@ -60,7 +70,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
                       }
                     `}
                 >
-                  {item.name}
+                  {t(item.name)}
                 </span>
               </div>
             ))}
@@ -69,6 +79,18 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
         {/* Right section with theme toggle and logout button */}
         <div className='flex items-center gap-4'>
+          <Button
+            variant='outline'
+            onClick={() => changeLanguage(currentLang === "en" ? "ar" : "en")}
+            size='sm'
+            className=' border-none'
+            title={
+              currentLang === "en" ? "Change to Arabic" : "Change to English"
+            }
+          >
+            <MdLanguage className='h-5 w-5' />
+          </Button>
+
           <Button
             variant='outline'
             onClick={toggleTheme}
@@ -89,7 +111,11 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
             size='sm'
             className='border-none'
           >
-            <MdLogout className='h-5 w-5' />
+            {currentLang === "ar" ? (
+              <MdLogout className='h-5 w-5 rotate-180' />
+            ) : (
+              <MdLogout className='h-5 w-5' />
+            )}
           </Button>
         </div>
       </div>

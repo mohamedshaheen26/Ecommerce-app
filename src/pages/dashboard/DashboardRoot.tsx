@@ -26,6 +26,9 @@ import {
 } from "../../api/dashboard";
 import { getStatusColor } from "../../utils/orderStatus";
 import Loader from "../../components/common/Loader";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../context/LanguageContext";
+import { formatDate } from "../../utils/formatDate";
 
 ChartJS.register(
   CategoryScale,
@@ -43,6 +46,7 @@ export default function DashboardRoot() {
   const navigate = useNavigate();
   const { settings, isLoading: settingsLoading } = useSettings();
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
   const [stats, setStats] = useState<IDashboardStats>({
     totalSales: 0,
     customers: 0,
@@ -50,6 +54,7 @@ export default function DashboardRoot() {
     bestSelling: [],
     recentOrders: [],
   });
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     fetchDashboardData();
@@ -143,7 +148,7 @@ export default function DashboardRoot() {
 
   const dashboardOrderColumns = [
     {
-      header: "Order",
+      header: t("Order"),
       accessor: (row: IRecentOrder) => (
         <div className='text-sm font-medium text-[var(--text-secondary)]'>
           {row.id.slice(0, 8)}
@@ -151,15 +156,15 @@ export default function DashboardRoot() {
       ),
     },
     {
-      header: "Date",
+      header: t("Date"),
       accessor: (row: IRecentOrder) => (
         <div className='text-sm text-[var(--text-secondary)]'>
-          {row.created_at}
+          {formatDate(row.created_at || "")}
         </div>
       ),
     },
     {
-      header: "Total",
+      header: t("Total"),
       accessor: (row: IRecentOrder) => (
         <div className='text-sm text-[var(--text-secondary)]'>
           ${row.total.toFixed(2)}
@@ -167,15 +172,14 @@ export default function DashboardRoot() {
       ),
     },
     {
-      header: "Status",
+      header: t("Status"),
       accessor: (row: IRecentOrder) => (
         <span
           className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
             row.status
           )}`}
         >
-          {row.status.replace("_", " ").charAt(0).toUpperCase() +
-            row.status.replace("_", " ").slice(1)}
+          {t(`statuses.${row.status}`)}
         </span>
       ),
     },
@@ -189,10 +193,10 @@ export default function DashboardRoot() {
           <div className='flex justify-between mb-4'>
             <div>
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
-                Total Sales
+                {t("Total Sales")}
               </h3>
               <p className='text-[var(--text-muted)] text-xs mt-1'>
-                THIS MONTH
+                {t("THIS MONTH")}
               </p>
             </div>
             <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
@@ -209,10 +213,10 @@ export default function DashboardRoot() {
           <div className='flex justify-between mb-4'>
             <div>
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
-                Customers
+                {t("Customers")}
               </h3>
               <p className='text-[var(--text-muted)] text-xs mt-1'>
-                THIS MONTH
+                {t("THIS MONTH")}
               </p>
             </div>
             <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
@@ -229,10 +233,10 @@ export default function DashboardRoot() {
           <div className='flex justify-between mb-4'>
             <div>
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
-                Orders
+                {t("Orders")}
               </h3>
               <p className='text-[var(--text-muted)] text-xs mt-1'>
-                MONTHLY GOALS: {monthlyGoal.toLocaleString()}
+                {t("MONTHLY GOALS")}: {monthlyGoal.toLocaleString()}
               </p>
             </div>
             <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
@@ -241,7 +245,7 @@ export default function DashboardRoot() {
           </div>
           <div className=''>
             <p className='text-sm text-[var(--text-muted)] mb-2'>
-              {ordersLeft} Left
+              {ordersLeft} {t("Left")}
             </p>
             <div className='h-2 bg-gray-100 rounded-full'>
               <div
@@ -258,15 +262,17 @@ export default function DashboardRoot() {
         <div className='md:col-span-1 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
           <div className='p-6 border-b border-[var(--border-color)] pb-4'>
             <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
-              Best Selling
+              {t("Best Selling")}
             </h3>
-            <p className='text-[var(--text-muted)] text-xs mt-1'>THIS MONTH</p>
+            <p className='text-[var(--text-muted)] text-xs mt-1'>
+              {t("THIS MONTH")}
+            </p>
           </div>
           <div className='p-6'>
             <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
               $2,400 -{" "}
               <span className='text-[var(--text-muted)] text-sm'>
-                Total Sales
+                {t("Total Sales")}
               </span>
             </p>
           </div>
@@ -277,7 +283,7 @@ export default function DashboardRoot() {
                 className='py-1 px-5 border border-[var(--border-color)] w-fit rounded-full'
               >
                 <span className='text-sm text-[var(--text-muted)]'>
-                  {product.title}
+                  {currentLang == "ar" ? product.name_ar : product.title}
                 </span>
                 <span className='text-sm text-[var(--text-muted)] mx-2'>-</span>
                 <span className='text-sm text-[var(--text-secondary)] font-semibold'>
@@ -292,10 +298,10 @@ export default function DashboardRoot() {
         <div className='md:col-span-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
           <div className='flex items-center justify-between p-6 border-b border-[var(--border-color)]'>
             <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
-              Recent Orders
+              {t("Recent Orders")}
             </h3>
             <Button variant='primary' onClick={() => navigate("/orders")}>
-              View All
+              {t("View All")}
             </Button>
           </div>
           <div className='overflow-x-auto'>

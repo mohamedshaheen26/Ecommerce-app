@@ -13,10 +13,10 @@ export async function fetchProducts(
   let query = supabase
     .from("products")
     .select(
-      `*, category:category_id (name)`,
+      `*, category:category_id (name, name_ar)`,
       { count: "exact" }
     )
-    .order("created_at", { ascending: false });
+    .order("id", { ascending: true });
 
   if (searchQuery) {
     query = query.or(`title.ilike.%${searchQuery}%`);

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap");
 @import "tailwindcss";
 
 * {
@@ -5,8 +6,8 @@
   scrollbar-color: var(--accent-primary) var(--bg-secondary);
 }
 
-html {
-  overflow: hidden;
+html[dir="rtl"] * {
+  font-family: "Tajawal", sans-serif;
 }
 
 ::-webkit-scrollbar {

@@ -4,13 +4,15 @@ import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const { currentLang } = useLanguage();
 
   return (
-    <div className='flex h-screen overflow-hidden'>
+    <div className='flex h-screen'>
       {/* Mobile backdrop */}
       {isSidebarOpen && (
         <div
@@ -22,9 +24,9 @@ export default function MainLayout() {
       {/* Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-30 bg-white transform transition-all duration-300 ease-in-out
+          fixed inset-y-0 right-0 z-30 bg-white transform transition-all duration-300 ease-in-out
           lg:translate-x-0 lg:static lg:z-0
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}
           ${isDesktopSidebarOpen ? "w-65" : "w-20"}
         `}
       >
@@ -37,9 +39,17 @@ export default function MainLayout() {
         {/* Desktop toggle button */}
         <button
           onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-          className='hidden lg:flex absolute -right-4 top-20 h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-primary)] shadow-md border border-[var(--border-color)] cursor-pointer  transition-colors duration-200'
+          className={`hidden lg:flex absolute ${
+            currentLang === "ar" ? "-left-4" : "-right-4"
+          } top-20 h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-primary)] shadow-md border border-[var(--border-color)] cursor-pointer  transition-colors duration-200`}
         >
           {isDesktopSidebarOpen ? (
+            currentLang === "ar" ? (
+              <MdChevronRight className='h-5 w-5 text-gray-600' />
+            ) : (
+              <MdChevronLeft className='h-5 w-5 text-gray-600' />
+            )
+          ) : currentLang === "ar" ? (
             <MdChevronLeft className='h-5 w-5 text-gray-600' />
           ) : (
             <MdChevronRight className='h-5 w-5 text-gray-600' />
@@ -48,12 +58,12 @@ export default function MainLayout() {
       </div>
 
       {/* Main content */}
-      <div className='overflow-y-auto flex-1 flex flex-col min-w-0 '>
+      <div className='flex-1 flex flex-col min-w-0 '>
         {/* Header */}
         <Header onToggleSidebar={() => setIsSidebarOpen(true)} />
 
         {/* Page content */}
-        <main className='flex-1 px-4 py-6 sm:px-6 lg:px-8'>
+        <main className='overflow-y-auto flex-1 px-4 py-6 sm:px-6 lg:px-8'>
           <Outlet />
         </main>
       </div>

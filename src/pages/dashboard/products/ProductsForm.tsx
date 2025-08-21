@@ -22,12 +22,15 @@ import ImagePreview from "./components/ImagePreview";
 import SizesSelector from "./components/SizesSelector";
 import ColorsSelector from "./components/ColorsSelector";
 import { useYupForm } from "../../../hooks/useYupForm";
-import { productSchema } from "../../../validation/productSchema";
+import { getProductSchema } from "../../../validation/productSchema";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const INITIAL_FORM_VALUES: IProductFormValues = {
   title: "",
+  name_ar: "",
   price: 0,
   description: "",
+  description_ar: "",
   category_id: "",
   stock_status: "",
   available_quantity: 0,
@@ -59,10 +62,12 @@ export default function ProductsForm({
     setValue,
     getValues,
     formState: { errors, isSubmitting },
-  } = useYupForm<IProductValidation>(productSchema, {
+  } = useYupForm<IProductValidation>(getProductSchema() as any, {
     title: editingProduct?.title ?? "",
+    name_ar: editingProduct?.name_ar ?? "",
     price: editingProduct?.price ?? 0,
     description: editingProduct?.description ?? "",
+    description_ar: editingProduct?.description_ar ?? "",
     category_id: editingProduct?.category_id ?? "",
     stock_status: editingProduct?.stock_status ?? "",
     available_quantity: editingProduct?.available_quantity ?? 0,
@@ -74,13 +79,16 @@ export default function ProductsForm({
   const colors = (watch("colors") ?? []) as string[];
   const sizes = (watch("sizes") ?? []) as string[];
   const images = (watch("images") ?? []) as string[];
+  const { currentLang } = useLanguage();
 
   useEffect(() => {
     if (isOpen) {
       reset({
         title: editingProduct?.title ?? "",
+        name_ar: editingProduct?.name_ar ?? "",
         price: editingProduct?.price ?? 0,
         description: editingProduct?.description ?? "",
+        description_ar: editingProduct?.description_ar ?? "",
         category_id: editingProduct?.category_id ?? "",
         stock_status: editingProduct?.stock_status ?? "",
         available_quantity: editingProduct?.available_quantity ?? 0,
@@ -136,14 +144,13 @@ export default function ProductsForm({
 
       const productData = {
         ...data,
-        // Use RHF values
         description: data.description,
         colors: data.colors,
         sizes: data.sizes,
         images: allImages,
       };
 
-      if (editingProduct) {
+      if (editingProduct && editingProduct.id) {
         await updateProduct(editingProduct.id, productData);
       } else {
         await createProduct(productData);
@@ -169,12 +176,12 @@ export default function ProductsForm({
       isOpen={isOpen}
       onClose={onClose}
       onConfirm={handleSubmit(onSubmit)}
-      title={editingProduct ? "Edit Product" : "Add Product"}
+      title={editingProduct ? "Edit Product" : "Add New Product"}
       maxWidth='max-w-4xl'
       isSubmitting={isSubmitting}
       confirmText={editingProduct ? "Update" : "Create"}
     >
-      <Grid columns={2}>
+      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='title'
           label='Title'
@@ -183,6 +190,16 @@ export default function ProductsForm({
         >
           <Input id='title' {...register("title")} />
         </FormField>
+        <FormField
+          htmlFor='name_ar'
+          label='Arabic Name'
+          error={errors.name_ar?.message}
+          required
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='stock_status'
           label='Stock Status'
@@ -194,26 +211,10 @@ export default function ProductsForm({
             {...register("stock_status")}
             options={[
               { value: "", label: "Select a Status" },
-              { value: "in_stock", label: "In Stock" },
-              { value: "low_stock", label: "Low Stock" },
-              { value: "out_of_stock", label: "Out of Stock" },
+              { value: "in_stock", label: "Stock Statuses.in_stock" },
+              { value: "low_stock", label: "Stock Statuses.low_stock" },
+              { value: "out_of_stock", label: "Stock Statuses.out_of_stock" },
             ]}
-          />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='price'
-          label='Price'
-          error={errors.price?.message}
-          required
-        >
-          <Input
-            id='price'
-            {...register("price")}
-            min='0'
-            type='number'
-            step='any'
           />
         </FormField>
         <FormField
@@ -230,7 +231,26 @@ export default function ProductsForm({
           />
         </FormField>
       </Grid>
-      <Grid columns={2}>
+      <Grid columns={{ default: 1, md: 2 }}>
+        <FormField
+          htmlFor='price'
+          label='Price'
+          error={errors.price?.message}
+          required
+        >
+          <Input
+            id='price'
+            {...register("price")}
+            min='0'
+            type='number'
+            step='any'
+          />
+        </FormField>
+        <FormField htmlFor='colors' label='Colors'>
+          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
+        </FormField>
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='category'
           label='Category'
@@ -244,27 +264,37 @@ export default function ProductsForm({
               { value: "", label: "Select a category" },
               ...categories.map((category) => ({
                 value: category.id ? category.id : "",
-                label: category.name,
+                label: currentLang === "en" ? category.name : category.name_ar,
               })),
             ]}
           />
         </FormField>
-        <FormField htmlFor='colors' label='Colors'>
-          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
+        <FormField htmlFor='sizes' label='Sizes'>
+          <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
         </FormField>
       </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='description'
-          label='Description'
-          error={errors.description?.message}
-        >
-          <TextArea id='description' {...register("description")} />
-        </FormField>
+      <Grid columns={{ default: 1, md: 2 }}>
         <Grid columns={1}>
-          <FormField htmlFor='sizes' label='Sizes'>
-            <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
+          <FormField
+            htmlFor='description'
+            label='Description'
+            error={errors.description?.message}
+          >
+            <TextArea id='description' rows={3} {...register("description")} />
           </FormField>
+          <FormField
+            htmlFor='description_ar'
+            label='Arabic Description'
+            error={errors.description_ar?.message}
+          >
+            <TextArea
+              id='description_ar'
+              rows={3}
+              {...register("description_ar")}
+            />
+          </FormField>
+        </Grid>
+        <Grid columns={1}>
           <FormField htmlFor='images' label='Images'>
             <div className='flex items-center space-x-4'>
               <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>

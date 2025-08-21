@@ -15,7 +15,7 @@ import Select from "../../../components/common/Select";
 import Grid from "../../../components/common/Grid";
 import TextArea from "../../../components/common/TextArea";
 
-import { employeeSchema } from "../../../validation/employeeSchema";
+import { getEmployeeSchema } from "../../../validation/employeeSchema";
 import { useYupForm } from "../../../hooks/useYupForm";
 import { useEffect } from "react";
 
@@ -39,9 +39,10 @@ export default function EmployeesForm({
     reset,
     formState: { errors, isSubmitting },
   } = useYupForm<IEmployeeValidation>(
-    employeeSchema,
+    getEmployeeSchema() as any,
     {
       full_name: editingEmployee?.full_name ?? "",
+      name_ar: editingEmployee?.name_ar ?? "",
       email: editingEmployee?.email ?? "",
       username: editingEmployee?.username ?? "",
       password: undefined,
@@ -49,6 +50,7 @@ export default function EmployeesForm({
       role: editingEmployee?.role ?? UserRole.Employee,
       phone: editingEmployee?.phone ?? "",
       address: editingEmployee?.address ?? "",
+      address_ar: editingEmployee?.address_ar ?? "",
       hire_date: editingEmployee?.hire_date,
       salary: editingEmployee?.salary ?? 0,
     },
@@ -59,12 +61,14 @@ export default function EmployeesForm({
     if (isOpen) {
       reset({
         full_name: editingEmployee?.full_name || "",
+        name_ar: editingEmployee?.name_ar || "",
         email: editingEmployee?.email || "",
         username: editingEmployee?.username || "",
         password: undefined,
         confirm_password: undefined,
         phone: editingEmployee?.phone || "",
         address: editingEmployee?.address || "",
+        address_ar: editingEmployee?.address_ar || "",
         role: editingEmployee?.role || UserRole.Employee,
         hire_date: editingEmployee?.hire_date,
         salary: editingEmployee?.salary || 0,
@@ -112,6 +116,16 @@ export default function EmployeesForm({
           <Input id='full_name' {...register("full_name")} />
         </FormField>
         <FormField
+          htmlFor='name_ar'
+          label='Arabic Full Name'
+          required
+          error={errors.name_ar?.message}
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+      </Grid>
+      <Grid columns={2}>
+        <FormField
           htmlFor='role'
           label='Role'
           required
@@ -126,6 +140,14 @@ export default function EmployeesForm({
               { value: UserRole.Admin, label: "Admin" },
             ]}
           />
+        </FormField>
+        <FormField
+          htmlFor='hire_date'
+          label='Hire Date'
+          error={errors.hire_date?.message}
+          required
+        >
+          <Input id='hire_date' type='date' {...register("hire_date")} />
         </FormField>
       </Grid>
       <Grid columns={2}>
@@ -180,31 +202,30 @@ export default function EmployeesForm({
       </Grid>
       <Grid columns={2}>
         <FormField
-          htmlFor='hire_date'
-          label='Hire Date'
-          error={errors.hire_date?.message}
-          required
-        >
-          <Input id='hire_date' type='date' {...register("hire_date")} />
-        </FormField>
-        <FormField
           htmlFor='salary'
           label='Salary'
           error={errors.salary?.message}
         >
           <Input id='salary' type='number' {...register("salary")} step='any' />
         </FormField>
-      </Grid>
-      <Grid columns={2}>
         <FormField htmlFor='phone' label='Phone' error={errors.phone?.message}>
           <Input id='phone' {...register("phone")} />
         </FormField>
+      </Grid>
+      <Grid columns={2}>
         <FormField
           htmlFor='address'
           label='Address'
           error={errors.address?.message}
         >
           <TextArea id='address' {...register("address")} rows={2} />
+        </FormField>
+        <FormField
+          htmlFor='address_ar'
+          label='Arabic Address'
+          error={errors.address_ar?.message}
+        >
+          <TextArea id='address_ar' {...register("address_ar")} rows={2} />
         </FormField>
       </Grid>
     </Modal>
