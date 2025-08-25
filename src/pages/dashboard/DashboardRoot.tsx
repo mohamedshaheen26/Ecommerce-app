@@ -270,7 +270,7 @@ export default function DashboardRoot() {
           </div>
           <div className='p-6'>
             <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
-              $2,400 -{" "}
+              ${stats.totalSales.toLocaleString()} -{" "}
               <span className='text-[var(--text-muted)] text-sm'>
                 {t("Total Sales")}
               </span>

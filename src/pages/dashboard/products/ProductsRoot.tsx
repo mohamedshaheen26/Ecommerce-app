@@ -45,7 +45,6 @@ export default function ProductsRoot() {
       setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
@@ -65,9 +64,9 @@ export default function ProductsRoot() {
     setDeleting(true);
     toast
       .promise(deleteProduct(selectedProduct), {
-        loading: "Deleting...",
-        success: "Product deleted",
-        error: "Delete failed",
+        loading: `${t("Deleting product")}`,
+        success: `${t("Product deleted successfully")}`,
+        error: `${t("Failed to save product")}`,
       })
       .finally(async () => {
         setDeleting(false);

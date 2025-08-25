@@ -13,6 +13,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
+      <div className={`relative`}>
       <div className={`${fullWidth ? "w-full" : ""} relative`}>
         {leftIcon && (
           <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500'>
@@ -23,7 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`
             block p-2 rounded-md border border-[var(--border-color)]
             focus:border-[var(--accent-primary)] focus:ring-[var(--accent-primary)]
-            disabled:cursor-not-allowed disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-[var(--text-secondary)]
+            disabled:cursor-not-allowed disabled:bg-[var(--disabled-input)] disabled:text-[var(--text-muted)] text-[var(--text-secondary)]
             ${error ? "border-red-500" : ""}
             ${fullWidth ? "w-full" : ""}
             ${leftIcon ? "pl-10" : ""}

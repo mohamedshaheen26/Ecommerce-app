@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useTranslation } from "react-i18next";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -36,6 +37,9 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   };
 
   const breadcrumbs = getBreadcrumbs();
+  const { darkMode, toggleTheme } = useTheme();
+  const { currentLang, changeLanguage } = useLanguage();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();

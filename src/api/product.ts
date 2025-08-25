@@ -16,6 +16,7 @@ export async function fetchProducts(
       `*, category:category_id (name, name_ar)`,
       { count: "exact" }
     )
+    .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
   if (searchQuery) {

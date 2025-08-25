@@ -13,6 +13,8 @@ import Modal from "../../../components/common/Modal";
 import { useYupForm } from "../../../hooks/useYupForm";
 import { getCategorySchema } from "../../../validation/categorySchema";
 import Grid from "../../../components/common/Grid";
+import { useTranslation } from "react-i18next";
+import { handleError } from "../../../utils/errorHandler";
 
 interface CategoriesFormProps {
   isOpen: boolean;
@@ -38,6 +40,7 @@ export default function CategoriesForm({
     description: editingCategory?.description ?? "",
     description_ar: editingCategory?.description_ar ?? "",
   });
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -54,19 +57,15 @@ export default function CategoriesForm({
     try {
       if (editingCategory && editingCategory?.id) {
         await updateCategory(editingCategory.id, data);
-        toast.success("Category updated successfully");
+        toast.success(t("Category updated successfully"));
       } else {
         await createCategory(data);
-        toast.success("Category created successfully");
+        toast.success(t("Category created successfully"));
       }
       onSuccess();
       onClose();
-    } catch (error) {
-      toast.error(
-        `Failed to save category: ${
-          error instanceof Error ? error.message : error
-        }`
-      );
+    } catch (error: any) {
+      toast.error(handleError(error));
     }
   };
 
@@ -82,6 +81,20 @@ export default function CategoriesForm({
     >
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
+          htmlFor='name_ar'
+          label='Name'
+          required
+          error={errors.name_ar?.message}
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+        <FormField
+          htmlFor='name'
+          label='Name Second Language'
+          required
+          error={errors.name?.message}
+        >
+          <Input id='name' {...register("name")} />
           htmlFor='name'
           label='Name'
           required
@@ -100,6 +113,20 @@ export default function CategoriesForm({
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
+          htmlFor='description_ar'
+          label='Description'
+          required
+          error={errors.description_ar?.message}
+        >
+          <TextArea id='description_ar' {...register("description_ar")} />
+        </FormField>
+        <FormField
+          htmlFor='description'
+          label='Description Second Language'
+          required
+          error={errors.description?.message}
+        >
+          <TextArea id='description' {...register("description")} />
           htmlFor='description'
           label='Description'
           required

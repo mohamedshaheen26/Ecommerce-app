@@ -59,6 +59,23 @@ export const getEmployeeSchema = () => {
       .notRequired(),
     hire_date: yup.date()
       .transform((curr, orig) => orig === "" ? undefined : curr)
+      .required(t("validations.hire_date_required"))
+      .max(new Date(), t("validations.hire_date_future")),
+  });
+};
+
+export const getCredentialsSchema = () => {
+  const { t } = useTranslation();
+
+  return yup.object({
+    password: yup
+      .string()
+      .min(6, t("validations.password_min"))
+      .required(t("validations.password_required")),
+    confirm_password: yup
+      .string()
+      .oneOf([yup.ref("password")], t("validations.confirm_password_one_of"))
+      .required(t("validations.confirm_password_required")),
       .required(t("validations.hire_date_required")),
   });
 };

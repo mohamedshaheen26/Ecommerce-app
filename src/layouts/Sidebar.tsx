@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { UserRole } from "../types";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../context/LanguageContext";
+import UserProfile from "../components/common/UserProfile";
 
 interface NavItem {
   path: string;
@@ -32,7 +33,7 @@ const navigationItems: NavItem[] = [
     path: "/employees",
     title: "Employees",
     icon: MdPeople,
-    allowedRoles: [UserRole.Admin],
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
     path: "/customers",
@@ -95,9 +96,13 @@ export default function Sidebar({
   };
 
   return (
-    <div className='flex h-full flex-col border-r bg-[var(--bg-primary)] border-[var(--border-color)]'>
+    <div
+      className={`flex h-full flex-col ${
+        currentLang === "ar" ? "border-l" : "border-r"
+      } bg-[var(--bg-primary)] border-[var(--border-color)]`}
+    >
       {/* Sidebar header */}
-      <div className='flex h-14 items-center justify-center px-4 border-b border-[var(--border-color)]'>
+      <div className='flex h-14 items-center justify-center px-2 border-b border-[var(--border-color)]'>
         <div className='flex items-center space-x-3'>
           <img src='/Logo.svg' alt='Logo' className='w-6 h-6' />
           {isDesktopOpen && (
@@ -120,7 +125,7 @@ export default function Sidebar({
               to={item.path}
               onClick={onClose}
               className={() =>
-                `flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors
+                `flex items-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors
               ${
                 isNavItemActive(item.path)
                   ? "bg-[var(--accent-primary)] text-[var(--text-primary)]"
@@ -160,6 +165,10 @@ export default function Sidebar({
           </div>
         )} */}
       </nav>
+
+      <div className='p-2 border-t border-[var(--border-color)] mt-auto'>
+        <UserProfile isDesktopOpen={isDesktopOpen} />
+      </div>
     </div>
   );
 }

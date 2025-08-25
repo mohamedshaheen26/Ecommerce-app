@@ -48,7 +48,7 @@ export default function Modal({
           onClick={onConfirm}
           disabled={isSubmitting}
           isLoading={isSubmitting}
-          loadingText='Deleting...'
+          loadingText={t('Deleting')}
         >
           {t("Delete")}
         </Button>

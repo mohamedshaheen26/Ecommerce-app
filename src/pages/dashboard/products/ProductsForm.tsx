@@ -24,6 +24,8 @@ import ColorsSelector from "./components/ColorsSelector";
 import { useYupForm } from "../../../hooks/useYupForm";
 import { getProductSchema } from "../../../validation/productSchema";
 import { useLanguage } from "../../../context/LanguageContext";
+import { useTranslation } from "react-i18next";
+import { handleError } from "../../../utils/errorHandler";
 
 const INITIAL_FORM_VALUES: IProductFormValues = {
   title: "",
@@ -80,6 +82,7 @@ export default function ProductsForm({
   const sizes = (watch("sizes") ?? []) as string[];
   const images = (watch("images") ?? []) as string[];
   const { currentLang } = useLanguage();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -162,12 +165,11 @@ export default function ProductsForm({
       onSuccess();
       toast.success(
         editingProduct
-          ? "Product updated successfully"
-          : "Product created successfully"
+          ? t("Product updated successfully")
+          : t("Product created successfully")
       );
-    } catch (error) {
-      toast.error("Failed to save product");
-      console.error(error);
+    } catch (error: any) {
+      toast.error(handleError(error));
     }
   };
 
@@ -183,13 +185,23 @@ export default function ProductsForm({
     >
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
+          htmlFor='name_ar'
+          label='Name'
+          error={errors.name_ar?.message}
+          required
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+        <FormField
           htmlFor='title'
-          label='Title'
+          label='Name Second Language'
           error={errors.title?.message}
           required
         >
           <Input id='title' {...register("title")} />
         </FormField>
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='name_ar'
           label='Arabic Name'
@@ -276,6 +288,8 @@ export default function ProductsForm({
       <Grid columns={{ default: 1, md: 2 }}>
         <Grid columns={1}>
           <FormField
+            htmlFor='description_ar'
+            label='Description'
             htmlFor='description'
             label='Description'
             error={errors.description?.message}
@@ -292,6 +306,13 @@ export default function ProductsForm({
               rows={3}
               {...register("description_ar")}
             />
+          </FormField>
+          <FormField
+            htmlFor='description'
+            label='Description Second Language'
+            error={errors.description?.message}
+          >
+            <TextArea id='description' rows={3} {...register("description")} />
           </FormField>
         </Grid>
         <Grid columns={1}>

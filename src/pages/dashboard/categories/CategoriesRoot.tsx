@@ -44,7 +44,6 @@ export default function CategoriesRoot() {
       setCategories(data);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      toast.error("Failed to fetch categories");
     } finally {
       setLoading(false);
     }
@@ -67,7 +66,7 @@ export default function CategoriesRoot() {
         await loadCategories();
         setIsDeleteModalOpen(false);
         setDeletingCategory(null);
-        resolve("Category deleted successfully");
+        resolve(t("Category deleted successfully"));
       } catch (error) {
         console.error("Error deleting category:", error);
         reject(
@@ -79,7 +78,7 @@ export default function CategoriesRoot() {
     });
 
     toast.promise(deletePromise, {
-      loading: "Deleting category...",
+      loading: `${t("Deleting category")}`,
       success: (message) => message as string,
       error: (err) => `Error: ${err}`,
     });

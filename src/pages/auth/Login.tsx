@@ -24,11 +24,9 @@ export default function Login() {
   const { login } = useAuth();
   const { t } = useTranslation();
 
-  // Get the intended destination from location state, or default to '/dashboard'
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
-  // Show success message from signup if it exists
   const message = (location.state as { message?: string })?.message;
 
   const handleSubmit = async (e: FormEvent) => {

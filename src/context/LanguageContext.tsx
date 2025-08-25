@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useEffect } from "react";
 import React, { createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +16,22 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { i18n } = useTranslation();
 
+  useEffect(() => {
+    const storedLang = localStorage.getItem("language");
+    if (storedLang) {
+      i18n.changeLanguage(storedLang);
+    } else {
+      // Set a default language if none is stored
+      i18n.changeLanguage("en");
+    }
+  }, []);
+
+  const value: LanguageContextType = {
+    currentLang: i18n.language,
+    changeLanguage: (lang: string) => {
+      i18n.changeLanguage(lang);
+      localStorage.setItem("language", lang);
+    },
   const value: LanguageContextType = {
     currentLang: i18n.language,
     changeLanguage: (lang: string) => i18n.changeLanguage(lang),

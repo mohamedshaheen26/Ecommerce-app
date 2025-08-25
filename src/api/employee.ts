@@ -5,6 +5,7 @@ export async function fetchAllEmployees() {
   const { data, error } = await supabase
     .from('employees')
     .select('*')
+    .order("created_at", { ascending: false })
     .order("id", { ascending: true });
   if (error) throw error
   return data
@@ -16,6 +17,28 @@ export async function fetchEmployeeById(id: string) {
     .from('employees')
     .select('*')
     .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ✅ Get employee by USER_ID
+export async function fetchEmployeeByUserId(user_id: string) {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*')
+    .eq('user_id', user_id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ✅ Get employee by email
+export async function fetchEmployeeByEmail(email: string) {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('full_name, name_ar, email, role')
+    .eq('email', email)
     .single()
   if (error) throw error
   return data
@@ -67,14 +90,50 @@ export async function updateEmployee(id: string, employee: any) {
       }
     )
     .eq('id', id)
-  if (error) throw error  
+  if (error) throw error
+}
+
+// ✅ Change Password
+export async function changePassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error("Error changing password:", error.message);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, user: data.user };
+}
+
+// ✅ Admin Change Password
+export async function adminChangePassword(userId: string, newPassword: string) {
+  const response = await fetch("api/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, newPassword }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) throw new Error(data.error || "Unknown error");
+
+  return data;
 }
 
 // ✅ Delete Employee
-export async function deleteEmployeeById(id: string) {
-  const { error } = await supabase
-    .from('employees')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
+export async function deleteEmployeeById(userId: string) {
+  debugger;
+const response = await fetch("api/delete-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) throw new Error(data.error || "Unknown error");
+
+  return data;
 }

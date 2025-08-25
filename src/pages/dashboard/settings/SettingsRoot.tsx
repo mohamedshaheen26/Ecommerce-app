@@ -59,8 +59,8 @@ export default function SettingsRoot() {
     });
 
     toast.promise(updatePromise, {
-      loading: "Saving changes...",
-      success: "Settings updated successfully",
+      loading: t("Saving changes"),
+      success: `${t("Settings updated successfully")}`,
       error: (err) => `Error: ${err}`,
     });
   };
@@ -91,6 +91,12 @@ export default function SettingsRoot() {
 
       <form onSubmit={handleSubmit} className='py-6 px-8'>
         <Grid columns={2} gap={4}>
+          <FormField htmlFor='siteName_ar' label='Site Name'>
+            <Input
+              id='siteName_ar'
+              name='site_name_ar'
+              type='text'
+              value={formData?.site_name_ar}
           <FormField htmlFor='siteName' label='Site Name'>
             <Input
               id='siteName'
@@ -101,6 +107,12 @@ export default function SettingsRoot() {
               required
             />
           </FormField>
+          <FormField htmlFor='siteName' label='Site Name Second Language'>
+            <Input
+              id='siteName'
+              name='site_name'
+              type='text'
+              value={formData?.site_name}
           <FormField htmlFor='siteName_ar' label='Arabic Site Name'>
             <Input
               id='siteName_ar'

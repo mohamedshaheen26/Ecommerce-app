@@ -25,6 +25,7 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
         notes
     `
     )
+    .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
   if (ordersError) throw ordersError;

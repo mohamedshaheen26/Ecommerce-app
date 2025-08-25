@@ -42,7 +42,6 @@ export default function EmployeesRoot() {
       setEmployees(data);
     } catch (error) {
       console.error("Error fetching employees:", error);
-      toast.error("Failed to fetch employees");
     } finally {
       setLoading(false);
     }
@@ -59,11 +58,12 @@ export default function EmployeesRoot() {
     const deletePromise = new Promise(async (resolve, reject) => {
       try {
         setDeleting(true);
-        if (deletingEmployee.id) await deleteEmployeeById(deletingEmployee.id);
+        if (deletingEmployee.user_id)
+          await deleteEmployeeById(deletingEmployee.user_id);
         await loadEmployees();
         setIsDeleteModalOpen(false);
         setDeletingEmployee(null);
-        resolve("Employee deleted successfully");
+        resolve(t("Employee deleted successfully"));
       } catch (error) {
         console.error("Error deleting employee:", error);
         reject(
@@ -75,7 +75,7 @@ export default function EmployeesRoot() {
     });
 
     toast.promise(deletePromise, {
-      loading: "Deleting employee...",
+      loading: `${t("Deleting employee")}`,
       success: (message) => message as string,
       error: (err) => `Error: ${err}`,
     });
