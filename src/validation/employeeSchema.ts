@@ -6,8 +6,8 @@ export const getEmployeeSchema = () => {
   const { t } = useTranslation();
 
   return yup.object<IEmployeeValidation>({
-    full_name: yup.string().required(t("validations.name_required")),
-    name_ar: yup.string().required(t("validations.name_ar_required")),
+    full_name: yup.string().required(t("validations.name_ar_required")),
+    name_ar: yup.string().required(t("validations.name_required")),
     email: yup
       .string()
       .email(t("validations.email_invalid"))
@@ -47,7 +47,7 @@ export const getEmployeeSchema = () => {
       .string()
       .test(
         "valid-phone",
-        t("validations.phone_required"),
+        t("validations.phone_invalid"),
         (value) => !value || /^\d{11}$/.test(value)
       )
       .notRequired(),
@@ -76,6 +76,5 @@ export const getCredentialsSchema = () => {
       .string()
       .oneOf([yup.ref("password")], t("validations.confirm_password_one_of"))
       .required(t("validations.confirm_password_required")),
-      .required(t("validations.hire_date_required")),
   });
 };

@@ -25,7 +25,6 @@ import {
   getEmployeeSchema,
   getCredentialsSchema,
 } from "../../../validation/employeeSchema";
-import { getEmployeeSchema } from "../../../validation/employeeSchema";
 import { useYupForm } from "../../../hooks/useYupForm";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -76,7 +75,6 @@ export default function EmployeesForm({
       address_ar: editingEmployee?.address_ar ?? "",
       hire_date:
         editingEmployee?.hire_date ?? new Date().toISOString().slice(0, 16),
-      hire_date: editingEmployee?.hire_date,
       salary: editingEmployee?.salary ?? 0,
     },
     { context: { isEditing } }
@@ -384,137 +382,5 @@ export default function EmployeesForm({
         </div>
       </Modal>
     </>
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      onConfirm={handleSubmit(onSubmit)}
-      title={editingEmployee ? "Edit Employee" : "Add New Employee"}
-      maxWidth='max-w-xl'
-      isSubmitting={isSubmitting}
-      confirmText={editingEmployee ? "Update" : "Create"}
-    >
-      <Grid columns={2}>
-        <FormField
-          htmlFor='full_name'
-          label='Full Name'
-          required
-          error={errors.full_name?.message}
-        >
-          <Input id='full_name' {...register("full_name")} />
-        </FormField>
-        <FormField
-          htmlFor='name_ar'
-          label='Arabic Full Name'
-          required
-          error={errors.name_ar?.message}
-        >
-          <Input id='name_ar' {...register("name_ar")} />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='role'
-          label='Role'
-          required
-          error={errors.role?.message}
-        >
-          <Select
-            id='role'
-            {...register("role")}
-            options={[
-              { value: "", label: "Select a role" },
-              { value: UserRole.Employee, label: "Employee" },
-              { value: UserRole.Admin, label: "Admin" },
-            ]}
-          />
-        </FormField>
-        <FormField
-          htmlFor='hire_date'
-          label='Hire Date'
-          error={errors.hire_date?.message}
-          required
-        >
-          <Input id='hire_date' type='date' {...register("hire_date")} />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='email'
-          label='Email'
-          required
-          error={errors.email?.message}
-        >
-          <Input
-            id='email'
-            {...register("email")}
-            disabled={!!editingEmployee}
-          />
-        </FormField>
-        <FormField
-          htmlFor='username'
-          label='Username'
-          required
-          error={errors.username?.message}
-        >
-          <Input id='username' {...register("username")} />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='password'
-          label='Password'
-          required
-          error={errors.password?.message}
-        >
-          <Input
-            id='password'
-            type='password'
-            {...register("password")}
-            disabled={!!editingEmployee}
-          />
-        </FormField>
-        <FormField
-          htmlFor='confirm_password'
-          label='Confirm Password'
-          required
-          error={errors.confirm_password?.message}
-        >
-          <Input
-            id='confirm_password'
-            type='password'
-            {...register("confirm_password")}
-            disabled={!!editingEmployee}
-          />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='salary'
-          label='Salary'
-          error={errors.salary?.message}
-        >
-          <Input id='salary' type='number' {...register("salary")} step='any' />
-        </FormField>
-        <FormField htmlFor='phone' label='Phone' error={errors.phone?.message}>
-          <Input id='phone' {...register("phone")} />
-        </FormField>
-      </Grid>
-      <Grid columns={2}>
-        <FormField
-          htmlFor='address'
-          label='Address'
-          error={errors.address?.message}
-        >
-          <TextArea id='address' {...register("address")} rows={2} />
-        </FormField>
-        <FormField
-          htmlFor='address_ar'
-          label='Arabic Address'
-          error={errors.address_ar?.message}
-        >
-          <TextArea id='address_ar' {...register("address_ar")} rows={2} />
-        </FormField>
-      </Grid>
-    </Modal>
   );
 }

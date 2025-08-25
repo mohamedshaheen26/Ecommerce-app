@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect } from "react";
-import React, { createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 type LanguageContextType = {
@@ -32,9 +31,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
       i18n.changeLanguage(lang);
       localStorage.setItem("language", lang);
     },
-  const value: LanguageContextType = {
-    currentLang: i18n.language,
-    changeLanguage: (lang: string) => i18n.changeLanguage(lang),
   };
 
   return (

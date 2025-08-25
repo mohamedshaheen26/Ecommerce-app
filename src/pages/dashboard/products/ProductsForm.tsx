@@ -290,8 +290,6 @@ export default function ProductsForm({
           <FormField
             htmlFor='description_ar'
             label='Description'
-            htmlFor='description'
-            label='Description'
             error={errors.description?.message}
           >
             <TextArea id='description' rows={3} {...register("description")} />

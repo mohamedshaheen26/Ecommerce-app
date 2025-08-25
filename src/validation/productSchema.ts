@@ -6,8 +6,8 @@ import { useTranslation } from "react-i18next";
 export const getProductSchema = () => {
   const { t } = useTranslation();
   return yup.object<IProductValidation>({
-    title: yup.string().required(t("validations.name_required")),
-    name_ar: yup.string().required(t("validations.name_ar_required")),
+    title: yup.string().required(t("validations.name_ar_required")),
+    name_ar: yup.string().required(t("validations.name_required")),
     price: yup
       .number()
       .required(t("validations.price_required"))

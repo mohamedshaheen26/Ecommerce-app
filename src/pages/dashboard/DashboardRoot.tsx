@@ -287,7 +287,7 @@ export default function DashboardRoot() {
                 </span>
                 <span className='text-sm text-[var(--text-muted)] mx-2'>-</span>
                 <span className='text-sm text-[var(--text-secondary)] font-semibold'>
-                  ${product.sales_count} Sales
+                  ${product.sales_count} {t("Sales")}
                 </span>
               </div>
             ))}

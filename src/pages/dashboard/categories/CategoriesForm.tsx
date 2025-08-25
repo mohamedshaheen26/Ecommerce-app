@@ -95,12 +95,6 @@ export default function CategoriesForm({
           error={errors.name?.message}
         >
           <Input id='name' {...register("name")} />
-          htmlFor='name'
-          label='Name'
-          required
-          error={errors.name?.message}
-        >
-          <Input id='name' {...register("name")} />
         </FormField>
         <FormField
           htmlFor='name_ar'
@@ -123,12 +117,6 @@ export default function CategoriesForm({
         <FormField
           htmlFor='description'
           label='Description Second Language'
-          required
-          error={errors.description?.message}
-        >
-          <TextArea id='description' {...register("description")} />
-          htmlFor='description'
-          label='Description'
           required
           error={errors.description?.message}
         >

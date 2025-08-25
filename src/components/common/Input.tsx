@@ -14,7 +14,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     return (
       <div className={`relative`}>
-      <div className={`${fullWidth ? "w-full" : ""} relative`}>
         {leftIcon && (
           <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500'>
             {leftIcon}

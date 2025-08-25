@@ -6,8 +6,8 @@ export const getCategorySchema = () => {
   const { t } = useTranslation();
   
   return yup.object<ICategoryValidation>({
-    name: yup.string().required(t("validations.name_required")),
-    name_ar: yup.string().required(t("validations.name_ar_required")),
+    name: yup.string().required(t("validations.name_ar_required")),
+    name_ar: yup.string().required(t("validations.name_required")),
     description: yup.string().required(t("validations.description_required")),
     description_ar: yup.string().required(t("validations.description_ar_required")),
   });
