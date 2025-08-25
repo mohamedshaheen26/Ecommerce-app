@@ -23,6 +23,22 @@ function AppContent() {
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
   }, [currentLang]);
 
+export default function App() {
+  const { settings } = useSettings();
+  const { currentLang } = useLanguage();
+
+  useEffect(() => {
+    document.title =
+      currentLang === "ar"
+        ? settings.site_name_ar
+        : settings.site_name || "Admin Dashboard";
+  }, [settings.site_name]);
+
+  useEffect(() => {
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+  }, [currentLang]);
+
   return (
     <>
       <AppRoutes />

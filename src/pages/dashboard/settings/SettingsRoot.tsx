@@ -97,6 +97,12 @@ export default function SettingsRoot() {
               name='site_name_ar'
               type='text'
               value={formData?.site_name_ar}
+          <FormField htmlFor='siteName' label='Site Name'>
+            <Input
+              id='siteName'
+              name='site_name'
+              type='text'
+              value={formData?.site_name}
               onChange={handleChange}
               required
             />
@@ -107,6 +113,12 @@ export default function SettingsRoot() {
               name='site_name'
               type='text'
               value={formData?.site_name}
+          <FormField htmlFor='siteName_ar' label='Arabic Site Name'>
+            <Input
+              id='siteName_ar'
+              name='site_name_ar'
+              type='text'
+              value={formData?.site_name_ar}
               onChange={handleChange}
               required
             />

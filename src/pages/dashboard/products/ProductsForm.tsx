@@ -203,6 +203,16 @@ export default function ProductsForm({
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
+          htmlFor='name_ar'
+          label='Arabic Name'
+          error={errors.name_ar?.message}
+          required
+        >
+          <Input id='name_ar' {...register("name_ar")} />
+        </FormField>
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
+        <FormField
           htmlFor='stock_status'
           label='Stock Status'
           error={errors.stock_status?.message}
@@ -280,6 +290,15 @@ export default function ProductsForm({
           <FormField
             htmlFor='description_ar'
             label='Description'
+            htmlFor='description'
+            label='Description'
+            error={errors.description?.message}
+          >
+            <TextArea id='description' rows={3} {...register("description")} />
+          </FormField>
+          <FormField
+            htmlFor='description_ar'
+            label='Arabic Description'
             error={errors.description_ar?.message}
           >
             <TextArea

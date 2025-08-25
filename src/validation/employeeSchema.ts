@@ -76,5 +76,6 @@ export const getCredentialsSchema = () => {
       .string()
       .oneOf([yup.ref("password")], t("validations.confirm_password_one_of"))
       .required(t("validations.confirm_password_required")),
+      .required(t("validations.hire_date_required")),
   });
 };

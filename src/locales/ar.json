@@ -30,6 +30,7 @@
   "Best Selling": "الأكثر مبيعا",
   "Recent Orders": "الطلبات الحديثة",
   "View All": "اظهار الكل",
+  "Name": "الاسم",
   "Contact": "الاتصال",
   "Joined": "الانضمام",
   "Total Spent": "اجمالي المصروفات",
@@ -40,6 +41,7 @@
   "Deleting": "حذف ...",
   "Description": "الوصف",
   "Description Second Language": "الوصف لغة ثانية",
+  "Description": "الوصف",
   "Created At": "تاريخ الانشاء",
   "Price": "السعر",
   "Stock Status": "حالة المخزون",
@@ -72,6 +74,11 @@
   "Salary": "الراتب",
   "Name": "الاسم",
   "Name Second Language": "الاسم لغة ثانية",
+  "Arabic Address": "العنوان العربي",
+  "Hire Date": "تاريخ التعيين",
+  "Salary": "الراتب",
+  "Full Name": "الاسم الكامل",
+  "Arabic Full Name": "الاسم الكامل العربي",
   "Username": "اسم المستخدم",
   "Email": "البريد الالكتروني",
   "Phone": "رقم الهاتف",
@@ -100,6 +107,7 @@
   "This action cannot be undone.": "لا يمكن التراجع عن هذه العملية.",
   "Site Name": "اسم الموقع",
   "Site Name Second Language": "اسم الموقع لغة ثانية",
+  "Arabic Site Name": "اسم الموقع العربي",
   "Support Email": "البريد الالكتروني للدعم",
   "Monthly Order Goal": "هدف الطلب الشهري",
   "Save Changes": "حفظ التغييرات",
@@ -130,6 +138,10 @@
   "validations": {
     "name_required": "الاسم مطلوب.",
     "name_ar_required": "الاسم لغة ثانية مطلوب.",
+  "Arabic Description": "الوصف العربي",
+  "validations": {
+    "name_required": "الاسم مطلوب.",
+    "name_ar_required": "الاسم العربي مطلوب.",
     "description_required": "الوصف مطلوب.",
     "description_ar_required": "الوصف العربي مطلوب.",
     "price_required": "السعر مطلوب.",
@@ -209,4 +221,5 @@
   "You don't have permission to view this page": "ليس لديك صلاحية عرض هذه الصفحة",
   "Go Back": "العودة إلى الصفحة السابقة",
   "You don't have permission to change this password": "ليس لديك صلاحية تغيير كلمة المرور هذا"
+  }
 }

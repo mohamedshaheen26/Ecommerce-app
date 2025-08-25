@@ -30,6 +30,7 @@
   "Best Selling": "Best Selling",
   "Recent Orders": "Recent Orders",
   "View All": "View All",
+  "Name": "Name",
   "Contact": "Contact",
   "Joined": "Joined",
   "Total Spent": "Total Spent",
@@ -40,6 +41,7 @@
   "Deleting": "Deleting ...",
   "Description": "Description",
   "Description Second Language": "Description Second Language",
+  "Description": "Description",
   "Created At": "Created At",
   "Price": "Price",
   "Stock Status": "Stock Status",
@@ -72,6 +74,11 @@
   "Salary": "Salary",
   "Name": "Name",
   "Name Second Language": "Name Second Language",
+  "Arabic Address": "Arabic Address",
+  "Hire Date": "Hire Date",
+  "Salary": "Salary",
+  "Full Name": "Full Name",
+  "Arabic Full Name": "Arabic Full Name",
   "Email": "Email",
   "Username": "Username",
   "Phone": "Phone",
@@ -100,6 +107,7 @@
   "This action cannot be undone.": "This action cannot be undone.",
   "Site Name": "Site Name",
   "Site Name Second Language": "Site Name Second Language",
+  "Arabic Site Name": "Arabic Site Name",
   "Support Email": "Support Email",
   "Monthly Order Goal": "Monthly Order Goal",
   "Save Changes": "Save Changes",
@@ -130,6 +138,10 @@
   "validations": {
     "name_required": "Name is required.",
     "name_ar_required": "Name Second Language is required.",
+  "Arabic Description": "Arabic Description",
+  "validations": {
+    "name_required": "Name is required.",
+    "name_ar_required": "Arabic name is required.",
     "description_required": "Description is required.",
     "description_ar_required": "Arabic description is required.",
     "price_required": "Price is required.",
@@ -209,4 +221,5 @@
   "You don't have permission to view this page": "You don't have permission to view this page",
   "Go Back": "Go Back",
   "You don't have permission to change this password": "You don't have permission to change this password"
+  }
 }
