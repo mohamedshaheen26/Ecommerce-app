@@ -1,5 +1,16 @@
 import type { ReactNode } from "react";
-import Button from "./Button";
+import {
+  Table as MuiTable,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Box,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import Loader from "./Loader";
 import { useTranslation } from "react-i18next";
@@ -41,156 +52,237 @@ export default function Table<T>({
     }
   };
 
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <>
-      <div className='overflow-x-auto'>
-        <table className='min-w-full divide-y divide-[var(--border-color)]'>
-          <thead>
-            <tr>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2,
+        overflow: "hidden",
+        backgroundColor: "var(--bg-primary)",
+      }}
+    >
+      <TableContainer>
+        <MuiTable size='small'>
+          <TableHead>
+            <TableRow>
               {columns.map((column, index) => (
-                <th
+                <TableCell
                   key={index}
-                  scope='col'
-                  className={`px-6 py-3 ${
-                    currentLang == "ar" ? "text-right" : "text-left"
-                  } text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider ${
-                    column.className || ""
-                  }`}
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.75rem",
+                    textTransform: "uppercase",
+                    color: "var(--text-muted)",
+                    textAlign: currentLang === "ar" ? "right" : "left",
+                    borderBottom: "1px solid var(--border-color)",
+                    ...(column.className && {
+                      className: column.className,
+                    }),
+                  }}
                 >
                   {column.header}
-                </th>
+                </TableCell>
               ))}
-            </tr>
-          </thead>
-          <tbody className='bg-[var(--bg-primary)] divide-y divide-[var(--border-color)]'>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {isLoading ? (
-              <tr>
-                <td colSpan={columns.length} className='px-6 py-4 text-center'>
-                  <Loader />
-                </td>
-              </tr>
-            ) : data.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={columns.length}
-                  className='px-6 py-4 text-center text-sm text-gray-500'
+                  sx={{
+                    textAlign: "center",
+                    py: 4,
+                    backgroundColor: "var(--bg-primary)",
+                  }}
                 >
-                  No items found
-                </td>
-              </tr>
+                  <Loader />
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  sx={{
+                    textAlign: "center",
+                    py: 4,
+                    color: "var(--text-secondary)",
+                    backgroundColor: "var(--bg-primary)",
+                  }}
+                >
+                  {t("No items found")}
+                </TableCell>
+              </TableRow>
             ) : (
               data.map((item, rowIndex) => (
-                <tr key={rowIndex}>
+                <TableRow
+                  key={rowIndex}
+                  sx={{
+                    backgroundColor: "var(--bg-primary)",
+                  }}
+                >
                   {columns.map((column, colIndex) => (
-                    <td
+                    <TableCell
                       key={colIndex}
-                      className={`px-6 py-4 whitespace-nowrap ${
-                        column.className || ""
-                      }`}
+                      sx={{
+                        borderBottom: "1px solid var(--border-color)",
+                        whiteSpace: "nowrap",
+                        backgroundColor: "inherit",
+                        ...(column.className && {
+                          className: column.className,
+                        }),
+                      }}
                     >
                       {column.accessor(item)}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </MuiTable>
+      </TableContainer>
 
       {showPagination && (
-        <div className='px-6 py-3 flex items-center justify-between border-t border-[var(--border-color)] bg-[var(--bg-primary)]'>
-          <div className='flex flex-1 flex-col sm:flex-row items-center sm:justify-between'>
-            <div className='mb-2'>
-              <p className='text-sm text-[var(--text-muted)]'>
-                {t("Showing")}{" "}
-                <span className='font-medium'>
-                  {(currentPage - 1) * pageSize + 1}
-                </span>{" "}
-                {t("to")}{" "}
-                <span className='font-medium'>
-                  {Math.min(currentPage * pageSize, totalItems)}
-                </span>{" "}
-                {t("of")} <span className='font-medium'>{totalItems}</span>{" "}
-                {t("results")}
-              </p>
-            </div>
-            <div>
-              <nav
-                className='relative z-0 inline-flex gap-1'
-                aria-label='Pagination'
-              >
-                <Button
-                  variant='outline'
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className='w-10 h-10 border-none disabled:bg-transparent'
-                >
-                  {currentLang === "ar" ? (
-                    <MdChevronRight className='w-7 h-7' />
-                  ) : (
-                    <MdChevronLeft className='w-7 h-7' />
-                  )}
-                </Button>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 3,
+            py: 2,
+            backgroundColor: "var(--bg-primary)",
+          }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Typography variant='body2' sx={{ color: "var(--text-muted)" }}>
+              {t("Showing")} <span className='font-medium'>{startItem}</span>{" "}
+              {t("to")} <span className='font-medium'>{endItem}</span> {t("of")}{" "}
+              <span className='font-medium'>{totalItems}</span> {t("results")}
+            </Typography>
+          </Box>
 
-                {[...Array(totalPages)].map((_, index) => {
-                  const page = index + 1;
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <IconButton
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              size='small'
+              sx={{
+                height: 40,
+                fontSize: "0.875rem",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-primary)",
+                borderRadius: "6px",
+                "&:disabled": {
+                  "&:disabled": {
+                    backgroundColor: "transparent",
+                    color: "var(--text-muted)",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "var(--accent-hover)",
+                  color: "var(--text-primary)",
+                },
+              }}
+            >
+              {currentLang === "ar" ? (
+                <MdChevronRight size={25} />
+              ) : (
+                <MdChevronLeft size={25} />
+              )}
+            </IconButton>
 
-                  // Always show first page, last page, current page, and pages around current page
-                  const showPage =
-                    page === 1 ||
-                    page === totalPages ||
-                    Math.abs(currentPage - page) <= 1;
+            {[...Array(totalPages)].map((_, index) => {
+              const page = index + 1;
+              const showPage =
+                page === 1 ||
+                page === totalPages ||
+                Math.abs(currentPage - page) <= 1;
 
-                  if (!showPage) {
-                    // Show ellipsis if there's a gap
-                    if (page === 2 || page === totalPages - 1) {
-                      return (
-                        <span
-                          key={page}
-                          className='relative inline-flex items-center justify-center w-10 h-10 text-[var(--text-muted)] bg-[var(--bg-primary)]'
-                        >
-                          ...
-                        </span>
-                      );
-                    }
-                    return null;
-                  }
-
+              if (!showPage) {
+                if (page === 2 || page === totalPages - 1) {
                   return (
-                    <Button
+                    <Typography
                       key={page}
-                      variant='outline'
-                      onClick={() => handlePageChange(page)}
-                      className={`border-none
-                        ${
-                          currentPage === page
-                            ? "bg-[var(--accent-primary)] !text-[var(--text-primary)]"
-                            : ""
-                        }`}
+                      variant='body2'
+                      sx={{
+                        px: 1,
+                        color: "var(--text-muted)",
+                      }}
                     >
-                      {page}
-                    </Button>
+                      ...
+                    </Typography>
                   );
-                })}
+                }
+                return null;
+              }
 
-                <Button
-                  variant='outline'
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className=' w-10 h-10 border-none disabled:bg-transparent'
+              return (
+                <IconButton
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  size='small'
+                  sx={{
+                    fontSize: "0.875rem",
+                    minWidth: 37,
+                    height: 40,
+                    borderRadius: "6px",
+                    backgroundColor:
+                      currentPage === page
+                        ? "var(--accent-primary)"
+                        : "var(--bg-primary)",
+                    color:
+                      currentPage === page
+                        ? "var(--text-primary)"
+                        : "var(--text-secondary)",
+                    "&:hover": {
+                      backgroundColor:
+                        currentPage === page
+                          ? "var(--accent-primary)"
+                          : "var(--accent-hover)",
+                      color:
+                        currentPage === page
+                          ? "var(--text-primary)"
+                          : "var(--text-primary)",
+                    },
+                  }}
                 >
-                  {currentLang === "ar" ? (
-                    <MdChevronLeft className='w-7 h-7' />
-                  ) : (
-                    <MdChevronRight className='w-7 h-7' />
-                  )}
-                </Button>
-              </nav>
-            </div>
-          </div>
-        </div>
+                  {page}
+                </IconButton>
+              );
+            })}
+
+            <IconButton
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              size='small'
+              sx={{
+                height: 40,
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-primary)",
+                borderRadius: "6px",
+                "&:disabled": {
+                  backgroundColor: "transparent",
+                  color: "var(--text-muted)",
+                },
+                "&:hover": {
+                  backgroundColor: "var(--accent-hover)",
+                  color: "var(--text-primary)",
+                },
+              }}
+            >
+              {currentLang === "ar" ? (
+                <MdChevronLeft size={25} />
+              ) : (
+                <MdChevronRight size={25} />
+              )}
+            </IconButton>
+          </Box>
+        </Box>
       )}
-    </>
+    </Paper>
   );
 }
