@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Table as MuiTable,
   TableBody,
@@ -10,8 +10,18 @@ import {
   Box,
   IconButton,
   Typography,
+  TableSortLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import {
+  MdChevronLeft,
+  MdChevronRight,
+  MdFirstPage,
+  MdLastPage,
+} from "react-icons/md";
 import Loader from "./Loader";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../context/LanguageContext";
@@ -20,6 +30,8 @@ interface Column<T> {
   header: ReactNode;
   accessor: (item: T) => ReactNode;
   className?: string;
+  sortable?: boolean;
+  sortKey?: keyof T;
 }
 
 interface TableProps<T> {
@@ -30,6 +42,7 @@ interface TableProps<T> {
   currentPage?: number;
   totalItems?: number;
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export default function Table<T>({
@@ -40,15 +53,57 @@ export default function Table<T>({
   currentPage = 1,
   totalItems = 0,
   onPageChange,
+  onPageSizeChange,
 }: TableProps<T>) {
   const totalPages = Math.ceil(totalItems / pageSize);
-  const showPagination = totalItems > pageSize;
+  const showPagination = totalItems > 0;
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
+  const [orderBy, setOrderBy] = useState<string | null>(null);
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (key: string) => {
+    const isAsc = orderBy === key && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(key);
+  };
+
+  function getNestedValue(obj: any, path: string) {
+    return path.split(".").reduce((acc, key) => acc?.[key], obj);
+  }
+
+  const sortedData = [...data].sort((a, b) => {
+    if (!orderBy) return 0;
+
+    const aValue = getNestedValue(a, orderBy);
+    const bValue = getNestedValue(b, orderBy);
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return order === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return order === "asc" ? aValue - bValue : bValue - aValue;
+    }
+
+    return 0;
+  });
 
   const handlePageChange = (page: number) => {
     if (onPageChange && page >= 1 && page <= totalPages) {
       onPageChange(page);
+    }
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    const newRowsPerPage = event.target.value;
+    if (onPageChange) {
+      onPageChange(1);
+    }
+    if (onPageSizeChange) {
+      onPageSizeChange(newRowsPerPage);
     }
   };
 
@@ -65,9 +120,32 @@ export default function Table<T>({
       }}
     >
       <TableContainer>
-        <MuiTable size='small'>
+        <MuiTable
+          size='small'
+          sx={{
+            border: "1px solid var(--border-color)",
+            borderCollapse: "collapse",
+            "& td, & th": {
+              border: "1px solid var(--border-color)",
+            },
+          }}
+        >
           <TableHead>
             <TableRow>
+              <TableCell
+                sx={{
+                  padding: "0",
+                  width: "30px",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  fontSize: "0.75rem",
+                  textTransform: "uppercase",
+                  color: "var(--text-muted)",
+                  borderBottom: "1px solid var(--border-color)",
+                }}
+              >
+                #
+              </TableCell>
               {columns.map((column, index) => (
                 <TableCell
                   key={index}
@@ -83,19 +161,53 @@ export default function Table<T>({
                     }),
                   }}
                 >
-                  {column.header}
+                  {column.sortable && column.sortKey ? (
+                    <TableSortLabel
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        color:
+                          orderBy === column.sortKey
+                            ? "var(--accent-primary) !important"
+                            : "var(--text-muted) !important",
+                        "& .MuiTableSortLabel-icon": {
+                          color:
+                            orderBy === column.sortKey
+                              ? "var(--accent-primary) !important"
+                              : "var(--text-muted) !important",
+                        },
+                      }}
+                      active={orderBy === column.sortKey}
+                      direction={orderBy === column.sortKey ? order : "asc"}
+                      onClick={() => handleSort(column.sortKey as string)}
+                    >
+                      {column.header}
+                    </TableSortLabel>
+                  ) : (
+                    column.header
+                  )}
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody
+            sx={{
+              "& tr:nth-of-type(odd)": {
+                backgroundColor: "var(--bg-secondary)",
+              },
+              "& tr:nth-of-type(even)": {
+                backgroundColor: "var(--bg-primary)",
+              },
+            }}
+          >
             {isLoading ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
                   sx={{
                     textAlign: "center",
-                    py: 4,
+                    py: 2,
                     backgroundColor: "var(--bg-primary)",
                   }}
                 >
@@ -108,7 +220,7 @@ export default function Table<T>({
                   colSpan={columns.length}
                   sx={{
                     textAlign: "center",
-                    py: 4,
+                    py: 2,
                     color: "var(--text-secondary)",
                     backgroundColor: "var(--bg-primary)",
                   }}
@@ -117,17 +229,28 @@ export default function Table<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((item, rowIndex) => (
+              sortedData.map((item, rowIndex) => (
                 <TableRow
                   key={rowIndex}
                   sx={{
                     backgroundColor: "var(--bg-primary)",
                   }}
                 >
+                  <TableCell
+                    sx={{
+                      padding: "0",
+                      textAlign: "center",
+                      borderBottom: "1px solid var(--border-color)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    {startItem + rowIndex}
+                  </TableCell>
                   {columns.map((column, colIndex) => (
                     <TableCell
                       key={colIndex}
                       sx={{
+                        textAlign: currentLang === "ar" ? "right" : "left",
                         borderBottom: "1px solid var(--border-color)",
                         whiteSpace: "nowrap",
                         backgroundColor: "inherit",
@@ -153,19 +276,78 @@ export default function Table<T>({
             alignItems: "center",
             justifyContent: "space-between",
             px: 3,
-            py: 2,
+            py: 1,
             backgroundColor: "var(--bg-primary)",
           }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Typography variant='body2' sx={{ color: "var(--text-muted)" }}>
-              {t("Showing")} <span className='font-medium'>{startItem}</span>{" "}
-              {t("to")} <span className='font-medium'>{endItem}</span> {t("of")}{" "}
-              <span className='font-medium'>{totalItems}</span> {t("results")}
+              <span className='font-medium'>{startItem} -</span>
+              <span className='font-medium'> {endItem}</span> {t("of")}
+              <span className='font-medium'> {totalItems}</span>
             </Typography>
           </Box>
 
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant='body2'
+              sx={{ color: "var(--text-muted)", fontSize: "0.75rem" }}
+            >
+              {t("Rows per page")}:
+            </Typography>
+            <FormControl size='small' sx={{ minWidth: 80 }}>
+              <Select
+                value={pageSize}
+                onChange={handleRowsPerPageChange}
+                sx={{
+                  fontSize: "0.75rem",
+                  height: 32,
+                  "& .MuiSelect-select": {
+                    py: 0.5,
+                    px: 1,
+                  },
+                  backgroundColor: "var(--bg-primary)",
+                  color: "var(--text-secondary)",
+                  border: "1px solid var(--border-color)",
+                  "&:hover": {
+                    borderColor: "var(--accent-primary)",
+                  },
+                }}
+              >
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={25}>25</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+                <MenuItem value={100}>100</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <IconButton
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              size='small'
+              sx={{
+                height: 40,
+                fontSize: "0.875rem",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-primary)",
+                borderRadius: "6px",
+                "&:disabled": {
+                  "&:disabled": {
+                    backgroundColor: "transparent",
+                    color: "var(--text-muted)",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "var(--accent-hover)",
+                  color: "var(--text-primary)",
+                },
+              }}
+            >
+              <MdFirstPage size={25} />
+            </IconButton>
+
             <IconButton
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -279,6 +461,31 @@ export default function Table<T>({
               ) : (
                 <MdChevronRight size={25} />
               )}
+            </IconButton>
+
+            <IconButton
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              size='small'
+              sx={{
+                height: 40,
+                fontSize: "0.875rem",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--bg-primary)",
+                borderRadius: "6px",
+                "&:disabled": {
+                  "&:disabled": {
+                    backgroundColor: "transparent",
+                    color: "var(--text-muted)",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "var(--accent-hover)",
+                  color: "var(--text-primary)",
+                },
+              }}
+            >
+              <MdLastPage size={25} />
             </IconButton>
           </Box>
         </Box>

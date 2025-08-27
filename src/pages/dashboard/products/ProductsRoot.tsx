@@ -23,14 +23,14 @@ export default function ProductsRoot() {
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadProducts();
     loadCategories();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, pageSize]);
 
   const loadProducts = async () => {
     try {
@@ -59,6 +59,11 @@ export default function ProductsRoot() {
     }
   };
 
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
+
   const handleDelete = async () => {
     if (!selectedProduct) return;
     setDeleting(true);
@@ -78,9 +83,9 @@ export default function ProductsRoot() {
 
   const columns = [
     {
-      header: <IoSwapVerticalOutline className='w-5 h-5' />,
+      header: `${t("Name")}`,
       accessor: (product: IProduct) => (
-        <div className='flex items-center'>
+        <div className='flex items-center gap-2'>
           <div className='h-12 w-12 flex-shrink-0 bg-[var(--bg-secondary)] rounded-lg overflow-hidden p-1'>
             <img
               className='rounded-lg object-cover w-full h-full'
@@ -88,19 +93,13 @@ export default function ProductsRoot() {
               alt={product.title}
             />
           </div>
-        </div>
-      ),
-      className: "w-10",
-    },
-    {
-      header: `${t("Name")}`,
-      accessor: (product: IProduct) => (
-        <div className='flex items-center'>
           <div className='text-sm font-medium text-[var(--text-secondary)]'>
             {currentLang === "ar" ? product.name_ar : product.title}
           </div>
         </div>
       ),
+      sortable: true,
+      sortKey: "title" as keyof IProduct,
     },
     {
       header: `${t("Price")}`,
@@ -109,6 +108,8 @@ export default function ProductsRoot() {
           ${product.price}
         </div>
       ),
+      sortable: true,
+      sortKey: "price" as keyof IProduct,
     },
     {
       header: `${t("Stock Status")}`,
@@ -126,6 +127,8 @@ export default function ProductsRoot() {
           {t(`Stock Statuses.${product.stock_status}`)}
         </span>
       ),
+      sortable: true,
+      sortKey: "stock_status" as keyof IProduct,
     },
     {
       header: `${t("Category")}`,
@@ -136,6 +139,8 @@ export default function ProductsRoot() {
             : product.category.name}
         </div>
       ),
+      sortable: true,
+      sortKey: "category.name" as keyof IProduct,
     },
     {
       header: `${t("Actions")}`,
@@ -186,6 +191,7 @@ export default function ProductsRoot() {
         pageSize={pageSize}
         totalItems={totalItems}
         onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
       />
 
       <ProductsForm

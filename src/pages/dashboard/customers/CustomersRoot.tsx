@@ -83,6 +83,8 @@ export default function CustomersRoot() {
           <div className='text-sm text-gray-500'>{customer.email}</div>
         </div>
       ),
+      sortable: true,
+      sortKey: "full_name" as keyof ICustomer,
     },
     {
       header: `${t("Contact")}`,
@@ -104,6 +106,8 @@ export default function CustomersRoot() {
           </div>
         </div>
       ),
+      sortable: true,
+      sortKey: "phone" as keyof ICustomer,
     },
     {
       header: `${t("Joined")}`,
@@ -112,6 +116,8 @@ export default function CustomersRoot() {
           {formatDate(customer.created_at || "N/A")}
         </div>
       ),
+      sortable: true,
+      sortKey: "created_at" as keyof ICustomer,
     },
     {
       header: `${t("Orders")}`,
@@ -120,6 +126,8 @@ export default function CustomersRoot() {
           {customer.total_orders}
         </div>
       ),
+      sortable: true,
+      sortKey: "total_orders" as keyof ICustomer,
     },
     {
       header: `${t("Total Spent")}`,
@@ -128,6 +136,8 @@ export default function CustomersRoot() {
           {formatCurrency(customer.total_spent)}
         </div>
       ),
+      sortable: true,
+      sortKey: "total_spent" as keyof ICustomer,
     },
     {
       header: `${t("Actions")}`,

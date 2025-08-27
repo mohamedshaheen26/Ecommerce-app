@@ -85,6 +85,8 @@ export default function OrdersRoot() {
           #{order.id.slice(0, 8)}
         </div>
       ),
+      sortable: true,
+      sortKey: "id" as keyof IOrderWithUserInfo,
     },
     {
       header: `${t("Customer")}`,
@@ -106,6 +108,8 @@ export default function OrdersRoot() {
           </div>
         </div>
       ),
+      sortable: true,
+      sortKey: "customer.full_name" as keyof IOrderWithUserInfo,
     },
     {
       header: `${t("Date")}`,
@@ -114,6 +118,8 @@ export default function OrdersRoot() {
           {formatDate(order.created_at || "")}
         </div>
       ),
+      sortable: true,
+      sortKey: "created_at" as keyof IOrderWithUserInfo,
     },
     {
       header: `${t("Status")}`,
@@ -126,6 +132,8 @@ export default function OrdersRoot() {
           {t(`statuses.${order.status}`)}
         </span>
       ),
+      sortable: true,
+      sortKey: "status" as keyof IOrderWithUserInfo,
     },
     {
       header: `${t("Total")}`,
@@ -134,6 +142,8 @@ export default function OrdersRoot() {
           ${order.total_amount.toFixed(2)}
         </div>
       ),
+      sortable: true,
+      sortKey: "total_amount" as keyof IOrderWithUserInfo,
     },
     {
       header: `${t("Actions")}`,

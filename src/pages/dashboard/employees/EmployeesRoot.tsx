@@ -89,6 +89,8 @@ export default function EmployeesRoot() {
           {currentLang === "ar" ? employee.name_ar : employee.full_name}
         </div>
       ),
+      sortable: true,
+      sortKey: "full_name" as keyof IEmployee,
     },
     {
       header: `${t("Role")}`,
@@ -97,6 +99,8 @@ export default function EmployeesRoot() {
           {t(`UserRole.${employee.role}`)}
         </div>
       ),
+      sortable: true,
+      sortKey: "role" as keyof IEmployee,
     },
     {
       header: `${t("Contact")}`,
@@ -116,6 +120,8 @@ export default function EmployeesRoot() {
           </div>
         </div>
       ),
+      sortable: true,
+      sortKey: "phone" as keyof IEmployee,
     },
     {
       header: `${t("Address")}`,
@@ -124,6 +130,8 @@ export default function EmployeesRoot() {
           {currentLang === "ar" ? employee.address_ar : employee.address}
         </div>
       ),
+      sortable: true,
+      sortKey: "address" as keyof IEmployee,
     },
     {
       header: `${t("Salary")}`,
@@ -132,6 +140,8 @@ export default function EmployeesRoot() {
           ${employee.salary ? employee.salary : "0"}
         </div>
       ),
+      sortable: true,
+      sortKey: "salary" as keyof IEmployee,
     },
     {
       header: `${t("Hire Date")}`,
@@ -142,6 +152,8 @@ export default function EmployeesRoot() {
             : "No date"}
         </div>
       ),
+      sortable: true,
+      sortKey: "hire_date" as keyof IEmployee,
     },
     {
       header: `${t("Actions")}`,

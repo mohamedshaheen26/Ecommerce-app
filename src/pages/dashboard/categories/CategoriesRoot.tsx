@@ -92,6 +92,8 @@ export default function CategoriesRoot() {
           {currentLang === "ar" ? category.name_ar : category.name}
         </div>
       ),
+      sortable: true,
+      sortKey: "name" as keyof ICategory,
     },
     {
       header: `${t("Description")}`,
@@ -102,6 +104,8 @@ export default function CategoriesRoot() {
             : category.description}
         </div>
       ),
+      sortable: true,
+      sortKey: "description" as keyof ICategory,
     },
     {
       header: `${t("Created At")}`,
@@ -112,6 +116,8 @@ export default function CategoriesRoot() {
             : "No date"}
         </div>
       ),
+      sortable: true,
+      sortKey: "created_at" as keyof ICategory,
     },
     {
       header: `${t("Actions")}`,
