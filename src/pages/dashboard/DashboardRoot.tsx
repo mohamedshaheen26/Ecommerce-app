@@ -308,6 +308,7 @@ export default function DashboardRoot() {
             <Table
               data={stats.recentOrders}
               columns={dashboardOrderColumns}
+              size='medium'
               isLoading={loading}
             />
           </div>

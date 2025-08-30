@@ -16,6 +16,7 @@ import CategoriesForm from "./CategoriesForm";
 import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../../context/LanguageContext";
+import { bulkDelete } from "../../../api/general";
 
 export default function CategoriesRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -30,18 +31,26 @@ export default function CategoriesRoot() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [currentPage, searchQuery, pageSize]);
 
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const data = await fetchAllCategories();
+      const { data, count } = await fetchAllCategories(
+        currentPage,
+        pageSize,
+        searchQuery
+      );
       setCategories(data);
+      setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -49,9 +58,61 @@ export default function CategoriesRoot() {
     }
   };
 
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
+
   const handleEdit = (category: ICategory) => {
     setEditingCategory(category);
     setIsFormOpen(true);
+  };
+
+  // Bulk actions handler
+  const handleBulkAction = async (
+    action: string,
+    selectedIds: (string | number)[]
+  ) => {
+    try {
+      switch (action) {
+        case "delete":
+          await toast.promise(
+            bulkDelete("categories", selectedIds as number[]),
+            {
+              loading: t("Deleting selected Categories"),
+              success: t(
+                `${selectedIds.length} categories deleted successfully`
+              ),
+              error: t("Failed to delete categories"),
+            }
+          );
+          await loadCategories();
+          break;
+        case "archive":
+          toast.success(
+            t(`${selectedIds.length} categories archived successfully`)
+          );
+          // TODO: Implement archive functionality
+          break;
+        case "export":
+          toast.success(
+            t(`Export completed for ${selectedIds.length} categories`)
+          );
+          // TODO: Implement export functionality
+          break;
+        case "print":
+          toast.success(
+            t(`Print initiated for ${selectedIds.length} categories`)
+          );
+          // TODO: Implement print functionality
+          break;
+        default:
+          console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
+      }
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      toast.error(t("An error occurred while processing bulk action"));
+    }
   };
 
   const handleDelete = async () => {
@@ -144,12 +205,6 @@ export default function CategoriesRoot() {
     },
   ];
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
@@ -160,10 +215,24 @@ export default function CategoriesRoot() {
           setIsFormOpen(true);
         }}
         searchQuery={searchQuery}
-        onSearch={(val) => setSearchQuery(val)}
+        onSearch={(val) => {
+          setSearchQuery(val);
+          setCurrentPage(1);
+        }}
       />
 
-      <Table data={filteredCategories} columns={columns} isLoading={loading} />
+      <Table
+        data={categories}
+        columns={columns}
+        isLoading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        enableBulkActions={true}
+        onBulkAction={handleBulkAction}
+      />
 
       {isFormOpen && (
         <CategoriesForm

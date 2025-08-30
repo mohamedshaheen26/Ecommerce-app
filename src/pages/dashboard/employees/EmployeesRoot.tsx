@@ -14,6 +14,7 @@ import { MdEmail, MdPhone } from "react-icons/md";
 import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../../context/LanguageContext";
+import { bulkDelete } from "../../../api/general";
 
 export default function EmployeesRoot() {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -27,24 +28,38 @@ export default function EmployeesRoot() {
     null
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadEmployees();
-  }, []);
+  }, [currentPage, searchQuery, pageSize]);
 
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      const data = await fetchAllEmployees();
+      const { data, count } = await fetchAllEmployees(
+        currentPage,
+        pageSize,
+        searchQuery
+      );
       setEmployees(data);
+      setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching employees:", error);
+      toast.error("Failed to load employees");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
   };
 
   const handleEdit = (employee: IEmployee) => {
@@ -79,6 +94,53 @@ export default function EmployeesRoot() {
       success: (message) => message as string,
       error: (err) => `Error: ${err}`,
     });
+  };
+
+  // Bulk actions handler
+  const handleBulkAction = async (
+    action: string,
+    selectedIds: (string | number)[]
+  ) => {
+    try {
+      switch (action) {
+        case "delete":
+          await toast.promise(
+            bulkDelete("Employees", selectedIds as number[]),
+            {
+              loading: t("Deleting selected Employees"),
+              success: t(
+                `${selectedIds.length} employees deleted successfully`
+              ),
+              error: t("Failed to delete Employees"),
+            }
+          );
+          await loadEmployees();
+          break;
+        case "archive":
+          toast.success(
+            t(`${selectedIds.length} Employees archived successfully`)
+          );
+          // TODO: Implement archive functionality
+          break;
+        case "export":
+          toast.success(
+            t(`Export completed for ${selectedIds.length} Employees`)
+          );
+          // TODO: Implement export functionality
+          break;
+        case "print":
+          toast.success(
+            t(`Print initiated for ${selectedIds.length} Employees`)
+          );
+          // TODO: Implement print functionality
+          break;
+        default:
+          console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
+      }
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      toast.error(t("An error occurred while processing bulk action"));
+    }
   };
 
   const columns = [
@@ -180,14 +242,6 @@ export default function EmployeesRoot() {
     },
   ];
 
-  const filteredEmployees = employees.filter(
-    (employee) =>
-      employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.phone?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
@@ -198,10 +252,24 @@ export default function EmployeesRoot() {
           setIsFormOpen(true);
         }}
         searchQuery={searchQuery}
-        onSearch={(val) => setSearchQuery(val)}
+        onSearch={(val) => {
+          setSearchQuery(val);
+          setCurrentPage(1); // Reset to first page when searching
+        }}
       />
 
-      <Table data={filteredEmployees} columns={columns} isLoading={loading} />
+      <Table
+        data={employees}
+        columns={columns}
+        isLoading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        enableBulkActions={true}
+        onBulkAction={handleBulkAction}
+      />
 
       {isFormOpen && (
         <EmployeesForm

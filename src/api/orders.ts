@@ -2,11 +2,26 @@ import { supabase } from "../lib/supabase";
 import type { IOrder, IOrderItem, IOrderWithUserInfo } from "../types";
 
 // ✅ Fetch all orders with user info
-export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
-  // Get all orders basic info
-  const { data: ordersData, error: ordersError } = await supabase
-    .from("orders")
-    .select(
+export async function fetchOrders(
+  page: number,
+  pageSize: number,
+  searchQuery: string
+): Promise<{data: IOrderWithUserInfo[]; count: number}> {
+  let query;
+  
+  if (searchQuery && searchQuery.trim()) {
+    // If searching, first find customers that match the search
+    const { data: matchingCustomers } = await supabase
+      .from("customers")
+      .select("id")
+      .or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+    
+    const customerIds = matchingCustomers?.map(c => c.id) || [];
+    
+    // Then get orders for those customers
+    query = supabase
+      .from("orders")
+      .select(
         `
         id,
         customer_id,
@@ -23,16 +38,48 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
         created_at,
         updated_at,
         notes
-    `
-    )
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: true });
+      `
+      )
+      .in('customer_id', customerIds.length > 0 ? customerIds : [])
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true });
+  } else {
+    // No search, get all orders
+    query = supabase
+      .from("orders")
+      .select(
+        `
+        id,
+        customer_id,
+        customer: customers (
+          full_name,
+          name_ar,
+          phone,
+          address,
+          address_ar
+        ),
+        status,
+        total_amount,
+        shipping_address,
+        created_at,
+        updated_at,
+        notes
+      `
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true });
+  }
 
-  if (ordersError) throw ordersError;
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1
+  );
+
+  if (error) throw error;
 
   // Add order items for each order
   const completeOrders = await Promise.all(
-    (ordersData || []).map(async (order) => {
+    (data || []).map(async (order) => {
       const { data: itemsData, error: itemsError } = await supabase
       .from("order_items")
       .select(`
@@ -64,7 +111,7 @@ export async function fetchOrders(): Promise<IOrderWithUserInfo[]> {
     })
   );
 
-  return completeOrders as unknown as IOrderWithUserInfo[];
+  return { data: completeOrders as unknown as IOrderWithUserInfo[], count: count || 0 };
 }
 
 // ✅ Update order status

@@ -15,6 +15,8 @@ import DeleteModal from "../../../components/common/DeleteModal";
 import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../../context/LanguageContext";
+import { bulkDelete } from "../../../api/general";
+import toast from "react-hot-toast";
 
 export default function CustomersRoot() {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
@@ -25,19 +27,27 @@ export default function CustomersRoot() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
 
   useEffect(() => {
     fetchCustomersWithOrders();
-  }, []);
+  }, [currentPage, pageSize, searchQuery]);
 
   const fetchCustomersWithOrders = async () => {
     try {
       setLoading(true);
-      const data = await fetchAllCustomersWithOrders();
+      const { data, count } = await fetchAllCustomersWithOrders(
+        currentPage,
+        pageSize,
+        searchQuery
+      );
       setCustomers(data);
+      setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
@@ -45,15 +55,10 @@ export default function CustomersRoot() {
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (customer.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ??
-        false) ||
-      (customer.address?.toLowerCase().includes(searchQuery.toLowerCase()) ??
-        false)
-  );
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
 
   const handleDeleteCustomer = async () => {
     if (!selectedCustomer) return;
@@ -69,6 +74,53 @@ export default function CustomersRoot() {
       console.error("Error deleting customer:", error);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // Bulk actions handler
+  const handleBulkAction = async (
+    action: string,
+    selectedIds: (string | number)[]
+  ) => {
+    try {
+      switch (action) {
+        case "delete":
+          await toast.promise(
+            bulkDelete("customers", selectedIds as number[]),
+            {
+              loading: t("Deleting selected Customers"),
+              success: t(
+                `${selectedIds.length} customers deleted successfully`
+              ),
+              error: t("Failed to delete customers"),
+            }
+          );
+          await fetchCustomersWithOrders();
+          break;
+        case "archive":
+          toast.success(
+            t(`${selectedIds.length} customers archived successfully`)
+          );
+          // TODO: Implement archive functionality
+          break;
+        case "export":
+          toast.success(
+            t(`Export completed for ${selectedIds.length} customers`)
+          );
+          // TODO: Implement export functionality
+          break;
+        case "print":
+          toast.success(
+            t(`Print initiated for ${selectedIds.length} customers`)
+          );
+          // TODO: Implement print functionality
+          break;
+        default:
+          console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
+      }
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      toast.error(t("An error occurred while processing bulk action"));
     }
   };
 
@@ -173,10 +225,24 @@ export default function CustomersRoot() {
         title='Customers'
         showAddButton={false}
         searchQuery={searchQuery}
-        onSearch={(val) => setSearchQuery(val)}
+        onSearch={(val) => {
+          setSearchQuery(val);
+          setCurrentPage(1);
+        }}
       />
 
-      <Table data={filteredCustomers} columns={columns} isLoading={loading} />
+      <Table
+        data={customers}
+        columns={columns}
+        isLoading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        enableBulkActions={true}
+        onBulkAction={handleBulkAction}
+      />
 
       {/* Customer Details Modal */}
       {isModalOpen && selectedCustomer && (

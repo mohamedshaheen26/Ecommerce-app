@@ -96,14 +96,6 @@ export default function CategoriesForm({
         >
           <Input id='name' {...register("name")} />
         </FormField>
-        <FormField
-          htmlFor='name_ar'
-          label='Arabic Name'
-          required
-          error={errors.name_ar?.message}
-        >
-          <Input id='name_ar' {...register("name_ar")} />
-        </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
@@ -121,14 +113,6 @@ export default function CategoriesForm({
           error={errors.description?.message}
         >
           <TextArea id='description' {...register("description")} />
-        </FormField>
-        <FormField
-          htmlFor='description_ar'
-          label='Arabic Description'
-          required
-          error={errors.description_ar?.message}
-        >
-          <TextArea id='description_ar' {...register("description_ar")} />
         </FormField>
       </Grid>
     </Modal>

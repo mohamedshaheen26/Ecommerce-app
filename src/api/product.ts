@@ -19,8 +19,8 @@ export async function fetchProducts(
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
-  if (searchQuery) {
-    query = query.or(`title.ilike.%${searchQuery}%`);
+  if (searchQuery && searchQuery.trim()) {
+    query = query.or(`title.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`);
   }
 
   const { data, error, count } = await query.range(

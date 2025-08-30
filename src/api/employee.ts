@@ -1,14 +1,30 @@
 import { supabase } from "../lib/supabase"
+import type { IEmployee } from "../types";
 
 // ✅ Get all employees
-export async function fetchAllEmployees() {
-  const { data, error } = await supabase
-    .from('employees')
-    .select('*')
+export async function fetchAllEmployees(
+  page: number,
+  pageSize: number,
+  searchQuery: string
+): Promise<{data: IEmployee[]; count: number}> {
+  let query = supabase
+    .from("employees")
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
-  if (error) throw error
-  return data
+
+  if (searchQuery && searchQuery.trim()) {
+    query = query.or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,username.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+  }
+
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1
+  );
+
+  if (error) throw error;
+
+  return { data: data || [], count: count || 0 };
 }
 
 // ✅ Get employee by ID

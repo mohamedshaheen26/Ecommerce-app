@@ -20,24 +20,37 @@ export default function OrdersRoot() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [updating, setUpdating] = useState(false);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [currentPage, pageSize, searchQuery]);
 
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const data = await fetchOrders();
+      const { data, count } = await fetchOrders(
+        currentPage,
+        pageSize,
+        searchQuery
+      );
       setOrders(data);
+      setTotalItems(count || 0);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
   };
 
   const handleStatusChange = async (
@@ -65,17 +78,91 @@ export default function OrdersRoot() {
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.full_name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      order.customer.phone?.toLowerCase().includes(searchQuery.toLowerCase());
+  // Custom bulk actions for orders
+  // const orderBulkActions = [
+  //   {
+  //     value: "approve",
+  //     label: t("Approve Selected"),
+  //     variant: "outline",
+  //     color: "success",
+  //   },
+  //   {
+  //     value: "ship",
+  //     label: t("Mark as Shipped"),
+  //     variant: "outline",
+  //     color: "info",
+  //   },
+  //   {
+  //     value: "cancel",
+  //     label: t("Cancel Selected"),
+  //     variant: "outline",
+  //     color: "error",
+  //   },
+  //   {
+  //     value: "export",
+  //     label: t("Export Selected"),
+  //     variant: "outline",
+  //     color: "secondary",
+  //   },
+  //   {
+  //     value: "print",
+  //     label: t("Print Selected"),
+  //     variant: "outline",
+  //     color: "warning",
+  //   },
+  // ];
 
-    return matchesSearch;
-  });
+  // Bulk actions handler for orders
+  // const handleBulkAction = async (
+  //   action: string,
+  //   selectedIds: (string | number)[]
+  // ) => {
+  //   try {
+  //     switch (action) {
+  //       case "approve":
+  //         // Bulk approve orders
+  //         for (const orderId of selectedIds) {
+  //           await updateOrderStatus(orderId as string, "approved");
+  //         }
+  //         toast.success(
+  //           t(`${selectedIds.length} orders approved successfully`)
+  //         );
+  //         await loadOrders(); // Refresh the data
+  //         break;
+  //       case "ship":
+  //         // Bulk ship orders
+  //         for (const orderId of selectedIds) {
+  //           await updateOrderStatus(orderId as string, "shipped");
+  //         }
+  //         toast.success(t(`${selectedIds.length} orders marked as shipped`));
+  //         await loadOrders(); // Refresh the data
+  //         break;
+  //       case "cancel":
+  //         // Bulk cancel orders
+  //         for (const orderId of selectedIds) {
+  //           await updateOrderStatus(orderId as string, "cancelled");
+  //         }
+  //         toast.success(
+  //           t(`${selectedIds.length} orders cancelled successfully`)
+  //         );
+  //         await loadOrders(); // Refresh the data
+  //         break;
+  //       case "export":
+  //         toast.success(t(`Export completed for ${selectedIds.length} orders`));
+  //         // TODO: Implement export functionality
+  //         break;
+  //       case "print":
+  //         toast.success(t(`Print initiated for ${selectedIds.length} orders`));
+  //         // TODO: Implement print functionality
+  //         break;
+  //       default:
+  //         console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Bulk action error:", error);
+  //     toast.error(t("An error occurred while processing bulk action"));
+  //   }
+  // };
 
   const columns = [
     {
@@ -172,10 +259,25 @@ export default function OrdersRoot() {
         title='Orders'
         showAddButton={false}
         searchQuery={searchQuery}
-        onSearch={(val) => setSearchQuery(val)}
+        onSearch={(val) => {
+          setSearchQuery(val);
+          setCurrentPage(1);
+        }}
       />
 
-      <Table data={filteredOrders} columns={columns} isLoading={loading} />
+      <Table
+        data={orders}
+        columns={columns}
+        isLoading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        enableBulkActions={true}
+        // bulkActions={orderBulkActions}
+        // onBulkAction={handleBulkAction}
+      />
 
       {/* Order Details Modal */}
       {isModalOpen && selectedOrder && (

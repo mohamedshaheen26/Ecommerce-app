@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { IoSwapVerticalOutline } from "react-icons/io5";
 import DeleteModal from "../../../components/common/DeleteModal";
 import Table from "../../../components/common/Table";
 import DropdownMenu from "../../../components/common/DropdownMenu";
@@ -7,6 +6,7 @@ import toast from "react-hot-toast";
 import type { ICategory, IProduct } from "../../../types";
 import { deleteProduct, fetchProducts } from "../../../api/product";
 import { fetchAllCategories } from "../../../api/categories";
+import { bulkDelete } from "../../../api/general";
 import ProductsForm from "./ProductsForm";
 import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
@@ -52,7 +52,11 @@ export default function ProductsRoot() {
 
   const loadCategories = async () => {
     try {
-      const data = await fetchAllCategories();
+      const { data } = await fetchAllCategories(
+        currentPage,
+        pageSize,
+        searchQuery
+      );
       setCategories(data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -79,6 +83,48 @@ export default function ProductsRoot() {
         setSelectedProduct(null);
         await loadProducts();
       });
+  };
+
+  // Bulk actions handler
+  const handleBulkAction = async (
+    action: string,
+    selectedIds: (string | number)[]
+  ) => {
+    try {
+      switch (action) {
+        case "delete":
+          await toast.promise(bulkDelete("products", selectedIds as number[]), {
+            loading: t("Deleting selected products"),
+            success: t(`${selectedIds.length} products deleted successfully`),
+            error: t("Failed to delete products"),
+          });
+          await loadProducts(); // Refresh the data
+          break;
+        case "archive":
+          toast.success(
+            t(`${selectedIds.length} products archived successfully`)
+          );
+          // TODO: Implement archive functionality
+          break;
+        case "export":
+          toast.success(
+            t(`Export completed for ${selectedIds.length} products`)
+          );
+          // TODO: Implement export functionality
+          break;
+        case "print":
+          toast.success(
+            t(`Print initiated for ${selectedIds.length} products`)
+          );
+          // TODO: Implement print functionality
+          break;
+        default:
+          console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
+      }
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      toast.error(t("An error occurred while processing bulk action"));
+    }
   };
 
   const columns = [
@@ -180,7 +226,10 @@ export default function ProductsRoot() {
           setIsAddModalOpen(true);
         }}
         searchQuery={searchQuery}
-        onSearch={(val) => setSearchQuery(val)}
+        onSearch={(val) => {
+          setSearchQuery(val);
+          setCurrentPage(1);
+        }}
       />
 
       <Table
@@ -192,6 +241,8 @@ export default function ProductsRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
+        enableBulkActions={true}
+        onBulkAction={handleBulkAction}
       />
 
       <ProductsForm

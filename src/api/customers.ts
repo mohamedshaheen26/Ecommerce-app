@@ -2,24 +2,51 @@ import { supabase } from "../lib/supabase";
 import type { ICustomer, IOrder } from "../types";
 
 // ✅ Get all customers
-export async function fetchAllCustomers(): Promise<ICustomer[]> {
-  const { data, error } = await supabase
+export async function fetchAllCustomers(
+  page: number,
+  pageSize: number,
+  searchQuery: string
+): Promise<{data: ICustomer[]; count: number}> {
+  let query = supabase
     .from("customers")
     .select("*")
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
+  if (searchQuery && searchQuery.trim()) {
+    query = query.or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+  }
+
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1
+  );
+
   if (error) throw error;
 
-  return data || [];
+  return { data: data, count: count ?? 0 };
 }
 
 // ✅ Get all customers With orders
-export async function fetchAllCustomersWithOrders(): Promise<ICustomer[]> {
-  const { data, error } = await supabase
+export async function fetchAllCustomersWithOrders(
+  page: number,
+  pageSize: number,
+  searchQuery: string
+): Promise<{data:ICustomer[]; count: number}> {
+  let query = supabase
     .from("customers")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (searchQuery && searchQuery.trim()) {
+    query = query.or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+  }
+
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1
+  );
 
   if (error) throw error;
 
@@ -41,7 +68,7 @@ export async function fetchAllCustomersWithOrders(): Promise<ICustomer[]> {
     });
   }
 
-  return customers;
+  return { data: customers, count: count ?? 0 };
 }
 
 // ✅ Get customer by ID with orders
