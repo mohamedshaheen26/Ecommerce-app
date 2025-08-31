@@ -88,10 +88,8 @@ export default function CustomersRoot() {
           await toast.promise(
             bulkDelete("customers", selectedIds as number[]),
             {
-              loading: t("Deleting selected Customers"),
-              success: t(
-                `${selectedIds.length} customers deleted successfully`
-              ),
+              loading: t("Deleting selected customers"),
+              success: t(`Customers deleted successfully`),
               error: t("Failed to delete customers"),
             }
           );
@@ -192,7 +190,7 @@ export default function CustomersRoot() {
       sortKey: "total_spent" as keyof ICustomer,
     },
     {
-      header: `${t("Actions")}`,
+      header: "",
       accessor: (customer: ICustomer) => (
         <div className='flex justify-end'>
           <DropdownMenu
@@ -240,7 +238,6 @@ export default function CustomersRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
-        enableBulkActions={true}
         onBulkAction={handleBulkAction}
       />
 

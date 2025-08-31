@@ -79,10 +79,8 @@ export default function CategoriesRoot() {
           await toast.promise(
             bulkDelete("categories", selectedIds as number[]),
             {
-              loading: t("Deleting selected Categories"),
-              success: t(
-                `${selectedIds.length} categories deleted successfully`
-              ),
+              loading: t("Deleting selected categories"),
+              success: t(`Categories deleted successfully`),
               error: t("Failed to delete categories"),
             }
           );
@@ -181,7 +179,7 @@ export default function CategoriesRoot() {
       sortKey: "created_at" as keyof ICategory,
     },
     {
-      header: `${t("Actions")}`,
+      header: "",
       accessor: (category: ICategory) => (
         <div className='flex justify-end'>
           <DropdownMenu
@@ -230,7 +228,6 @@ export default function CategoriesRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
-        enableBulkActions={true}
         onBulkAction={handleBulkAction}
       />
 

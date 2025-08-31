@@ -95,7 +95,7 @@ export default function ProductsRoot() {
         case "delete":
           await toast.promise(bulkDelete("products", selectedIds as number[]), {
             loading: t("Deleting selected products"),
-            success: t(`${selectedIds.length} products deleted successfully`),
+            success: t(`products deleted successfully`),
             error: t("Failed to delete products"),
           });
           await loadProducts(); // Refresh the data
@@ -189,7 +189,7 @@ export default function ProductsRoot() {
       sortKey: "category.name" as keyof IProduct,
     },
     {
-      header: `${t("Actions")}`,
+      header: "",
       accessor: (product: IProduct) => (
         <div className='flex justify-end'>
           <DropdownMenu
@@ -241,7 +241,6 @@ export default function ProductsRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
-        enableBulkActions={true}
         onBulkAction={handleBulkAction}
       />
 

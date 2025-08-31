@@ -1,7 +1,6 @@
 import { supabase } from "../lib/supabase";
 
 export async function bulkDelete(domainName: string, ids: number[]) {
-  debugger
   const { data, error } = await supabase
     .from(domainName)
     .delete()

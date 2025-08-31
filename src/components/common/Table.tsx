@@ -55,7 +55,10 @@ interface TableProps<T> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   // Bulk actions props
-  enableBulkActions?: boolean;
+  showBulkActions?: boolean;
+  showPageSize?: boolean;
+  showPagenation?: boolean;
+  showPage?: boolean;
   bulkActions?: BulkAction[];
   onBulkAction?: (action: string, selectedIds: (string | number)[]) => void;
   getRowId?: (item: T) => string | number;
@@ -72,7 +75,9 @@ export default function Table<T extends Record<string, any>>({
   totalItems = 0,
   onPageChange,
   onPageSizeChange,
-  enableBulkActions = false,
+  showBulkActions = true,
+  showPageSize = true,
+  showPagenation = true,
   bulkActions = [],
   onBulkAction,
   getRowId = (item: T) => item.id,
@@ -156,6 +161,7 @@ export default function Table<T extends Record<string, any>>({
 
     setSelectedRows(new Set());
     setBulkAction("");
+    setIsSelectedModalOpen(false);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -224,59 +230,65 @@ export default function Table<T extends Record<string, any>>({
           backgroundColor: "var(--bg-primary)",
         }}
       >
-        <Grid>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 1,
-              p: 1,
-            }}
-          >
-            {enableBulkActions && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Select
-                  fullWidth={false}
-                  value={bulkAction}
-                  onChange={(e: any) => handleBulkActionChange(e.target.value)}
-                  options={[
-                    { value: "", label: t("Bulk Actions") },
-                    ...actionsToShow,
-                  ]}
-                />
-                <Button variant='outline' onClick={openSelectedModal}>
-                  {t("Apply")}
-                </Button>
-              </Box>
-            )}
+        {(showBulkActions || showPageSize) && (
+          <Grid>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 gap: 1,
+                p: 1,
               }}
             >
-              <Typography
-                variant='body2'
-                sx={{ color: "var(--text-muted)", fontSize: "0.75rem" }}
-              >
-                {t("Rows per page")}:
-              </Typography>
-              <FormControl size='small' sx={{ minWidth: 80 }}>
-                <Select
-                  id='rows-per-page'
-                  value={pageSize}
-                  onChange={handleRowsPerPageChange}
-                  options={[10, 25, 50].map((pageSize) => ({
-                    value: pageSize.toString(),
-                    label: pageSize.toString(),
-                  }))}
-                />
-              </FormControl>
+              {showBulkActions && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Select
+                    fullWidth={false}
+                    value={bulkAction}
+                    onChange={(e: any) =>
+                      handleBulkActionChange(e.target.value)
+                    }
+                    options={[
+                      { value: "", label: t("Bulk Actions") },
+                      ...actionsToShow,
+                    ]}
+                  />
+                  <Button variant='outline' onClick={openSelectedModal}>
+                    {t("Apply")}
+                  </Button>
+                </Box>
+              )}
+              {showPageSize && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography
+                    variant='body2'
+                    sx={{ color: "var(--text-muted)", fontSize: "0.75rem" }}
+                  >
+                    {t("Rows per page")}:
+                  </Typography>
+                  <FormControl size='small' sx={{ minWidth: 80 }}>
+                    <Select
+                      id='rows-per-page'
+                      value={pageSize}
+                      onChange={handleRowsPerPageChange}
+                      options={[10, 25, 50].map((pageSize) => ({
+                        value: pageSize.toString(),
+                        label: pageSize.toString(),
+                      }))}
+                    />
+                  </FormControl>
+                </Box>
+              )}
             </Box>
-          </Box>
-        </Grid>
+          </Grid>
+        )}
 
         <TableContainer
           sx={{
@@ -286,7 +298,7 @@ export default function Table<T extends Record<string, any>>({
           <MuiTable size={size}>
             <TableHead>
               <TableRow>
-                {enableBulkActions && bulkAction && (
+                {showBulkActions && bulkAction && (
                   <TableCell
                     sx={{
                       textAlign: "center",
@@ -298,6 +310,13 @@ export default function Table<T extends Record<string, any>>({
                     <Checkbox
                       sx={{
                         p: 0,
+                        color: "var(--accent-primary)",
+                        "&.Mui-checked": {
+                          color: "var(--accent-primary)",
+                        },
+                        "&.MuiCheckbox-indeterminate": {
+                          color: "var(--accent-primary)",
+                        },
                       }}
                       checked={isAllSelected}
                       indeterminate={isIndeterminate}
@@ -379,7 +398,7 @@ export default function Table<T extends Record<string, any>>({
                 <TableRow>
                   <TableCell
                     colSpan={
-                      enableBulkActions ? columns.length + 2 : columns.length
+                      showBulkActions ? columns.length + 2 : columns.length
                     }
                     sx={{
                       textAlign: "center",
@@ -394,9 +413,7 @@ export default function Table<T extends Record<string, any>>({
                 <TableRow>
                   <TableCell
                     colSpan={
-                      enableBulkActions
-                        ? columns.length + 2
-                        : columns.length + 1
+                      showBulkActions ? columns.length + 2 : columns.length + 1
                     }
                     sx={{
                       textAlign: "center",
@@ -419,7 +436,7 @@ export default function Table<T extends Record<string, any>>({
                       },
                     }}
                   >
-                    {enableBulkActions && bulkAction && (
+                    {showBulkActions && bulkAction && (
                       <TableCell
                         sx={{
                           textAlign: "center",
@@ -430,6 +447,13 @@ export default function Table<T extends Record<string, any>>({
                         <Checkbox
                           sx={{
                             p: 0,
+                            color: "var(--accent-primary)",
+                            "&.Mui-checked": {
+                              color: "var(--accent-primary)",
+                            },
+                            "&.MuiCheckbox-indeterminate": {
+                              color: "var(--accent-primary)",
+                            },
                           }}
                           checked={selectedRows.has(getRowId(item))}
                           onChange={(e) =>
@@ -471,218 +495,220 @@ export default function Table<T extends Record<string, any>>({
           </MuiTable>
         </TableContainer>
 
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            px: 3,
-            py: 1,
-            backgroundColor: "var(--bg-primary)",
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography variant='body2' sx={{ color: "var(--text-muted)" }}>
-              <span className='font-medium'>{startItem} -</span>
-              <span className='font-medium'> {endItem}</span> {t("of")}
-              <span className='font-medium'> {totalItems}</span>
-            </Typography>
-          </Box>
+        {showPagenation && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              px: 3,
+              py: 1,
+              backgroundColor: "var(--bg-primary)",
+            }}
+          >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Typography variant='body2' sx={{ color: "var(--text-muted)" }}>
+                <span className='font-medium'>{startItem} -</span>
+                <span className='font-medium'> {endItem}</span> {t("of")}
+                <span className='font-medium'> {totalItems}</span>
+              </Typography>
+            </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <IconButton
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-              size='small'
-              sx={{
-                height: 40,
-                fontSize: "0.875rem",
-                color: "var(--text-secondary)",
-                backgroundColor: "var(--bg-primary)",
-                borderRadius: "6px",
-                "&:disabled": {
-                  "&:disabled": {
-                    backgroundColor: "transparent",
-                    color: "var(--text-muted)",
-                  },
-                },
-                "&:hover": {
-                  backgroundColor: "var(--accent-hover)",
-                  color: "var(--text-primary)",
-                },
-              }}
-            >
-              {currentLang === "ar" ? (
-                <MdLastPage size={25} />
-              ) : (
-                <MdFirstPage size={25} />
-              )}
-            </IconButton>
-
-            <IconButton
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              size='small'
-              sx={{
-                height: 40,
-                fontSize: "0.875rem",
-                color: "var(--text-secondary)",
-                backgroundColor: "var(--bg-primary)",
-                borderRadius: "6px",
-                "&:disabled": {
-                  "&:disabled": {
-                    backgroundColor: "transparent",
-                    color: "var(--text-muted)",
-                  },
-                },
-                "&:hover": {
-                  backgroundColor: "var(--accent-hover)",
-                  color: "var(--text-primary)",
-                },
-              }}
-            >
-              {currentLang === "ar" ? (
-                <MdChevronRight size={25} />
-              ) : (
-                <MdChevronLeft size={25} />
-              )}
-            </IconButton>
-            {totalPages <= 1 ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <IconButton
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
                 size='small'
                 sx={{
-                  fontSize: "0.875rem",
-                  minWidth: 37,
                   height: 40,
+                  fontSize: "0.875rem",
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-primary)",
                   borderRadius: "6px",
-                  backgroundColor: "var(--accent-primary)",
-                  color: "var(--text-primary)",
+                  "&:disabled": {
+                    "&:disabled": {
+                      backgroundColor: "transparent",
+                      color: "var(--text-muted)",
+                    },
+                  },
                   "&:hover": {
-                    backgroundColor: "var(--accent-primary)",
+                    backgroundColor: "var(--accent-hover)",
                     color: "var(--text-primary)",
                   },
                 }}
               >
-                1
+                {currentLang === "ar" ? (
+                  <MdLastPage size={25} />
+                ) : (
+                  <MdFirstPage size={25} />
+                )}
               </IconButton>
-            ) : (
-              [...Array(totalPages)].map((_, index) => {
-                const page = index + 1;
-                const showPage =
-                  page === 1 ||
-                  page === totalPages ||
-                  Math.abs(currentPage - page) <= 1;
 
-                if (!showPage) {
-                  if (page === 2 || page === totalPages - 1) {
-                    return (
-                      <Typography
-                        key={page}
-                        variant='body2'
-                        sx={{
-                          px: 1,
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        ...
-                      </Typography>
-                    );
+              <IconButton
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                size='small'
+                sx={{
+                  height: 40,
+                  fontSize: "0.875rem",
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-primary)",
+                  borderRadius: "6px",
+                  "&:disabled": {
+                    "&:disabled": {
+                      backgroundColor: "transparent",
+                      color: "var(--text-muted)",
+                    },
+                  },
+                  "&:hover": {
+                    backgroundColor: "var(--accent-hover)",
+                    color: "var(--text-primary)",
+                  },
+                }}
+              >
+                {currentLang === "ar" ? (
+                  <MdChevronRight size={25} />
+                ) : (
+                  <MdChevronLeft size={25} />
+                )}
+              </IconButton>
+              {totalPages <= 1 ? (
+                <IconButton
+                  size='small'
+                  sx={{
+                    fontSize: "0.875rem",
+                    minWidth: 37,
+                    height: 40,
+                    borderRadius: "6px",
+                    backgroundColor: "var(--accent-primary)",
+                    color: "var(--text-primary)",
+                    "&:hover": {
+                      backgroundColor: "var(--accent-primary)",
+                      color: "var(--text-primary)",
+                    },
+                  }}
+                >
+                  1
+                </IconButton>
+              ) : (
+                [...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  const showPage =
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(currentPage - page) <= 1;
+
+                  if (!showPage) {
+                    if (page === 2 || page === totalPages - 1) {
+                      return (
+                        <Typography
+                          key={page}
+                          variant='body2'
+                          sx={{
+                            px: 1,
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          ...
+                        </Typography>
+                      );
+                    }
+                    return null;
                   }
-                  return null;
-                }
 
-                return (
-                  <IconButton
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    size='small'
-                    sx={{
-                      fontSize: "0.875rem",
-                      minWidth: 37,
-                      height: 40,
-                      borderRadius: "6px",
-                      backgroundColor:
-                        currentPage === page
-                          ? "var(--accent-primary)"
-                          : "var(--bg-primary)",
-                      color:
-                        currentPage === page
-                          ? "var(--text-primary)"
-                          : "var(--text-secondary)",
-                      "&:hover": {
+                  return (
+                    <IconButton
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      size='small'
+                      sx={{
+                        fontSize: "0.875rem",
+                        minWidth: 37,
+                        height: 40,
+                        borderRadius: "6px",
                         backgroundColor:
                           currentPage === page
                             ? "var(--accent-primary)"
-                            : "var(--accent-hover)",
+                            : "var(--bg-primary)",
                         color:
                           currentPage === page
                             ? "var(--text-primary)"
-                            : "var(--text-primary)",
-                      },
-                    }}
-                  >
-                    {page}
-                  </IconButton>
-                );
-              })
-            )}
-
-            <IconButton
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || totalItems <= 10}
-              size='small'
-              sx={{
-                height: 40,
-                color: "var(--text-secondary)",
-                backgroundColor: "var(--bg-primary)",
-                borderRadius: "6px",
-                "&:disabled": {
-                  backgroundColor: "transparent",
-                  color: "var(--text-muted)",
-                },
-                "&:hover": {
-                  backgroundColor: "var(--accent-hover)",
-                  color: "var(--text-primary)",
-                },
-              }}
-            >
-              {currentLang === "ar" ? (
-                <MdChevronLeft size={25} />
-              ) : (
-                <MdChevronRight size={25} />
+                            : "var(--text-secondary)",
+                        "&:hover": {
+                          backgroundColor:
+                            currentPage === page
+                              ? "var(--accent-primary)"
+                              : "var(--accent-hover)",
+                          color:
+                            currentPage === page
+                              ? "var(--text-primary)"
+                              : "var(--text-primary)",
+                        },
+                      }}
+                    >
+                      {page}
+                    </IconButton>
+                  );
+                })
               )}
-            </IconButton>
 
-            <IconButton
-              onClick={() => handlePageChange(totalPages)}
-              disabled={currentPage === totalPages || totalItems <= 10}
-              size='small'
-              sx={{
-                height: 40,
-                fontSize: "0.875rem",
-                color: "var(--text-secondary)",
-                backgroundColor: "var(--bg-primary)",
-                borderRadius: "6px",
-                "&:disabled": {
+              <IconButton
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || totalItems <= 10}
+                size='small'
+                sx={{
+                  height: 40,
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-primary)",
+                  borderRadius: "6px",
                   "&:disabled": {
                     backgroundColor: "transparent",
                     color: "var(--text-muted)",
                   },
-                },
-                "&:hover": {
-                  backgroundColor: "var(--accent-hover)",
-                  color: "var(--text-primary)",
-                },
-              }}
-            >
-              {currentLang === "ar" ? (
-                <MdFirstPage size={25} />
-              ) : (
-                <MdLastPage size={25} />
-              )}
-            </IconButton>
+                  "&:hover": {
+                    backgroundColor: "var(--accent-hover)",
+                    color: "var(--text-primary)",
+                  },
+                }}
+              >
+                {currentLang === "ar" ? (
+                  <MdChevronLeft size={25} />
+                ) : (
+                  <MdChevronRight size={25} />
+                )}
+              </IconButton>
+
+              <IconButton
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages || totalItems <= 10}
+                size='small'
+                sx={{
+                  height: 40,
+                  fontSize: "0.875rem",
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-primary)",
+                  borderRadius: "6px",
+                  "&:disabled": {
+                    "&:disabled": {
+                      backgroundColor: "transparent",
+                      color: "var(--text-muted)",
+                    },
+                  },
+                  "&:hover": {
+                    backgroundColor: "var(--accent-hover)",
+                    color: "var(--text-primary)",
+                  },
+                }}
+              >
+                {currentLang === "ar" ? (
+                  <MdFirstPage size={25} />
+                ) : (
+                  <MdLastPage size={25} />
+                )}
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        )}
       </Paper>
 
       <DeleteModal

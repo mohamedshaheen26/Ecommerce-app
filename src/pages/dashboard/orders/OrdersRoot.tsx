@@ -143,7 +143,7 @@ export default function OrdersRoot() {
   //           await updateOrderStatus(orderId as string, "cancelled");
   //         }
   //         toast.success(
-  //           t(`${selectedIds.length} orders cancelled successfully`)
+  //           t(`orders cancelled successfully`)
   //         );
   //         await loadOrders(); // Refresh the data
   //         break;
@@ -233,7 +233,7 @@ export default function OrdersRoot() {
       sortKey: "total_amount" as keyof IOrderWithUserInfo,
     },
     {
-      header: `${t("Actions")}`,
+      header: "",
       accessor: (order: IOrderWithUserInfo) => (
         <div className='flex justify-end'>
           <DropdownMenu
@@ -274,7 +274,6 @@ export default function OrdersRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
-        enableBulkActions={true}
         // bulkActions={orderBulkActions}
         // onBulkAction={handleBulkAction}
       />

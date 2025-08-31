@@ -105,13 +105,11 @@ export default function EmployeesRoot() {
       switch (action) {
         case "delete":
           await toast.promise(
-            bulkDelete("Employees", selectedIds as number[]),
+            bulkDelete("employees", selectedIds as number[]),
             {
-              loading: t("Deleting selected Employees"),
-              success: t(
-                `${selectedIds.length} employees deleted successfully`
-              ),
-              error: t("Failed to delete Employees"),
+              loading: t("Deleting selected employees"),
+              success: t(`Employees deleted successfully`),
+              error: t("Failed to delete employees"),
             }
           );
           await loadEmployees();
@@ -218,7 +216,7 @@ export default function EmployeesRoot() {
       sortKey: "hire_date" as keyof IEmployee,
     },
     {
-      header: `${t("Actions")}`,
+      header: "",
       accessor: (employee: IEmployee) => (
         <div className='flex justify-end'>
           <DropdownMenu
@@ -267,7 +265,6 @@ export default function EmployeesRoot() {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
-        enableBulkActions={true}
         onBulkAction={handleBulkAction}
       />
 

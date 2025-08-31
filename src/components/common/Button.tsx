@@ -62,7 +62,7 @@ export default function Button({
 
     // Outline
     outline:
-      "border border-gray-300 text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]",
+      "border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]",
   };
 
   const disabledStyles =

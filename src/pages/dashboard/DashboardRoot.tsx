@@ -310,6 +310,9 @@ export default function DashboardRoot() {
               columns={dashboardOrderColumns}
               size='medium'
               isLoading={loading}
+              showBulkActions={false}
+              showPageSize={false}
+              showPagenation={false}
             />
           </div>
         </div>
