@@ -24,7 +24,7 @@ export async function fetchAllCustomers(
 
   if (error) throw error;
 
-  return { data: data, count: count ?? 0 };
+  return { data: data, count: count || 0 };
 }
 
 // ✅ Get all customers With orders
@@ -35,7 +35,7 @@ export async function fetchAllCustomersWithOrders(
 ): Promise<{data:ICustomer[]; count: number}> {
   let query = supabase
     .from("customers")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
