@@ -3,6 +3,7 @@ import { fetchEmployeeByEmail } from "../../api/employee";
 import { UserRole } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { supabase } from "../../lib/supabase";
+import { Tooltip } from "@mui/material";
 
 interface UserProfileProps {
   isDesktopOpen?: boolean;
@@ -74,15 +75,23 @@ export default function UserProfile({ isDesktopOpen }: UserProfileProps) {
       }`}
     >
       {/* User Avatar */}
-      <div className='relative'>
-        <div className='w-8 h-8 bg-gradient-to-br to-blue-500 from-[var(--accent-primary)] rounded-full flex items-center justify-center text-white font-semibold text-sm'>
-          {currentLang === "ar"
-            ? userInfo.name_ar.charAt(0)
-            : userInfo.full_name.charAt(0).toUpperCase()}
+      <Tooltip
+        title={
+          !isDesktopOpen &&
+          (currentLang === "ar" ? userInfo.name_ar : userInfo.full_name)
+        }
+        arrow
+        placement={currentLang === "ar" ? "right" : "left"}
+      >
+        <div className='relative'>
+          <div className='w-8 h-8 bg-gradient-to-br to-blue-500 from-[var(--accent-primary)] rounded-full flex items-center justify-center text-white font-semibold text-sm'>
+            {currentLang === "ar"
+              ? userInfo.name_ar.charAt(0)
+              : userInfo.full_name.charAt(0).toUpperCase()}
+          </div>
+          <div className='absolute -bottom-1 -right-1 w-3 h-3 bg-[var(--success)] border-2 border-[var(--border-color)] rounded-full'></div>
         </div>
-        <div className='absolute -bottom-1 -right-1 w-3 h-3 bg-[var(--success)] border-2 border-[var(--border-color)] rounded-full'></div>
-      </div>
-
+      </Tooltip>
       {/* User Info */}
       {isDesktopOpen && (
         <div className='flex flex-col'>

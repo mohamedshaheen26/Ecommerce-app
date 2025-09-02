@@ -6,6 +6,8 @@ export interface IDashboardStats {
   orders: number;
   bestSelling: IBestSellingProduct[];
   recentOrders: IRecentOrder[];
+  salesPerDay?: number[];
+  customersPerDay?: number[];
 }
 
 export interface IBestSellingProduct {

@@ -14,6 +14,7 @@ import { UserRole } from "../types";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../context/LanguageContext";
 import UserProfile from "../components/common/UserProfile";
+import { Tooltip } from "@mui/material";
 
 interface NavItem {
   path: string;
@@ -120,33 +121,33 @@ export default function Sidebar({
             (item) => !item.allowedRoles || item.allowedRoles.includes(userRole)
           )
           .map((item) => (
-            <NavLink
+            <Tooltip
+              arrow
               key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={() =>
-                `flex items-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors
-              ${
-                isNavItemActive(item.path)
-                  ? "bg-[var(--accent-primary)] text-[var(--text-primary)]"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]"
-              }
-              ${!isDesktopOpen && "justify-center px-2"}
-              `
-              }
               title={t(item.title)}
+              placement={currentLang === "ar" ? "right" : "left"}
+              className={`flex items-center rounded-lg px-2 py-2.5 text-sm font-medium transition-colors
+                  ${
+                    isNavItemActive(item.path)
+                      ? "bg-[var(--accent-primary)] text-[var(--text-primary)]"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]"
+                  }
+                  ${!isDesktopOpen && "justify-center px-2"}
+                  `}
             >
-              <item.icon
-                className={`h-5 w-5 flex-shrink-0 ${
-                  isDesktopOpen && currentLang === "ar"
-                    ? "ml-3"
-                    : !isDesktopOpen
-                    ? ""
-                    : "mr-3"
-                }`}
-              />
-              {isDesktopOpen && <span>{t(item.title)}</span>}
-            </NavLink>
+              <NavLink to={item.path} onClick={onClose}>
+                <item.icon
+                  className={`h-5 w-5 flex-shrink-0 ${
+                    isDesktopOpen && currentLang === "ar"
+                      ? "ml-3"
+                      : !isDesktopOpen
+                      ? ""
+                      : "mr-3"
+                  }`}
+                />
+                {isDesktopOpen && <span>{t(item.title)}</span>}
+              </NavLink>
+            </Tooltip>
           ))}
 
         {/* {userRole === UserRole.Admin && (
