@@ -37,8 +37,6 @@ async function fetchOrderItems(orderId: string): Promise<IOrderItem[]> {
     console.error("Error fetching order items:", error);
     return [];
   }
-  console.log(data);
-  
 
   return (data || []) as unknown as IOrderItem[];
 }

@@ -243,5 +243,11 @@
   "Failed to delete orders": "فشل حذف الطلبات المحددة: {{message}}",
   "Deleting selected customers": "جاري حذف العملاء المحددة...",
   "Customers deleted successfully": "تم حذف العملاء المحددة بنجاح",
-  "Failed to delete customers": "فشل حذف العملاء المحددة: {{message}}"
+  "Failed to delete customers": "فشل حذف العملاء المحددة: {{message}}",
+  "Notifications": "الاشعارات",
+  "unreadMessages": "لديك {{count}} رسالة غير مقروءة",
+  "Mark all as read": "عرض الكل كمقروء",
+  "No notifications": "لا توجد اشعارات",
+  "Change Theme": "تغيير الوضع",
+  "Change to English": "تغيير الي اللغة الانجليزية"
 }

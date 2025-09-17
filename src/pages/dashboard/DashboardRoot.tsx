@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Line } from "react-chartjs-2";
+import { Bar, Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -7,6 +7,7 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -23,6 +24,8 @@ import {
   getOrderCountCurrentMonth,
   getRecentOrders,
   getTotalSalesCurrentMonth,
+  getSalesPerDayCurrentMonth,
+  getCustomerPerDayCurrentMonth,
 } from "../../api/dashboard";
 import { getStatusColor } from "../../utils/orderStatus";
 import Loader from "../../components/common/Loader";
@@ -36,6 +39,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -53,6 +57,8 @@ export default function DashboardRoot() {
     orders: 0,
     bestSelling: [],
     recentOrders: [],
+    salesPerDay: [],
+    customersPerDay: [],
   });
   const { currentLang } = useLanguage();
 
@@ -63,14 +69,23 @@ export default function DashboardRoot() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [totalSales, customers, orders, bestSelling, recentOrders] =
-        await Promise.all([
-          getTotalSalesCurrentMonth(),
-          getCustomerCount(),
-          getOrderCountCurrentMonth(),
-          getBestSellingProducts(),
-          getRecentOrders(),
-        ]);
+      const [
+        totalSales,
+        customers,
+        orders,
+        bestSelling,
+        recentOrders,
+        salesPerDay,
+        customersPerDay,
+      ] = await Promise.all([
+        getTotalSalesCurrentMonth(),
+        getCustomerCount(),
+        getOrderCountCurrentMonth(),
+        getBestSellingProducts(),
+        getRecentOrders(),
+        getSalesPerDayCurrentMonth(),
+        getCustomerPerDayCurrentMonth(),
+      ]);
 
       setStats({
         totalSales,
@@ -78,6 +93,8 @@ export default function DashboardRoot() {
         orders,
         bestSelling,
         recentOrders,
+        salesPerDay,
+        customersPerDay,
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -87,16 +104,13 @@ export default function DashboardRoot() {
   };
 
   const salesData = {
-    labels: Array.from({ length: 30 }, (_, i) => i + 1),
+    labels: stats.salesPerDay?.map((_, i) => i + 1) || [],
     datasets: [
       {
-        label: "Sales",
-        data: Array.from(
-          { length: 30 },
-          () => Math.floor(Math.random() * 200) + 100
-        ),
+        label: t("Sales"),
+        data: stats.salesPerDay || [],
+        backgroundColor: "#714b67",
         borderColor: "#714b67",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
         borderWidth: 2,
         fill: true,
       },
@@ -104,18 +118,38 @@ export default function DashboardRoot() {
   };
 
   const customersData = {
-    labels: Array.from({ length: 30 }, (_, i) => i + 1),
+    labels: stats.customersPerDay?.map((_, i) => i + 1) || [],
     datasets: [
       {
-        label: "Customers",
-        data: Array.from(
-          { length: 30 },
-          () => Math.floor(Math.random() * 100) + 50
-        ),
+        label: t("Customers"),
+        data: stats.customersPerDay || [],
+        backgroundColor: "#714b67",
         borderColor: "#714b67",
         tension: 0.4,
         pointRadius: 0,
         borderWidth: 2,
+      },
+    ],
+  };
+
+  const bestSellingData = {
+    labels:
+      stats.bestSelling?.map((i) =>
+        currentLang === "ar" ? i.name_ar : i.title
+      ) || [],
+    datasets: [
+      {
+        label: t("Customers"),
+        data: stats.bestSelling?.map((p) => p.sales_count) || [],
+        backgroundColor: "#714b67",
+        borderColor: "#714b67",
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+        spacing: 1,
+        offset: 10,
+        hoverOffset: 20,
+        cutout: "85%",
       },
     ],
   };
@@ -204,7 +238,7 @@ export default function DashboardRoot() {
             </p>
           </div>
           <div className='h-34'>
-            <Line data={salesData} options={chartOptions} />
+            <Bar data={salesData} options={chartOptions} />
           </div>
         </div>
 
@@ -291,6 +325,9 @@ export default function DashboardRoot() {
                 </span>
               </div>
             ))}
+          </div>
+          <div className='p-6 h-34'>
+            <Doughnut data={bestSellingData} options={chartOptions} />
           </div>
         </div>
 

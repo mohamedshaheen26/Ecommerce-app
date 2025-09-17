@@ -243,5 +243,11 @@
   "Failed to delete orders": "Failed to delete orders: {{message}}",
   "Deleting selected customers": "Deleting selected Customers...",
   "Customers deleted successfully": "customers deleted successfully",
-  "Failed to delete customers": "Failed to delete customers: {{message}}"
+  "Failed to delete customers": "Failed to delete customers: {{message}}",
+  "Notifications": "Notifications",
+  "unreadMessages": "You have {{count}} unread messages",
+  "Mark all as read": "Mark all as read",
+  "No notifications": "No notifications",
+  "Change Theme": "Change Theme",
+  "Change to Arabic": "Change to Arabic"
 }

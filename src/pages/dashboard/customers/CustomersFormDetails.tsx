@@ -78,40 +78,42 @@ const CustomersFormDetails = ({ isOpen, customer, onClose }: Props) => {
         </div>
       </div>
 
-      <div>
-        <h3 className='font-medium mb-4 text-[var(--text-secondary)]'>
-          {t("Recent Orders")}
-        </h3>
-        <div className='space-y-4'>
-          {selectedCustomer.orders?.slice(0, 5).map((order) => (
-            <div
-              key={order.id}
-              className='flex justify-between items-center p-4 bg-[var(--bg-secondary)] rounded-lg'
-            >
-              <div>
-                <div className='text-sm font-medium text-[var(--text-secondary)]'>
-                  {t("Order")} #{order.id.slice(0, 8)}
+      {selectedCustomer.orders.length > 0 && (
+        <div>
+          <h3 className='font-medium mb-4 text-[var(--text-secondary)]'>
+            {t("Recent Orders")}
+          </h3>
+          <div className='space-y-4'>
+            {selectedCustomer.orders.slice(0, 5).map((order) => (
+              <div
+                key={order.id}
+                className='flex justify-between items-center p-4 bg-[var(--bg-secondary)] rounded-lg'
+              >
+                <div>
+                  <div className='text-sm font-medium text-[var(--text-secondary)]'>
+                    {t("Order")} #{order.id.slice(0, 8)}
+                  </div>
+                  <div className='text-sm text-[var(--text-muted)]'>
+                    {formatDate(order.created_at)}
+                  </div>
                 </div>
-                <div className='text-sm text-[var(--text-muted)]'>
-                  {formatDate(order.created_at)}
+                <div className='flex items-center space-x-4'>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
+                    {t(`statuses.${order.status}`)}
+                  </span>
+                  <span className='text-sm font-medium text-[var(--text-secondary)]'>
+                    {formatCurrency(order.total_amount)}
+                  </span>
                 </div>
               </div>
-              <div className='flex items-center space-x-4'>
-                <span
-                  className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(
-                    order.status
-                  )}`}
-                >
-                  {t(`statuses.${order.status}`)}
-                </span>
-                <span className='text-sm font-medium text-[var(--text-secondary)]'>
-                  {formatCurrency(order.total_amount)}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </Modal>
   );
 };

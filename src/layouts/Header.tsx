@@ -12,7 +12,13 @@ import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useTranslation } from "react-i18next";
 import { getBreadcrumbs } from "../utils/getBreadcrumbs";
-
+import { Badge, Popover } from "@mui/material";
+import { BsBell } from "react-icons/bs";
+import { useState } from "react";
+import { LiaCheckDoubleSolid } from "react-icons/lia";
+import { useNotifications } from "../context/useNotification";
+import { NotificationItem } from "../components/common/NotificationItem";
+import { Tooltip } from "@mui/material";
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -22,6 +28,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const { logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const { currentLang, changeLanguage } = useLanguage();
+  const { notifications, markAllAsRead } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const { t } = useTranslation();
   const breadcrumbs = getBreadcrumbs();
 
@@ -29,6 +37,18 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
     logout();
     navigate("/login");
   };
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
 
   return (
     <header className='sticky top-0 z-10 shadow-2xs bg-[var(--bg-primary)]'>
@@ -67,44 +87,152 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
         {/* Right section with theme toggle and logout button */}
         <div className='flex items-center gap-4'>
-          <Button
-            variant='outline'
-            onClick={() => changeLanguage(currentLang === "en" ? "ar" : "en")}
-            size='sm'
-            className=' border-none'
+          <Tooltip title={t("Notifications")} arrow>
+            <Button
+              onClick={handleClick}
+              variant='outline'
+              size='sm'
+              className=' border-none'
+            >
+              <Badge badgeContent={unreadCount} color='error'>
+                <BsBell className='h-5 w-5' />
+              </Badge>
+            </Button>
+          </Tooltip>
+
+          <Popover
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: currentLang === "ar" ? "left" : "right",
+            }}
+            sx={{
+              ".MuiPaper-root": {
+                top: "55px !important",
+                left:
+                  currentLang === "ar" ? "200px !important" : "auto !important",
+                right:
+                  currentLang === "ar" ? "auto !important" : "200px !important",
+                backgroundColor: "var(--bg-secondary)",
+                width: "300px",
+                maxWidth: "100%",
+                maxHeight: "400px",
+                overflow: "unset",
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "8px",
+                boxShadow: "var(--shadow)",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: "-8px",
+                  left: currentLang === "ar" ? "26px" : "258px",
+                  width: "16px",
+                  height: "16px",
+                  backgroundColor: "var(--bg-secondary)",
+                  transform: "rotate(45deg)",
+                  zIndex: 0,
+                },
+              },
+            }}
+          >
+            <div className='flex items-center justify-between p-4 pb-2 border-b border-[var(--border-color)]'>
+              <div className=''>
+                <h3 className='font-semibold text-[var(--text-secondary)]'>
+                  {t("Notifications")}
+                </h3>
+                <p className='text-[var(--text-muted)] text-sm'>
+                  {t("unreadMessages", { count: unreadCount })}
+                </p>
+              </div>
+              {unreadCount > 0 && (
+                <Tooltip title={`${t("Mark all as read")}`} arrow>
+                  <Button
+                    variant='outline'
+                    className='border-none hover:bg-[var(--accent-hover)] !p-1 !rounded-full !min-h-[auto] !w-7 !h-7'
+                  >
+                    <LiaCheckDoubleSolid
+                      className='h-5 w-5'
+                      onClick={markAllAsRead}
+                    />
+                  </Button>
+                </Tooltip>
+              )}
+            </div>
+
+            {notifications.length === 0 ? (
+              <div className='p-8 text-center text-[var(--text-muted)]'>
+                <BsBell className='h-12 w-12 mx-auto mb-4 opacity-20' />
+                <p className='text-sm'>{t("No notifications")}</p>
+              </div>
+            ) : (
+              <div className='overflow-y-auto flex-1'>
+                {notifications.map((notification, index) => (
+                  <div
+                    key={notification.id}
+                    className={`
+                      ${
+                        index < notifications.length - 1
+                          ? "border-b border-[var(--border-color)]"
+                          : ""
+                      }`}
+                  >
+                    <NotificationItem notification={notification} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </Popover>
+
+          <Tooltip
             title={
-              currentLang === "en" ? "Change to Arabic" : "Change to English"
+              currentLang === "en"
+                ? t("Change to Arabic")
+                : t("Change to English")
             }
+            arrow
           >
-            <MdLanguage className='h-5 w-5' />
-          </Button>
+            <Button
+              variant='outline'
+              onClick={() => changeLanguage(currentLang === "en" ? "ar" : "en")}
+              size='sm'
+              className=' border-none'
+            >
+              <MdLanguage className='h-5 w-5' />
+            </Button>
+          </Tooltip>
 
-          <Button
-            variant='outline'
-            onClick={toggleTheme}
-            size='sm'
-            className=' border-none'
-            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {darkMode ? (
-              <MdLightMode className='h-5 w-5' />
-            ) : (
-              <MdDarkMode className='h-5 w-5' />
-            )}
-          </Button>
+          <Tooltip title={`${t("Change Theme")}`} arrow>
+            <Button
+              variant='outline'
+              onClick={toggleTheme}
+              size='sm'
+              className=' border-none'
+            >
+              {darkMode ? (
+                <MdLightMode className='h-5 w-5' />
+              ) : (
+                <MdDarkMode className='h-5 w-5' />
+              )}
+            </Button>
+          </Tooltip>
 
-          <Button
-            variant='outline'
-            onClick={handleLogout}
-            size='sm'
-            className='border-none'
-          >
-            {currentLang === "ar" ? (
-              <MdLogout className='h-5 w-5 rotate-180' />
-            ) : (
-              <MdLogout className='h-5 w-5' />
-            )}
-          </Button>
+          <Tooltip title={`${t("Logout")}`} arrow>
+            <Button
+              variant='outline'
+              onClick={handleLogout}
+              size='sm'
+              className='border-none'
+            >
+              {currentLang === "ar" ? (
+                <MdLogout className='h-5 w-5 rotate-180' />
+              ) : (
+                <MdLogout className='h-5 w-5' />
+              )}
+            </Button>
+          </Tooltip>
         </div>
       </div>
     </header>
