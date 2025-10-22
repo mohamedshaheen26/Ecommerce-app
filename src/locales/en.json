@@ -249,5 +249,13 @@
   "Mark all as read": "Mark all as read",
   "No notifications": "No notifications",
   "Change Theme": "Change Theme",
-  "Change to Arabic": "Change to Arabic"
+  "Change to Arabic": "Change to Arabic",
+  "Page Not Found": "Page Not Found",
+  "Sorry, the page you are looking for doesn't exist.": "Sorry, the page you are looking for doesn't exist.",
+  "The page might have been moved, deleted, or you entered the wrong URL.": "The page might have been moved, deleted, or you entered the wrong URL.",
+  "Go Back": "Go Back",
+  "Go Home": "Go Home",
+  "Need help?": "Need help?",
+  "Contact support or check our": "Contact support or check our",
+  "documentation": "documentation"
 }

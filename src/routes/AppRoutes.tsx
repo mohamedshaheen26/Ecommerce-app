@@ -11,6 +11,7 @@ import ProductsRoot from "../pages/dashboard/products/ProductsRoot";
 import EmployeesRoot from "../pages/dashboard/employees/EmployeesRoot";
 import { UserRole } from "../types";
 import UnauthorizedPage from "../pages/auth/Unauthorized";
+import NotFoundPage from "../pages/auth/NotFound";
 import ReviewsRoot from "../pages/dashboard/reviews/ReviewsRoot";
 
 export default function AppRoutes() {
@@ -87,6 +88,9 @@ export default function AppRoutes() {
           }
         />
       </Route>
+
+      {/* Catch-all route for 404 */}
+      <Route path='*' element={<NotFoundPage />} />
     </Routes>
   );
 }

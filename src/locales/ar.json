@@ -249,5 +249,13 @@
   "Mark all as read": "عرض الكل كمقروء",
   "No notifications": "لا توجد اشعارات",
   "Change Theme": "تغيير الوضع",
-  "Change to English": "تغيير الي اللغة الانجليزية"
+  "Change to English": "تغيير الي اللغة الانجليزية",
+  "Page Not Found": "الصفحة غير موجودة",
+  "Sorry, the page you are looking for doesn't exist.": "عذراً، الصفحة التي تبحث عنها غير موجودة.",
+  "The page might have been moved, deleted, or you entered the wrong URL.": "ربما تم نقل الصفحة أو حذفها، أو أنك أدخلت رابطاً خاطئاً.",
+  "Go Back": "العودة",
+  "Go Home": "الذهاب للرئيسية",
+  "Need help?": "تحتاج مساعدة؟",
+  "Contact support or check our": "تواصل مع الدعم أو راجع",
+  "documentation": "الوثائق"
 }
