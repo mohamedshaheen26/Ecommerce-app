@@ -295,12 +295,27 @@ export default function Table<T extends Record<string, any>>({
         <TableContainer
           sx={{
             borderTop: "1px solid var(--border-color)",
+            overflowX: "auto",
+            "&::-webkit-scrollbar": {
+              height: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "var(--bg-secondary)",
+              borderRadius: "4px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "var(--border-color)",
+              borderRadius: "4px",
+              "&:hover": {
+                backgroundColor: "var(--text-muted)",
+              },
+            },
           }}
         >
           <TableVirtuoso
             style={{
               height: 450,
-              width: "100%",
+              minWidth: "100%",
             }}
             data={
               isLoading
@@ -314,7 +329,11 @@ export default function Table<T extends Record<string, any>>({
                 <MuiTable
                   {...props}
                   size={size}
-                  sx={{ tableLayout: "fixed", width: "100%" }}
+                  sx={{
+                    tableLayout: "auto",
+                    minWidth: "max-content",
+                    width: "100%",
+                  }}
                 />
               ),
               TableHead: TableHead,

@@ -229,7 +229,7 @@ export default function DashboardRoot() {
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                 {t("Total Sales")}
               </h3>
-              <p className='text-[var(--text-muted)] text-xs mt-1'>
+              <p className='text-[var(--text-muted)] text-xs'>
                 {t("THIS MONTH")}
               </p>
             </div>
@@ -249,7 +249,7 @@ export default function DashboardRoot() {
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                 {t("Customers")}
               </h3>
-              <p className='text-[var(--text-muted)] text-xs mt-1'>
+              <p className='text-[var(--text-muted)] text-xs'>
                 {t("THIS MONTH")}
               </p>
             </div>
@@ -269,7 +269,7 @@ export default function DashboardRoot() {
               <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                 {t("Orders")}
               </h3>
-              <p className='text-[var(--text-muted)] text-xs mt-1'>
+              <p className='text-[var(--text-muted)] text-xs'>
                 {t("MONTHLY GOALS")}: {monthlyGoal.toLocaleString()}
               </p>
             </div>
@@ -294,11 +294,11 @@ export default function DashboardRoot() {
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
         {/* Best Selling Products */}
         <div className='md:col-span-1 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
-          <div className='p-6 border-b border-[var(--border-color)] pb-4'>
+          <div className='p-3 border-b border-[var(--border-color)]'>
             <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
               {t("Best Selling")}
             </h3>
-            <p className='text-[var(--text-muted)] text-xs mt-1'>
+            <p className='text-[var(--text-muted)] text-xs'>
               {t("THIS MONTH")}
             </p>
           </div>
@@ -333,7 +333,7 @@ export default function DashboardRoot() {
 
         {/* Recent Orders */}
         <div className='md:col-span-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
-          <div className='flex items-center justify-between p-6 border-b border-[var(--border-color)]'>
+          <div className='flex items-center justify-between p-3 border-b border-[var(--border-color)]'>
             <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
               {t("Recent Orders")}
             </h3>

@@ -149,25 +149,9 @@ export default function Sidebar({
               </NavLink>
             </Tooltip>
           ))}
-
-        {/* {userRole === UserRole.Admin && (
-          <div className='mt-6 pt-6 border-t border-[var(--border-color)]'>
-            <button
-              className='flex items-center cursor-pointer rounded-lg px-4 py-2.5 w-full text-sm font-medium transition-colors text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]'
-              onClick={() => {}}
-            >
-              <MdAdd
-                className={`h-5 w-5 flex-shrink-0 ${
-                  isDesktopOpen ? "mr-3" : ""
-                }`}
-              />
-              {isDesktopOpen && <span>Extras</span>}
-            </button>
-          </div>
-        )} */}
       </nav>
 
-      <div className='p-2 border-t border-[var(--border-color)] mt-auto'>
+      <div className='py-2 px-4 border-t border-[var(--border-color)] mt-auto'>
         <UserProfile isDesktopOpen={isDesktopOpen} />
       </div>
     </div>
