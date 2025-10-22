@@ -249,7 +249,7 @@ export default function OrdersRoot() {
           />
         </div>
       ),
-      className: "w-10",
+      width: "5%",
     },
   ];
 

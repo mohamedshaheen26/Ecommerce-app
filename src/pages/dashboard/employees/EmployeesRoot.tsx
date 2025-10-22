@@ -182,6 +182,7 @@ export default function EmployeesRoot() {
       ),
       sortable: true,
       sortKey: "phone" as keyof IEmployee,
+      width: "30%",
     },
     {
       header: `${t("Address")}`,
@@ -236,7 +237,7 @@ export default function EmployeesRoot() {
           />
         </div>
       ),
-      className: "w-10",
+      width: "5%",
     },
   ];
 

@@ -212,7 +212,7 @@ export default function ProductsRoot() {
           />
         </div>
       ),
-      className: "w-10",
+      width: "5%",
     },
   ];
 

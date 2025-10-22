@@ -213,7 +213,7 @@ export default function CustomersRoot() {
           />
         </div>
       ),
-      className: "w-10",
+      width: "5%",
     },
   ];
 

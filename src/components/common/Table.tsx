@@ -28,11 +28,13 @@ import Select from "./Select";
 import toast from "react-hot-toast";
 import Grid from "./Grid";
 import DeleteModal from "./DeleteModal";
+import { TableVirtuoso } from "react-virtuoso";
 
 interface Column<T> {
   header: ReactNode;
   accessor: (item: T) => ReactNode;
   className?: string;
+  width?: string;
   sortable?: boolean;
   sortKey?: keyof T;
 }
@@ -278,7 +280,7 @@ export default function Table<T extends Record<string, any>>({
                       id='rows-per-page'
                       value={pageSize}
                       onChange={handleRowsPerPageChange}
-                      options={[10, 25, 50].map((pageSize) => ({
+                      options={[10, 50, 100, 500, 1000].map((pageSize) => ({
                         value: pageSize.toString(),
                         label: pageSize.toString(),
                       }))}
@@ -295,9 +297,37 @@ export default function Table<T extends Record<string, any>>({
             borderTop: "1px solid var(--border-color)",
           }}
         >
-          <MuiTable size={size}>
-            <TableHead>
-              <TableRow>
+          <TableVirtuoso
+            style={{
+              height: 450,
+              width: "100%",
+            }}
+            data={
+              isLoading
+                ? [{ isLoading: true } as unknown as T]
+                : data.length === 0
+                ? [{ isEmpty: true } as unknown as T]
+                : sortedData
+            }
+            components={{
+              Table: (props) => (
+                <MuiTable
+                  {...props}
+                  size={size}
+                  sx={{ tableLayout: "fixed", width: "100%" }}
+                />
+              ),
+              TableHead: TableHead,
+              TableRow: TableRow,
+              TableBody: TableBody,
+            }}
+            fixedHeaderContent={() => (
+              <TableRow
+                sx={{
+                  backgroundColor: "var(--bg-primary)",
+                  boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)",
+                }}
+              >
                 {showBulkActions && bulkAction && (
                   <TableCell
                     sx={{
@@ -349,10 +379,9 @@ export default function Table<T extends Record<string, any>>({
                       color: "var(--text-muted)",
                       textAlign: currentLang === "ar" ? "right" : "left",
                       borderBottom: "1px solid var(--border-color)",
-                      ...(column.className && {
-                        className: column.className,
-                      }),
+                      width: column.width || "auto",
                     }}
+                    className={`${column.className}`}
                   >
                     {column.sortable && column.sortKey ? (
                       <TableSortLabel
@@ -383,22 +412,15 @@ export default function Table<T extends Record<string, any>>({
                   </TableCell>
                 ))}
               </TableRow>
-            </TableHead>
-            <TableBody
-              sx={{
-                "& tr:nth-of-type(odd)": {
-                  backgroundColor: "var(--bg-secondary)",
-                },
-                "& tr:nth-of-type(even)": {
-                  backgroundColor: "var(--bg-primary)",
-                },
-              }}
-            >
-              {isLoading ? (
-                <TableRow>
+            )}
+            itemContent={(index, item) => {
+              if (item.isLoading) {
+                return (
                   <TableCell
                     colSpan={
-                      showBulkActions ? columns.length + 2 : columns.length
+                      showBulkActions && bulkAction
+                        ? columns.length + 2
+                        : columns.length + 1
                     }
                     sx={{
                       textAlign: "center",
@@ -408,12 +430,16 @@ export default function Table<T extends Record<string, any>>({
                   >
                     <Loader />
                   </TableCell>
-                </TableRow>
-              ) : data.length === 0 ? (
-                <TableRow>
+                );
+              }
+
+              if (item.isEmpty) {
+                return (
                   <TableCell
                     colSpan={
-                      showBulkActions ? columns.length + 2 : columns.length + 1
+                      showBulkActions && bulkAction
+                        ? columns.length + 2
+                        : columns.length + 1
                     }
                     sx={{
                       textAlign: "center",
@@ -424,75 +450,74 @@ export default function Table<T extends Record<string, any>>({
                   >
                     {t("No items found")}
                   </TableCell>
-                </TableRow>
-              ) : (
-                sortedData.map((item, rowIndex) => (
-                  <TableRow
-                    key={rowIndex}
-                    sx={{
-                      backgroundColor: "var(--bg-primary)",
-                      "&:hover": {
-                        backgroundColor: "var(--bg-hover)",
-                      },
-                    }}
-                  >
-                    {showBulkActions && bulkAction && (
-                      <TableCell
-                        sx={{
-                          textAlign: "center",
-                          padding: "10px",
-                          borderBottom: "1px solid var(--border-color)",
-                        }}
-                      >
-                        <Checkbox
-                          sx={{
-                            p: 0,
-                            color: "var(--accent-primary)",
-                            "&.Mui-checked": {
-                              color: "var(--accent-primary)",
-                            },
-                            "&.MuiCheckbox-indeterminate": {
-                              color: "var(--accent-primary)",
-                            },
-                          }}
-                          checked={selectedRows.has(getRowId(item))}
-                          onChange={(e) =>
-                            handleSelectRow(item, e.target.checked)
-                          }
-                        />
-                      </TableCell>
-                    )}
+                );
+              }
+
+              return (
+                <>
+                  {showBulkActions && bulkAction && (
                     <TableCell
                       sx={{
-                        padding: "0",
                         textAlign: "center",
+                        padding: "10px",
                         borderBottom: "1px solid var(--border-color)",
-                        color: "var(--text-secondary)",
+                        backgroundColor:
+                          index % 2 === 0
+                            ? "var(--bg-primary)"
+                            : "var(--bg-secondary)",
                       }}
                     >
-                      {startItem + rowIndex}
-                    </TableCell>
-                    {columns.map((column, colIndex) => (
-                      <TableCell
-                        key={colIndex}
+                      <Checkbox
                         sx={{
-                          textAlign: currentLang === "ar" ? "right" : "left",
-                          borderBottom: "1px solid var(--border-color)",
-                          whiteSpace: "nowrap",
-                          backgroundColor: "inherit",
-                          ...(column.className && {
-                            className: column.className,
-                          }),
+                          p: 0,
+                          color: "var(--accent-primary)",
+                          "&.Mui-checked": {
+                            color: "var(--accent-primary)",
+                          },
                         }}
-                      >
-                        {column.accessor(item)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </MuiTable>
+                        checked={selectedRows.has(getRowId(item))}
+                        onChange={(e) =>
+                          handleSelectRow(item, e.target.checked)
+                        }
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell
+                    sx={{
+                      padding: "0",
+                      textAlign: "center",
+                      borderBottom: "1px solid var(--border-color)",
+                      color: "var(--text-secondary)",
+                      backgroundColor:
+                        index % 2 === 0
+                          ? "var(--bg-primary)"
+                          : "var(--bg-secondary)",
+                    }}
+                  >
+                    {startItem + index}
+                  </TableCell>
+                  {columns.map((column, colIndex) => (
+                    <TableCell
+                      key={colIndex}
+                      sx={{
+                        textAlign: currentLang === "ar" ? "right" : "left",
+                        borderBottom: "1px solid var(--border-color)",
+                        whiteSpace: "nowrap",
+                        backgroundColor:
+                          index % 2 === 0
+                            ? "var(--bg-primary)"
+                            : "var(--bg-secondary)",
+                        width: column.width || "auto",
+                      }}
+                      className={`${column.className}`}
+                    >
+                      {column.accessor(item)}
+                    </TableCell>
+                  ))}
+                </>
+              );
+            }}
+          />
         </TableContainer>
 
         {showPagenation && (

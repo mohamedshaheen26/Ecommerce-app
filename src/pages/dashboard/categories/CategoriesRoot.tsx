@@ -142,7 +142,6 @@ export default function CategoriesRoot() {
       error: (err) => `Error: ${err}`,
     });
   };
-
   const columns = [
     {
       header: `${t("Name")}`,
@@ -199,7 +198,7 @@ export default function CategoriesRoot() {
           />
         </div>
       ),
-      className: "w-10",
+      width: "5%",
     },
   ];
 
