@@ -124,7 +124,17 @@ export async function updateCustomer(id: string, customerData: Partial<ICustomer
 }
 
 // ✅ Delete customer
-export async function deleteCustomerById(id: string): Promise<void> {
-  const { error } = await supabase.from("customers").delete().eq("id", id);
-  if (error) throw error;
+export async function deleteCustomerById(userId: string) {
+  debugger;
+  const response = await fetch("api/delete-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) throw new Error(data.error || "Unknown error");
+
+  return data;
 }

@@ -66,7 +66,7 @@ export async function createEmployee(employee: any) {
     email: employee.email,
     password: employee.password,
   });
-
+  
   if (authError) throw authError;
 
   const { error } = await supabase
@@ -140,8 +140,7 @@ export async function adminChangePassword(userId: string, newPassword: string) {
 
 // ✅ Delete Employee
 export async function deleteEmployeeById(userId: string) {
-  debugger;
-const response = await fetch("api/delete-user", {
+  const response = await fetch("api/delete-user", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),

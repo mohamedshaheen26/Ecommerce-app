@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import Loader from "./Loader";
 import { useTranslation } from "react-i18next";
+import Loader from "./Loader";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
@@ -9,7 +9,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     | "danger"
     | "success"
     | "warning"
-    | "outline";
+    | "outline"
+    | "default";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: ReactNode;
@@ -49,7 +50,7 @@ export default function Button({
       "bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)]",
 
     // Secondary - Blue scale (B800 background with B100 hover)
-    secondary: "bg-[#0E1422] text-white hover:bg-[#333845]",
+    secondary: "bg-[var(--btn-secondary)] text-white hover:bg-[#333845]",
 
     // Success - Green (500)
     success: "bg-[#22C55E] text-white hover:bg-[#16A34A]",
@@ -63,10 +64,14 @@ export default function Button({
     // Outline
     outline:
       "border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)]",
+
+    default:
+      "border-0 text-[var(--accent-primary)] hover:text-[var(--accent-hover)] disabled:bg-tranparent",
   };
 
-  const disabledStyles =
-    "disabled:bg-[var(--disabled-btn)] disabled:cursor-default disabled:text-[var(--text-muted)]";
+  const disabledStyles = ` ${
+    variantStyles["default"] ? "" : "disabled:bg-[var(--disabled-btn)]"
+  }  disabled:cursor-default disabled:text-[var(--text-muted)]`;
   const fullWidthStyles = "w-full";
 
   const computedClassName = `

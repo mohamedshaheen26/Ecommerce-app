@@ -40,6 +40,7 @@ export default function CategoriesForm({
     description: editingCategory?.description ?? "",
     description_ar: editingCategory?.description_ar ?? "",
   });
+  
   const { t } = useTranslation();
 
   useEffect(() => {

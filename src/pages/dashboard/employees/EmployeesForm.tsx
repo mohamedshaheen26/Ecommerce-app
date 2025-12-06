@@ -31,6 +31,8 @@ import { useTranslation } from "react-i18next";
 import { handleError } from "../../../utils/errorHandler";
 import Button from "../../../components/common/Button";
 import { supabase } from "../../../lib/supabase";
+import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { useLanguage } from "../../../context/LanguageContext";
 
 interface EmployeesFormProps {
   isOpen: boolean;
@@ -53,8 +55,10 @@ export default function EmployeesForm({
 }: EmployeesFormProps) {
   const isEditing = !!editingEmployee;
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { t } = useTranslation();
-
+  const { currentLang } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -122,6 +126,7 @@ export default function EmployeesForm({
   }, [isOpen, editingEmployee, isEditing, reset, resetCredentials]);
 
   const onSubmit = async (data: IEmployeeValidation) => {
+    debugger;
     try {
       if (isEditing && editingEmployee?.id) {
         await updateEmployee(editingEmployee.id, data);
@@ -271,12 +276,25 @@ export default function EmployeesForm({
             required
             error={errors.password?.message}
           >
-            <Input
-              id='password'
-              type='password'
-              {...register("password")}
-              disabled={isEditing}
-            />
+            <div className='relative'>
+              <Input
+                required={false}
+                id='password'
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                disabled={isEditing}
+                className={`${currentLang === "ar" ? "pl-10" : "pr-10"}`}
+              />
+              <button
+                type='button'
+                className={`absolute inset-y-0 cursor-pointer ${
+                  currentLang == "ar" ? "left-0 pl-3" : "right-0 pr-3"
+                } flex items-center text-gray-500 hover:text-gray-700 focus:outline-none`}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <BsEyeSlash /> : <BsEye />}
+              </button>
+            </div>
           </FormField>
           <FormField
             htmlFor='confirm_password'
@@ -284,12 +302,25 @@ export default function EmployeesForm({
             required
             error={errors.confirm_password?.message}
           >
-            <Input
-              id='confirm_password'
-              type='password'
-              {...register("confirm_password")}
-              disabled={isEditing}
-            />
+            <div className='relative'>
+              <Input
+                required={false}
+                id='confirm_password'
+                type={showConfirmPassword ? "text" : "password"}
+                {...register("confirm_password")}
+                disabled={isEditing}
+                className={`${currentLang === "ar" ? "pl-10" : "pr-10"}`}
+              />
+              <button
+                type='button'
+                className={`absolute inset-y-0 cursor-pointer ${
+                  currentLang == "ar" ? "left-0 pl-3" : "right-0 pr-3"
+                } flex items-center text-gray-500 hover:text-gray-700 focus:outline-none`}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showPassword ? <BsEyeSlash /> : <BsEye />}
+              </button>
+            </div>
           </FormField>
         </Grid>
         <Grid columns={2}>

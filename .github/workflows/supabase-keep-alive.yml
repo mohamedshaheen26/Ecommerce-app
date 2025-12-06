@@ -1,0 +1,17 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    - cron: "0 9 * * 5" # Every Friday at 09:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase Edge Function
+        run: |
+          curl -s "$SUPABASE_KEEP_ALIVE_URL"
+        env:
+          SUPABASE_KEEP_ALIVE_URL: ${{ secrets.SUPABASE_KEEP_ALIVE_URL }}

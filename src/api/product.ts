@@ -1,6 +1,5 @@
 import { supabase } from "../lib/supabase";
-import type { IProduct } from "../types";
-import type { IProductFormValues } from "../types";
+import type { IProduct, IProductFormValues } from "../types";
 
 const bucket_productsImg = "images";
 
@@ -101,4 +100,28 @@ export async function deleteProduct(product: IProduct): Promise<void> {
     .eq("id", product.id);
 
   if (error) throw error;
+}
+
+export async function fetchBestSellingProducts(): Promise<IProduct[]> {
+  const { data, error } = await supabase.from("products").select("*").order("sales_count", { ascending: false }).limit(10);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchLatestProducts(): Promise<IProduct[]> {
+  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false }).limit(10);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchFeaturedProducts(): Promise<IProduct[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("is_featured", true)
+    .order("created_at", { ascending: false })
+    .limit(10);
+    
+  if (error) throw error;
+  return data || [];
 }

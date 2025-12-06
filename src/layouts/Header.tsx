@@ -1,24 +1,23 @@
-import Button from "../components/common/Button";
-import { useNavigate } from "react-router-dom";
+import { Badge, Popover, Tooltip } from "@mui/material";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BsBell } from "react-icons/bs";
+import { LiaCheckDoubleSolid } from "react-icons/lia";
 import {
-  MdMenu,
-  MdLogout,
-  MdLightMode,
   MdDarkMode,
   MdLanguage,
+  MdLightMode,
+  MdLogout,
+  MdMenu,
 } from "react-icons/md";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { useLanguage } from "../context/LanguageContext";
-import { useTranslation } from "react-i18next";
-import { getBreadcrumbs } from "../utils/getBreadcrumbs";
-import { Badge, Popover } from "@mui/material";
-import { BsBell } from "react-icons/bs";
-import { useState } from "react";
-import { LiaCheckDoubleSolid } from "react-icons/lia";
-import { useNotifications } from "../context/useNotification";
+import { useNavigate } from "react-router-dom";
+import Button from "../components/common/Button";
 import { NotificationItem } from "../components/common/NotificationItem";
-import { Tooltip } from "@mui/material";
+import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
+import { useNotifications } from "../context/useNotification";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -53,7 +52,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   return (
     <header className='sticky top-0 z-10 shadow-2xs bg-[var(--bg-primary)]'>
       <div className='flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8'>
-        {/* Left section with menu button and breadcrumbs */}
         <div className='flex items-center gap-4'>
           <button
             onClick={onToggleSidebar}
@@ -63,7 +61,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
             <MdMenu className='h-6 w-6' />
           </button>
 
-          {/* Breadcrumbs */}
           <nav className='hidden sm:flex items-center gap-2'>
             {breadcrumbs.map((item, index) => (
               <div key={item.path} className='flex items-center'>
@@ -85,8 +82,18 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
           </nav>
         </div>
 
-        {/* Right section with theme toggle and logout button */}
         <div className='flex items-center gap-4'>
+          <Tooltip arrow title={t("Go to Store")} placement='bottom'>
+            <button
+              type='button'
+              aria-label='Store'
+              onClick={() => navigate("/")}
+              className='cursor-pointer flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--accent-hover)] hover:text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg'
+            >
+              {t("Store")}
+            </button>
+          </Tooltip>
+
           <Tooltip title={t("Notifications")} arrow>
             <Button
               onClick={handleClick}
