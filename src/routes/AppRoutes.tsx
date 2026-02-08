@@ -1,29 +1,61 @@
-import { Routes, Route } from "react-router-dom";
-import LoginPage from "../pages/auth/Login";
-import ProtectedRoute from "./ProtectedRoute";
+import { Route, Routes } from "react-router-dom";
+import PublicRedirect from "../components/PublicRedirect";
+import UserRedirect from "../components/UserRedirect";
+import ClientLayout from "../layouts/ClientLayout";
 import MainLayout from "../layouts/MainLayout";
+import EmailConfirmationPage from "../pages/auth/EmailConfirmation";
+import ForgotPasswordPage from "../pages/auth/ForgotPassword";
+import LoginPage from "../pages/auth/Login";
+import NotFoundPage from "../pages/auth/NotFound";
+import RegisterPage from "../pages/auth/Register";
+import ResetPasswordPage from "../pages/auth/ResetPassword";
+import UnauthorizedPage from "../pages/auth/Unauthorized";
+import HomePage from "../pages/client/HomePage";
 import CategoriesRoot from "../pages/dashboard/categories/CategoriesRoot";
 import CustomersRoot from "../pages/dashboard/customers/CustomersRoot";
-import OrdersRoot from "../pages/dashboard/orders/OrdersRoot";
-import SettingsRoot from "../pages/dashboard/settings/SettingsRoot";
 import DashboardRoot from "../pages/dashboard/DashboardRoot";
-import ProductsRoot from "../pages/dashboard/products/ProductsRoot";
 import EmployeesRoot from "../pages/dashboard/employees/EmployeesRoot";
-import { UserRole } from "../types";
-import UnauthorizedPage from "../pages/auth/Unauthorized";
-import NotFoundPage from "../pages/auth/NotFound";
+import OrdersRoot from "../pages/dashboard/orders/OrdersRoot";
+import ProductsRoot from "../pages/dashboard/products/ProductsRoot";
 import ReviewsRoot from "../pages/dashboard/reviews/ReviewsRoot";
+import SettingsRoot from "../pages/dashboard/settings/SettingsRoot";
+import { UserRole } from "../types";
+import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public route */}
       <Route path='/login' element={<LoginPage />} />
+      <Route path='/signup' element={<RegisterPage />} />
+      <Route path='/emailConfirmation' element={<EmailConfirmationPage />} />
+      <Route path='/forgot-password' element={<ForgotPasswordPage />} />
+      <Route path='/reset-password' element={<ResetPasswordPage />} />
       <Route path='/unauthorized' element={<UnauthorizedPage />} />
+
+      {/* User redirect route - checks user type and redirects accordingly */}
+      <Route path='/redirect' element={<UserRedirect />} />
+
+      {/* Root route - checks if user is authenticated and redirects accordingly */}
+      <Route path='/home' element={<PublicRedirect />} />
+
+      {/* Client Routes - Public access (Home page) */}
+      <Route path='/' element={<ClientLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path='cart' element={<div>Cart Page - Coming Soon</div>} />
+        <Route
+          path='favorites'
+          element={<div>Favorites Page - Coming Soon</div>}
+        />
+        <Route path='orders' element={<div>Orders Page - Coming Soon</div>} />
+        <Route path='account' element={<div>Account Page - Coming Soon</div>} />
+        <Route path='help' element={<div>Help Page - Coming Soon</div>} />
+        <Route path='search' element={<div>Search Page - Coming Soon</div>} />
+      </Route>
 
       {/* Protected Dashboard Routes */}
       <Route
-        path='/'
+        path='/dashboard'
         element={
           <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
             <MainLayout />
@@ -32,7 +64,7 @@ export default function AppRoutes() {
       >
         <Route index element={<DashboardRoot />} />
         <Route
-          path='employees'
+          path='/dashboard/employees'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
               <EmployeesRoot />
@@ -40,7 +72,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='settings'
+          path='/dashboard/settings'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <SettingsRoot />
@@ -48,7 +80,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='orders'
+          path='/dashboard/orders'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <OrdersRoot />
@@ -56,7 +88,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='products'
+          path='/dashboard/products'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
               <ProductsRoot />
@@ -64,7 +96,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='customers'
+          path='/dashboard/customers'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <CustomersRoot />
@@ -72,7 +104,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='categories'
+          path='/dashboard/categories'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
               <CategoriesRoot />
@@ -80,7 +112,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path='reviews'
+          path='/dashboard/reviews'
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <ReviewsRoot />

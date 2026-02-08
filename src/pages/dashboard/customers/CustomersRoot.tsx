@@ -61,11 +61,13 @@ export default function CustomersRoot() {
   };
 
   const handleDeleteCustomer = async () => {
+    debugger;
     if (!selectedCustomer) return;
 
     try {
       setDeleting(true);
-      if (selectedCustomer.id) await deleteCustomerById(selectedCustomer.id);
+      if (selectedCustomer.id)
+        await deleteCustomerById(selectedCustomer.user_id ?? "");
       setCustomers(
         customers.filter((customer) => customer.id !== selectedCustomer.id)
       );

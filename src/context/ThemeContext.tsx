@@ -7,15 +7,17 @@ import {
 } from "react";
 import { themes } from "../styles/themes";
 
+type ThemeMode = "light" | "dark" | "system";
+
 interface ThemeContextType {
-  currentTheme: string;
-  setTheme: (theme: string) => void;
+  currentTheme: ThemeMode;
+  setTheme: (theme: ThemeMode) => void;
   toggleTheme: () => void;
   darkMode: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  currentTheme: "light",
+  currentTheme: "system",
   setTheme: () => {},
   toggleTheme: () => {},
   darkMode: false,
@@ -24,40 +26,60 @@ const ThemeContext = createContext<ThemeContextType>({
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentTheme, setCurrentTheme] = useState(() => {
+  const [currentTheme, setCurrentTheme] = useState<ThemeMode>(() => {
     try {
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme === "dark" || savedTheme === "light") {
-        return savedTheme;
-      }
-      return "light";
+      return (localStorage.getItem("theme") as ThemeMode) || "system";
     } catch {
-      return "light";
+      return "system";
     }
   });
 
+  const getSystemTheme = () =>
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(
+    getSystemTheme()
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemTheme(e.matches ? "dark" : "light");
+    };
+
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
+  }, []);
+
+  const appliedTheme = currentTheme === "system" ? systemTheme : currentTheme;
+
   useLayoutEffect(() => {
     const root = document.documentElement;
-    const themeColors = themes[currentTheme as keyof typeof themes];
+    const themeColors = themes[appliedTheme];
 
-    Object.entries(themeColors).forEach(([property, value]) => {
-      root.style.setProperty(property, value);
+    Object.entries(themeColors).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
     });
 
-    if (currentTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    root.classList.toggle("dark", appliedTheme === "dark");
+  }, [appliedTheme]);
+
+  useEffect(() => {
+    if (currentTheme !== "system") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const listener = () => setCurrentTheme("system");
+
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
   }, [currentTheme]);
 
   useEffect(() => {
     localStorage.setItem("theme", currentTheme);
   }, [currentTheme]);
-
-  const setTheme = (theme: string) => {
-    setCurrentTheme(theme);
-  };
 
   const toggleTheme = () => {
     setCurrentTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -67,9 +89,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     <ThemeContext.Provider
       value={{
         currentTheme,
-        setTheme,
+        setTheme: setCurrentTheme,
         toggleTheme,
-        darkMode: currentTheme === "dark",
+        darkMode: appliedTheme === "dark",
       }}
     >
       {children}

@@ -1,10 +1,10 @@
-import { BrowserRouter, useLocation } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-import AppRoutes from "./routes/AppRoutes";
 import { useEffect } from "react";
-import { useLanguage } from "./context/LanguageContext";
-import { getBreadcrumbs } from "./utils/getBreadcrumbs";
+import { Toaster } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { BrowserRouter, useLocation } from "react-router-dom";
+import { useLanguage } from "./context/LanguageContext";
+import AppRoutes from "./routes/AppRoutes";
+import { getBreadcrumbs } from "./utils/getBreadcrumbs";
 
 function AppContent() {
   const { currentLang } = useLanguage();

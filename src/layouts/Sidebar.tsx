@@ -1,20 +1,20 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { Tooltip } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import type { IconType } from "react-icons";
 import {
+  MdCategory,
   MdDashboard,
   MdInventory,
-  MdCategory,
-  MdShoppingCart,
   MdPeople,
-  MdStarBorder,
   MdSettings,
+  MdShoppingCart,
+  MdStarBorder,
 } from "react-icons/md";
-import type { IconType } from "react-icons";
-import { useAuth } from "../context/AuthContext";
-import { UserRole } from "../types";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "../context/LanguageContext";
+import { NavLink, useLocation } from "react-router-dom";
 import UserProfile from "../components/common/UserProfile";
-import { Tooltip } from "@mui/material";
+import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
+import { UserRole } from "../types";
 
 interface NavItem {
   path: string;
@@ -25,49 +25,49 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   {
-    path: "/",
+    path: "/dashboard",
     title: "Dashboard",
     icon: MdDashboard,
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/employees",
+    path: "/dashboard/employees",
     title: "Employees",
     icon: MdPeople,
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/customers",
+    path: "/dashboard/customers",
     title: "Customers",
     icon: MdPeople,
     allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/categories",
+    path: "/dashboard/categories",
     title: "Categories",
     icon: MdCategory,
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/products",
+    path: "/dashboard/products",
     title: "Products",
     icon: MdInventory,
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
-    path: "/orders",
+    path: "/dashboard/orders",
     title: "Orders",
     icon: MdShoppingCart,
     allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/reviews",
+    path: "/dashboard/reviews",
     title: "Reviews",
     icon: MdStarBorder,
     allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/settings",
+    path: "/dashboard/settings",
     title: "Settings",
     icon: MdSettings,
     allowedRoles: [UserRole.Admin],

@@ -1,44 +1,61 @@
+import { Checkbox, Tooltip } from "@mui/material";
 import { useState } from "react";
-import type { FormEvent } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import Input from "../../components/common/Input";
-import Button from "../../components/common/Button";
-import FormField from "../../components/common/FormField";
+import { useTranslation } from "react-i18next";
+import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   getCurrentUserEmail,
   getUserRoleByEmail,
   signInWithEmailOrUsername,
+  signInWithFacebook,
+  signInWithGoogle,
   signOut,
-} from "../../api/login";
+} from "../../api/auth";
+import Button from "../../components/common/Button";
+import FormField from "../../components/common/FormField";
+import Input from "../../components/common/Input";
+import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { UserRole } from "../../types";
-import { useTranslation } from "react-i18next";
+import { useYupForm } from "../../hooks/useYupForm";
+import {
+  getLoginSchema,
+  type ILoginValidation,
+} from "../../validation/loginSchema";
 
 export default function Login() {
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { currentLang } = useLanguage();
   const { t } = useTranslation();
-
-  const from =
-    (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
   const message = (location.state as { message?: string })?.message;
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useYupForm<ILoginValidation>(getLoginSchema() as any, {
+    usernameOrEmail: "",
+    password: "",
+  });
+
+  const onSubmit = async (data: ILoginValidation) => {
     setError("");
     setLoading(true);
-
     try {
-      const data = await signInWithEmailOrUsername(usernameOrEmail, password);
+      const signInData = await signInWithEmailOrUsername(
+        data.usernameOrEmail,
+        data.password
+      );
 
-      if (data?.user) {
-        const token = data.session?.access_token || "";
+      if (signInData?.user) {
+        const token = signInData.session?.access_token || "";
         const email = await getCurrentUserEmail();
 
         if (!email) {
@@ -55,7 +72,7 @@ export default function Login() {
 
         if (isSuper) {
           login(token, UserRole.Admin);
-          navigate(from, { replace: true });
+          navigate("/redirect", { replace: true });
           return;
         }
 
@@ -70,8 +87,8 @@ export default function Login() {
           return;
         }
 
-        login(token);
-        navigate(from, { replace: true });
+        login(token, role);
+        navigate("/redirect", { replace: true });
       }
     } catch (err) {
       setError("Invalid username/email or password.");
@@ -89,11 +106,11 @@ export default function Login() {
             <img src='/Logo.svg' alt='Logo' className='w-full h-full' />
           </div>
           <h1 className='text-xl font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
-            {t("Admin")}
+            {t("Login")}
           </h1>
         </div>
 
-        <form className='space-y-6' onSubmit={handleSubmit}>
+        <form className='space-y-6 mb-2' onSubmit={handleSubmit(onSubmit)}>
           {message && (
             <div className='p-3 rounded bg-green-50 text-sm text-green-700'>
               {t(message)}
@@ -106,32 +123,78 @@ export default function Login() {
           )}
 
           <div className='space-y-6'>
-            <div className='space-y-1'>
-              <FormField htmlFor='usernameOrEmail' label='Username or Email'>
-                <Input
-                  required={false}
-                  id='usernameOrEmail'
-                  name='usernameOrEmail'
-                  type='text'
-                  value={usernameOrEmail}
-                  onChange={(e) => setUsernameOrEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </FormField>
-            </div>
+            <FormField
+              htmlFor='usernameOrEmail'
+              label='Username or Email'
+              required
+              error={errors.usernameOrEmail?.message}
+            >
+              <Input
+                id='usernameOrEmail'
+                type='text'
+                {...register("usernameOrEmail")}
+                disabled={isSubmitting}
+              />
+            </FormField>
 
-            <div className='space-y-1'>
-              <FormField htmlFor='password' label='Password'>
+            <FormField
+              htmlFor='password'
+              label='Password'
+              required
+              error={errors.password?.message}
+            >
+              <div className='relative'>
                 <Input
                   required={false}
                   id='password'
-                  name='password'
-                  type='password'
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  disabled={isSubmitting}
+                  className={`${currentLang === "ar" ? "pl-10" : "pr-10"}`}
                 />
-              </FormField>
+                <button
+                  type='button'
+                  className={`absolute inset-y-0 cursor-pointer ${
+                    currentLang == "ar" ? "left-0 pl-3" : "right-0 pr-3"
+                  } flex items-center text-gray-500 hover:text-gray-700 focus:outline-none`}
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  {showPassword ? <BsEyeSlash /> : <BsEye />}
+                </button>
+              </div>
+            </FormField>
+
+            <div className='text-sm flex justify-between align-items-center text-[var(--text-secondary)]'>
+              <div className='flex items-center space-x-2'>
+                <Checkbox
+                  sx={{
+                    p: 0,
+                    color: "var(--accent-primary)",
+                    "&.Mui-checked": {
+                      color: "var(--accent-primary)",
+                    },
+                    "&.MuiCheckbox-indeterminate": {
+                      color: "var(--accent-primary)",
+                    },
+                  }}
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <label
+                  htmlFor='remember'
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className='cursor-pointer'
+                >
+                  {t("Remember me")}
+                </label>
+              </div>
+              <Link
+                to='/forgot-password'
+                className='text-[var(--accent-primary)] hover:underline'
+              >
+                {t("Forgot Password?")}
+              </Link>
             </div>
           </div>
 
@@ -144,6 +207,43 @@ export default function Login() {
             {loading ? t("Logging") : t("Login")}
           </Button>
         </form>
+        <div className='text-sm text-center text-[var(--text-secondary)]'>
+          {t("Don't have an account?")}{" "}
+          <Link
+            to='/signup'
+            className='text-[var(--accent-primary)] hover:underline'
+          >
+            {t("Register")}
+          </Link>
+        </div>
+        <div className='text-sm text-center text-[var(--text-secondary)]'>
+          <span>{t("Or login with:")}</span>
+          <div className='flex items-center justify-center space-x-2 mt-2'>
+            <Tooltip title={t("Login with Google")} arrow>
+              <Button variant='outline' onClick={signInWithGoogle}>
+                <img src='/google-icon.png' alt='Google' className='w-5 h-5' />
+              </Button>
+            </Tooltip>
+            <Tooltip title={t("Login with Facebook")} arrow>
+              <Button variant='outline' onClick={signInWithFacebook}>
+                <img
+                  src='/facebook-icon.png'
+                  alt='Facebook'
+                  className='w-5 h-5'
+                />
+              </Button>
+            </Tooltip>
+            {/* <Tooltip title={t("Login with Twitter")} arrow>
+              <Button variant='outline' onClick={signInWithTwitter}>
+                <img
+                  src='/twitter-icon.png'
+                  alt='Twitter'
+                  className='w-5 h-5'
+                />
+              </Button>
+            </Tooltip> */}
+          </div>
+        </div>
       </div>
     </div>
   );

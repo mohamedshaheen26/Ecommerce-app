@@ -8,12 +8,20 @@ import {
 } from "react";
 import { UserRole } from "../types";
 import { supabase } from "../lib/supabase";
+import { signUpWithEmailOrUsername } from "../api/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   isAuthReady: boolean;
+  user: any | null;
   login: (token: string, role?: UserRole) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone: string
+  ) => Promise<void>;
   logout: () => void;
 }
 
@@ -23,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<UserRole>(UserRole.User);
   const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
-
+  const [user, setUser] = useState<any | null>(null);
   const roleChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
     null
   );
@@ -92,6 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(hasSession);
 
     if (hasSession) {
+      const currentUser = data.session?.user || null;
+      setUser(currentUser);
+
       const userEmail = data.session?.user?.email;
       if (userEmail) {
         if (isSuperAdmin(userEmail)) {
@@ -105,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       stopRoleSubscription();
       setUserRole(UserRole.User);
+      setUser(null);
     }
     setIsAuthReady(true);
   };
@@ -116,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         const signedIn = !!session;
         setIsAuthenticated(signedIn);
+        setUser(session?.user || null);
 
         const email = session?.user?.email;
         if (signedIn && email) {
@@ -130,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           stopRoleSubscription();
           setUserRole(UserRole.User);
+          setUser(null);
         }
       }
     );
@@ -143,6 +157,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await initializeAuthState();
   };
 
+  const register = async (
+    email: string,
+    password: string,
+    fullName: string,
+    phone: string
+  ) => {
+    await signUpWithEmailOrUsername(email, password, fullName, phone);
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     stopRoleSubscription();
@@ -152,7 +175,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, userRole, isAuthReady, login, logout }}
+      value={{
+        isAuthenticated,
+        userRole,
+        isAuthReady,
+        user,
+        login,
+        logout,
+        register,
+      }}
     >
       {children}
     </AuthContext.Provider>

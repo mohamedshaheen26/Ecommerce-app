@@ -19,7 +19,7 @@ export default function FormField({
   const { t } = useTranslation();
 
   return (
-    <div className='space-y-1 mb-4'>
+    <div className='space-y-1 mb-2'>
       <label
         htmlFor={htmlFor}
         className='block text-sm text-[var(--text-secondary)] mb-1'
