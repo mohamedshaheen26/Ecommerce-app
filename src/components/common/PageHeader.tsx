@@ -1,7 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { IoSearchOutline } from "react-icons/io5";
 import Button from "./Button";
 import Input from "./Input";
-import { useTranslation } from "react-i18next";
 
 interface PageHeaderProps {
   title: string;
@@ -36,7 +36,7 @@ const PageHeader = ({
         {onSearch && (
           <Input
             fullWidth={true}
-            placeholder={`${t("Search")} ${t(title).toLowerCase()}...`}
+            placeholder={`${t("Search")}...`}
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             leftIcon={<IoSearchOutline className='w-5 h-5' />}

@@ -2,6 +2,7 @@ import { Tooltip } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type { IconType } from "react-icons";
 import {
+  MdAccountTree,
   MdCategory,
   MdDashboard,
   MdInventory,
@@ -52,6 +53,12 @@ const navigationItems: NavItem[] = [
     path: "/dashboard/products",
     title: "Products",
     icon: MdInventory,
+    allowedRoles: [UserRole.Admin, UserRole.Employee],
+  },
+  {
+    path: "/dashboard/items",
+    title: "Items",
+    icon: MdAccountTree,
     allowedRoles: [UserRole.Admin, UserRole.Employee],
   },
   {
@@ -108,7 +115,7 @@ export default function Sidebar({
           <img src='/Logo.svg' alt='Logo' className='w-6 h-6' />
           {isDesktopOpen && (
             <span className='text-lg font-bold transition-opacity duration-300 text-[var(--text-secondary)]'>
-              {t("Admin")}
+              {userRole === UserRole.Admin ? t("Admin") : t("Employee")}
             </span>
           )}
         </div>
@@ -118,7 +125,8 @@ export default function Sidebar({
       <nav className='flex-1 space-y-1 overflow-y-auto p-4'>
         {navigationItems
           .filter(
-            (item) => !item.allowedRoles || item.allowedRoles.includes(userRole)
+            (item) =>
+              !item.allowedRoles || item.allowedRoles.includes(userRole),
           )
           .map((item) => (
             <Tooltip
@@ -141,8 +149,8 @@ export default function Sidebar({
                     isDesktopOpen && currentLang === "ar"
                       ? "ml-3"
                       : !isDesktopOpen
-                      ? ""
-                      : "mr-3"
+                        ? ""
+                        : "mr-3"
                   }`}
                 />
                 {isDesktopOpen && <span>{t(item.title)}</span>}

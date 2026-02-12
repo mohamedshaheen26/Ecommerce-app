@@ -11,6 +11,7 @@ import RegisterPage from "../pages/auth/Register";
 import ResetPasswordPage from "../pages/auth/ResetPassword";
 import UnauthorizedPage from "../pages/auth/Unauthorized";
 import HomePage from "../pages/client/HomePage";
+import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
 import CategoriesRoot from "../pages/dashboard/categories/CategoriesRoot";
 import CustomersRoot from "../pages/dashboard/customers/CustomersRoot";
 import DashboardRoot from "../pages/dashboard/DashboardRoot";
@@ -108,6 +109,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
               <CategoriesRoot />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/dashboard/items'
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Employee]}>
+              <CatalogRoot />
             </ProtectedRoute>
           }
         />

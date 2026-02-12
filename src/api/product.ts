@@ -7,24 +7,28 @@ const bucket_productsImg = "images";
 export async function fetchProducts(
   page: number,
   pageSize: number,
-  searchQuery: string
+  searchQuery: string,
+  categoryId?: string,
 ): Promise<{ data: IProduct[]; count: number }> {
   let query = supabase
     .from("products")
-    .select(
-      `*, category:category_id (name, name_ar)`,
-      { count: "exact" }
-    )
+    .select(`*, category:category_id (name, name_ar)`, { count: "exact" })
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
   if (searchQuery && searchQuery.trim()) {
-    query = query.or(`title.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`);
+    query = query.or(
+      `title.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
+    );
+  }
+
+  if (categoryId) {
+    query = query.eq("category_id", categoryId);
   }
 
   const { data, error, count } = await query.range(
     (page - 1) * pageSize,
-    page * pageSize - 1
+    page * pageSize - 1,
   );
 
   if (error) throw error;
@@ -59,16 +63,20 @@ export const uploadImages = async (files: File[]) => {
 };
 
 // ✅ Create product
-export const createProduct = async (productData: Omit<IProductFormValues, "images"> & { images: string[] }) => {
-  const { error } = await supabase
-    .from("products")
-    .insert([productData]);
+export const createProduct = async (
+  productData: Omit<IProductFormValues, "images"> & { images: string[] },
+) => {
+  const { error } = await supabase.from("products").insert([productData]);
 
   if (error) throw error;
 };
 
 // ✅ Update product
-export const updateProduct = async (id: string, productData: Omit<IProductFormValues, "images"> & { images: string[] }) => {
+export const updateProduct = async (
+  id: string,
+  productData: Omit<IProductFormValues, "images"> & { images: string[] },
+) => {
+  console.log(productData);
   const { error } = await supabase
     .from("products")
     .update(productData)
@@ -103,13 +111,21 @@ export async function deleteProduct(product: IProduct): Promise<void> {
 }
 
 export async function fetchBestSellingProducts(): Promise<IProduct[]> {
-  const { data, error } = await supabase.from("products").select("*").order("sales_count", { ascending: false }).limit(10);
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("sales_count", { ascending: false })
+    .limit(10);
   if (error) throw error;
   return data || [];
 }
 
 export async function fetchLatestProducts(): Promise<IProduct[]> {
-  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false }).limit(10);
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(10);
   if (error) throw error;
   return data || [];
 }
@@ -121,7 +137,7 @@ export async function fetchFeaturedProducts(): Promise<IProduct[]> {
     .eq("is_featured", true)
     .order("created_at", { ascending: false })
     .limit(10);
-    
+
   if (error) throw error;
   return data || [];
 }

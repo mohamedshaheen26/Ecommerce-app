@@ -166,6 +166,16 @@ export default function CategoriesRoot() {
       sortKey: "description" as keyof ICategory,
     },
     {
+      header: `${t("Path")}`,
+      accessor: (category: ICategory) => (
+        <div className='text-sm text-[var(--text-secondary)]'>
+          {currentLang === "ar"
+            ? category.path_ar || category.name_ar
+            : category.path || category.name}
+        </div>
+      ),
+    },
+    {
       header: `${t("Created At")}`,
       accessor: (category: ICategory) => (
         <div className='text-sm text-[var(--text-secondary)]'>
