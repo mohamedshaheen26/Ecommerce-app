@@ -9,11 +9,13 @@ export interface IProduct {
   title: string;
   name_ar: string;
   price: number;
+  slug: string;
   description: string;
   description_ar: string;
   category_id: string;
   stock_status: StockStatus;
   available_quantity: number;
+  image_url: string;
   images: string[];
   colors: string[];
   sizes: string[];
@@ -21,12 +23,15 @@ export interface IProduct {
   category: {
     name: string;
     name_ar: string;
+    path: string;
+    path_ar: string;
   };
 }
 
 export interface IProductFormValues {
   title: string;
   name_ar: string;
+  slug: string;
   price: number;
   description: string;
   description_ar: string;
@@ -38,10 +43,10 @@ export interface IProductFormValues {
   sizes: string[];
 }
 
-
 export interface IProductValidation {
   title: string;
   name_ar: string;
+  slug: string;
   price: number;
   description: string;
   description_ar: string;

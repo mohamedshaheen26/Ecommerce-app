@@ -22,6 +22,7 @@ import {
   type IProductValidation,
 } from "../../../types";
 import { handleError } from "../../../utils/errorHandler";
+import { slugify } from "../../../utils/slugify";
 import { getProductSchema } from "../../../validation/productSchema";
 import ColorsSelector from "./components/ColorsSelector";
 import ImagePreview from "./components/ImagePreview";
@@ -30,6 +31,7 @@ import SizesSelector from "./components/SizesSelector";
 const INITIAL_FORM_VALUES: IProductFormValues = {
   title: "",
   name_ar: "",
+  slug: "",
   price: 0,
   description: "",
   description_ar: "",
@@ -70,6 +72,7 @@ export default function ProductsForm({
     title: editingProduct?.title ?? "",
     name_ar: editingProduct?.name_ar ?? "",
     price: editingProduct?.price ?? 0,
+    slug: editingProduct?.slug ?? "",
     description: editingProduct?.description ?? "",
     description_ar: editingProduct?.description_ar ?? "",
     category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
@@ -92,6 +95,7 @@ export default function ProductsForm({
         title: editingProduct?.title ?? "",
         name_ar: editingProduct?.name_ar ?? "",
         price: editingProduct?.price ?? 0,
+        slug: editingProduct?.slug ?? "",
         description: editingProduct?.description ?? "",
         description_ar: editingProduct?.description_ar ?? "",
         category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
@@ -135,6 +139,15 @@ export default function ProductsForm({
     setValue("sizes", next, { shouldDirty: true, shouldValidate: true });
   };
 
+  const titleRegister = register("title");
+  const onTitleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    titleRegister.onBlur(e);
+    const title = getValues("title");
+    if (title) {
+      setValue("slug", slugify(title), { shouldValidate: true });
+    }
+  };
+
   const onSubmit = async (data: IProductValidation) => {
     try {
       debugger;
@@ -154,6 +167,7 @@ export default function ProductsForm({
         colors: data.colors,
         sizes: data.sizes,
         images: allImages,
+        slug: slugify(data.title),
       };
 
       if (editingProduct && editingProduct.id) {
@@ -201,7 +215,7 @@ export default function ProductsForm({
           error={errors.title?.message}
           required
         >
-          <Input id='title' {...register("title")} />
+          <Input id='title' {...titleRegister} onBlur={onTitleBlur} />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
@@ -238,6 +252,14 @@ export default function ProductsForm({
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
+          htmlFor='slug'
+          label='Slug'
+          error={errors.slug?.message}
+          required
+        >
+          <Input id='slug' {...register("slug")} disabled />
+        </FormField>
+        <FormField
           htmlFor='price'
           label='Price'
           error={errors.price?.message}
@@ -250,9 +272,6 @@ export default function ProductsForm({
             type='number'
             step='any'
           />
-        </FormField>
-        <FormField htmlFor='colors' label='Colors'>
-          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
@@ -274,8 +293,8 @@ export default function ProductsForm({
             ]}
           />
         </FormField>
-        <FormField htmlFor='sizes' label='Sizes'>
-          <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
+        <FormField htmlFor='colors' label='Colors'>
+          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
@@ -296,6 +315,9 @@ export default function ProductsForm({
           </FormField>
         </Grid>
         <Grid columns={1}>
+          <FormField htmlFor='sizes' label='Sizes'>
+            <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
+          </FormField>
           <FormField htmlFor='images' label='Images'>
             <div className='flex items-center space-x-4'>
               <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>

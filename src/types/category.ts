@@ -1,5 +1,6 @@
 export interface ICategory {
   id?: string;
+  slug: string;
   name: string;
   name_ar: string;
   description: string;
@@ -11,6 +12,7 @@ export interface ICategory {
 }
 
 export interface ICategoryValidation {
+  slug: string;
   name: string;
   name_ar: string;
   description: string;
@@ -19,3 +21,4 @@ export interface ICategoryValidation {
   path?: string;
   path_ar?: string;
 }
+

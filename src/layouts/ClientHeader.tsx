@@ -32,7 +32,10 @@ const ClientHeader = () => {
     }
   };
 
-  const navigationItems = [{ path: "/", label: "Home", icon: null }];
+  const navigationItems = [
+    { path: "/", label: "Home", icon: null },
+    { path: "/products", label: "Products", icon: null },
+  ];
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -121,7 +124,7 @@ const ClientHeader = () => {
                 <div className='relative'>
                   <input
                     type='search'
-                    placeholder={t("Search...")}
+                    placeholder={`${t("Search")}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className='w-full pl-8 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-secondary)] placeholder-[var(--text-muted)]'

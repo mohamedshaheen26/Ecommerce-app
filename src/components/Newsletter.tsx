@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage } from "../context/LanguageContext";
+import Button from "./common/Button";
+import Input from "./common/Input";
 
 const Newsletter = () => {
   const { currentLang } = useLanguage();
