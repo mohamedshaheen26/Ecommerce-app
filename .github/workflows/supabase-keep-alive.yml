@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Ping Supabase Edge Function
         run: |
-          curl -s "$SUPABASE_KEEP_ALIVE_URL"
+          if [ -z "$SUPABASE_KEEP_ALIVE_URL" ]; then
+            echo "::error::SUPABASE_KEEP_ALIVE_URL secret is not set. Add it in repo Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "Pinging keep-alive URL..."
+          status=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SUPABASE_KEEP_ALIVE_URL")
+          echo "Response: HTTP $status"
+          if [ "$status" = "000" ]; then
+            echo "::error::Request failed (no response or connection error)"
+            exit 1
+          fi
         env:
           SUPABASE_KEEP_ALIVE_URL: ${{ secrets.SUPABASE_KEEP_ALIVE_URL }}
