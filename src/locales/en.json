@@ -373,6 +373,10 @@
   "Subscribe": "Subscribe",
   "No products available.": "No products available.",
   "Featured": "Featured",
-  "Latest": "Latest", 
-  "Hello": "Hello"
+  "Latest": "Latest",
+  "Hello": "Hello",
+  "Items": "Items",
+  "Add Subcategory": "Add Subcategory",
+  "Add Product": "Add Product",
+  "Store": "Store"
 }

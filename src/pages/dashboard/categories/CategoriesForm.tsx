@@ -7,20 +7,21 @@ import { createCategory, updateCategory } from "../../../api/categories";
 
 import FormField from "../../../components/common/FormField";
 import Input from "../../../components/common/Input";
-import TextArea from "../../../components/common/TextArea";
 import Modal from "../../../components/common/Modal";
+import TextArea from "../../../components/common/TextArea";
 
-import { useYupForm } from "../../../hooks/useYupForm";
-import { getCategorySchema } from "../../../validation/categorySchema";
-import Grid from "../../../components/common/Grid";
 import { useTranslation } from "react-i18next";
+import Grid from "../../../components/common/Grid";
+import { useYupForm } from "../../../hooks/useYupForm";
 import { handleError } from "../../../utils/errorHandler";
+import { getCategorySchema } from "../../../validation/categorySchema";
 
 interface CategoriesFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   editingCategory: ICategory | null;
+  defaultParentId?: string;
 }
 
 export default function CategoriesForm({
@@ -28,6 +29,7 @@ export default function CategoriesForm({
   onClose,
   onSuccess,
   editingCategory,
+  defaultParentId,
 }: CategoriesFormProps) {
   const {
     register,
@@ -39,8 +41,9 @@ export default function CategoriesForm({
     name_ar: editingCategory?.name_ar ?? "",
     description: editingCategory?.description ?? "",
     description_ar: editingCategory?.description_ar ?? "",
+    parent_id: editingCategory?.parent_id ?? defaultParentId ?? null,
   });
-  
+
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -50,9 +53,12 @@ export default function CategoriesForm({
         name_ar: editingCategory?.name_ar ?? "",
         description: editingCategory?.description ?? "",
         description_ar: editingCategory?.description_ar ?? "",
+        parent_id: editingCategory?.parent_id ?? defaultParentId ?? null,
+        path: editingCategory?.path ?? "",
+        path_ar: editingCategory?.path_ar ?? "",
       });
     }
-  }, [editingCategory, isOpen, reset]);
+  }, [defaultParentId, editingCategory, isOpen, reset]);
 
   const onSubmit = async (data: ICategoryValidation) => {
     try {
@@ -114,6 +120,22 @@ export default function CategoriesForm({
           error={errors.description?.message}
         >
           <TextArea id='description' {...register("description")} />
+        </FormField>
+        <FormField
+          htmlFor='path'
+          label='Path'
+          required
+          error={errors.path?.message}
+        >
+          <Input id='path' {...register("path")} disabled readOnly />
+        </FormField>
+        <FormField
+          htmlFor='path_ar'
+          label='Path Second Language'
+          required
+          error={errors.path_ar?.message}
+        >
+          <Input id='path_ar' {...register("path_ar")} disabled readOnly />
         </FormField>
       </Grid>
     </Modal>

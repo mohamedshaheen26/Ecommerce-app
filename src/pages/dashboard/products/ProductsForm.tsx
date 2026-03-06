@@ -1,31 +1,31 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  uploadImages,
   createProduct,
   updateProduct,
+  uploadImages,
 } from "../../../api/product";
 
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import FormField from "../../../components/common/FormField";
+import Grid from "../../../components/common/Grid";
+import Input from "../../../components/common/Input";
+import Modal from "../../../components/common/Modal";
+import Select from "../../../components/common/Select";
+import TextArea from "../../../components/common/TextArea";
+import { useLanguage } from "../../../context/LanguageContext";
+import { useYupForm } from "../../../hooks/useYupForm";
 import {
   type ICategory,
   type IProduct,
   type IProductFormValues,
   type IProductValidation,
 } from "../../../types";
-import Modal from "../../../components/common/Modal";
-import Grid from "../../../components/common/Grid";
-import FormField from "../../../components/common/FormField";
-import Input from "../../../components/common/Input";
-import Select from "../../../components/common/Select";
-import TextArea from "../../../components/common/TextArea";
+import { handleError } from "../../../utils/errorHandler";
+import { getProductSchema } from "../../../validation/productSchema";
+import ColorsSelector from "./components/ColorsSelector";
 import ImagePreview from "./components/ImagePreview";
 import SizesSelector from "./components/SizesSelector";
-import ColorsSelector from "./components/ColorsSelector";
-import { useYupForm } from "../../../hooks/useYupForm";
-import { getProductSchema } from "../../../validation/productSchema";
-import { useLanguage } from "../../../context/LanguageContext";
-import { useTranslation } from "react-i18next";
-import { handleError } from "../../../utils/errorHandler";
 
 const INITIAL_FORM_VALUES: IProductFormValues = {
   title: "",
@@ -47,6 +47,7 @@ interface AddEditProductModalProps {
   onSuccess: () => void;
   categories: ICategory[];
   editingProduct?: IProduct | null;
+  defaultCategoryId?: string;
 }
 
 export default function ProductsForm({
@@ -55,6 +56,7 @@ export default function ProductsForm({
   onSuccess,
   categories,
   editingProduct,
+  defaultCategoryId,
 }: AddEditProductModalProps) {
   const {
     register,
@@ -70,7 +72,7 @@ export default function ProductsForm({
     price: editingProduct?.price ?? 0,
     description: editingProduct?.description ?? "",
     description_ar: editingProduct?.description_ar ?? "",
-    category_id: editingProduct?.category_id ?? "",
+    category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
     stock_status: editingProduct?.stock_status ?? "",
     available_quantity: editingProduct?.available_quantity ?? 0,
     images: editingProduct?.images ?? [],
@@ -92,7 +94,7 @@ export default function ProductsForm({
         price: editingProduct?.price ?? 0,
         description: editingProduct?.description ?? "",
         description_ar: editingProduct?.description_ar ?? "",
-        category_id: editingProduct?.category_id ?? "",
+        category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
         stock_status: editingProduct?.stock_status ?? "",
         available_quantity: editingProduct?.available_quantity ?? 0,
         colors: editingProduct?.colors ?? [],
@@ -135,6 +137,7 @@ export default function ProductsForm({
 
   const onSubmit = async (data: IProductValidation) => {
     try {
+      debugger;
       let uploadedUrls: string[] = [];
       if (newImages.length > 0) {
         uploadedUrls = await uploadImages(newImages);
@@ -166,7 +169,7 @@ export default function ProductsForm({
       toast.success(
         editingProduct
           ? t("Product updated successfully")
-          : t("Product created successfully")
+          : t("Product created successfully"),
       );
     } catch (error: any) {
       toast.error(handleError(error));
