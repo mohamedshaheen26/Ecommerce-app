@@ -15,6 +15,7 @@ export default function SizesSelector({
     <div className='flex flex-wrap gap-2'>
       {AVAILABLE_SIZES.map((size) => (
         <Button
+          size='sm'
           className='rounded-sm'
           key={size}
           variant={selectedSizes.includes(size) ? "primary" : "outline"}

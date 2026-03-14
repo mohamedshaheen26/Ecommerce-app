@@ -383,7 +383,6 @@
   "Add Subcategory": "اضافة تصنيف",
   "Add Product": "اضافة منتج",
   "Store": "المتجر",
-  "reviews": "مراجعات",
   "Detail": "التفاصيل",
   "Details": "التفاصيل",
   "No reviews yet": "لا توجد مراجعات بعد",
@@ -397,8 +396,20 @@
   "This company always goes above and beyond to satisfy their customers.": "هذه الشركة تتجاوز التوقعات دائمًا لإرضاء عملائها.",
   "I can't believe how affordable and high-quality this item is!": "لا أصدق كم أن هذا المنتج بسعر مناسب وجودته عالية!",
   "These guys know their stuff, and it shows in their products.": "هؤلاء يعرفون عملهم جيدًا، وهذا واضح في منتجاتهم.",
-  "Free shipping on all orders over $100+": "توصيل مجاني لجميع الطلبات بأكثر من $100+",
   "Available Colors": "اللون",
   "Select Size": "حجم المنتج",
-  "Add to cart": "اضافة للسلة"
+  "Add to cart": "اضافة للسلة",
+  "Catalog": {
+    "Colors": "الالوان",
+    "Sizes": "المقاسات",
+    "Size": "المقاس",
+    "AppliedFilters": "الفلاتر المطبقة",
+    "ShowingResults": "عرض {{start}}-{{end}} من {{total}} نتيجة",
+    "SortBy": "ترتيب حسب",
+    "Newest": "الأحدث",
+    "PriceFrom": "من",
+    "PriceTo": "إلى",
+    "Apply": "تطبيق",
+    "Search": "بحث"
+  }
 }

@@ -4,6 +4,7 @@ import {
   MdOutlineArrowForwardIos,
 } from "react-icons/md";
 import Slider, { type Settings } from "react-slick";
+import { useLanguage } from "../context/LanguageContext";
 
 import "slick-carousel/slick/slick-theme.css";
 import "slick-carousel/slick/slick.css";
@@ -22,18 +23,18 @@ interface CarouselProps {
   [key: string]: any;
 }
 
-const NextArrow = ({ onClick }: { onClick?: () => void }) => (
+const NextArrow = ({ onClick }: { onClick?: () => void; rtl?: boolean }) => (
   <div
-    className='absolute top-1/2 -right-10 z-10 cursor-pointer transform -translate-y-1/2 text-white bg-[var(--accent-primary)] p-2 rounded-full hover:bg-[var(--accent-hover)]'
+    className={`absolute top-1/2 z-10 cursor-pointer transform -translate-y-1/2 text-white bg-[var(--accent-primary)] p-2 rounded-full hover:bg-[var(--accent-hover)] -right-10`}
     onClick={onClick}
   >
     <MdOutlineArrowForwardIos />
   </div>
 );
 
-const PrevArrow = ({ onClick }: { onClick?: () => void }) => (
+const PrevArrow = ({ onClick }: { onClick?: () => void; rtl?: boolean }) => (
   <div
-    className='absolute top-1/2 -left-10 z-10 cursor-pointer transform -translate-y-1/2 text-white bg-[var(--accent-primary)] p-2 rounded-full hover:bg-[var(--accent-hover)]'
+    className={`absolute top-1/2 z-10 cursor-pointer transform -translate-y-1/2 text-white bg-[var(--accent-primary)] p-2 rounded-full hover:bg-[var(--accent-hover)] -left-10`}
     onClick={onClick}
   >
     <MdOutlineArrowBackIos />
@@ -54,6 +55,9 @@ const Carousel = ({
   className = "",
   ...rest
 }: CarouselProps) => {
+  const { currentLang } = useLanguage();
+  const isRTL = currentLang === "ar";
+
   const defaultResponsive = [
     {
       breakpoint: 1024,
@@ -84,6 +88,7 @@ const Carousel = ({
     speed,
     slidesToShow,
     slidesToScroll,
+    rtl: isRTL,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
     autoplay,

@@ -46,3 +46,7 @@ body {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
+
+[dir="rtl"] .slick-track {
+  direction: rtl;
+}

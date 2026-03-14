@@ -183,3 +183,76 @@ export async function fetchRelatedProducts(
   if (error) throw error;
   return data || [];
 }
+
+export interface ProductFilters {
+  categoryIds?: string[];
+  colors?: string[];
+  sizes?: string[];
+  priceMin?: number;
+  priceMax?: number;
+  sortBy?: "newest" | "price_asc" | "price_desc" | "name";
+  searchQuery?: string;
+}
+
+export async function fetchProductsWithFilters(
+  page: number,
+  pageSize: number,
+  filters: ProductFilters,
+): Promise<{ data: IProduct[]; count: number }> {
+  let query = supabase
+    .from("products")
+    .select(`*, category:category_id (name, name_ar, path, path_ar)`, {
+      count: "exact",
+    });
+
+  const { categoryIds, colors, sizes, priceMin, priceMax, sortBy, searchQuery } =
+    filters;
+
+  if (searchQuery?.trim()) {
+    query = query.or(
+      `title.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
+    );
+  }
+
+  if (categoryIds?.length) {
+    query = query.in("category_id", categoryIds);
+  }
+
+  if (colors?.length) {
+    query = query.overlaps("colors", colors);
+  }
+
+  if (sizes?.length) {
+    query = query.overlaps("sizes", sizes);
+  }
+
+  if (priceMin != null && priceMin > 0) {
+    query = query.gte("price", priceMin);
+  }
+  if (priceMax != null && priceMax > 0) {
+    query = query.lte("price", priceMax);
+  }
+
+  switch (sortBy) {
+    case "price_asc":
+      query = query.order("price", { ascending: true }).order("id", { ascending: true });
+      break;
+    case "price_desc":
+      query = query.order("price", { ascending: false }).order("id", { ascending: true });
+      break;
+    case "name":
+      query = query.order("title", { ascending: true }).order("id", { ascending: true });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: true });
+  }
+
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1,
+  );
+
+  if (error) throw error;
+
+  return { data: (data || []) as IProduct[], count: count || 0 };
+}

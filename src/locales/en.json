@@ -380,7 +380,19 @@
   "Add Subcategory": "Add Subcategory",
   "Add Product": "Add Product",
   "Store": "Store",
-  "Hello": "Hello",
   "reviews": "reviews",
-  "Free shipping on all orders over $100+": "Free shipping on all orders over $100+"
+  "Free shipping on all orders over $100+": "Free shipping on all orders over $100+",
+  "Catalog": {
+    "Colors": "Colors",
+    "Sizes": "Sizes",
+    "Size": "Size",
+    "AppliedFilters": "Applied Filters",
+    "ShowingResults": "Showing {{start}}-{{end}} Of {{total}} Results",
+    "SortBy": "SORT BY",
+    "Newest": "Newest",
+    "PriceFrom": "From",
+    "PriceTo": "To",
+    "Apply": "Apply",
+    "Search": "Search"
+  }
 }

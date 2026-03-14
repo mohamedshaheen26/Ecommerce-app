@@ -1,5 +1,5 @@
 import { Divider, Tooltip } from "@mui/material";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,7 +10,12 @@ import {
   MdOutlineShoppingCart,
   MdSearch,
 } from "react-icons/md";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  NavLink,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import AccountMenu from "../components/AccountMenu";
 import LanguageMenu from "../components/LanguageMenu";
 import ThemeMenu from "../components/ThemeMenu";
@@ -21,16 +26,33 @@ const ClientHeader = () => {
   const location = useLocation();
   const { isAuthenticated, userRole, logout } = useAuth();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (location.pathname === "/search") {
+      const q = searchParams.get("q") ?? "";
+      setSearchQuery(q);
+    }
+  }, [location.pathname, searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileSearchOpen(false);
     }
   };
+
+  useEffect(() => {
+    if (mobileSearchOpen && mobileSearchInputRef.current) {
+      mobileSearchInputRef.current.focus();
+    }
+  }, [mobileSearchOpen]);
 
   const navigationItems = [
     { path: "/", label: "Home", icon: null },
@@ -129,19 +151,60 @@ const ClientHeader = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className='w-full pl-8 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-secondary)] placeholder-[var(--text-muted)]'
                   />
-                  <MdSearch className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+                  <MdSearch
+                    className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer'
+                    onClick={handleSearch}
+                  />
                 </div>
               </form>
             </div>
 
-            {/* Mobile/Tablet search */}
-            <button
-              onClick={() => navigate("/search")}
-              className='xl:hidden p-1.5 sm:p-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition'
-              aria-label='Search'
-            >
-              <MdSearch className='h-5 w-5 sm:h-6 sm:w-6' />
-            </button>
+            {/* Mobile/Tablet search - button toggles input with transition */}
+            <div className='xl:hidden flex items-center min-w-0'>
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-out ${
+                  mobileSearchOpen
+                    ? "max-w-[200px] sm:max-w-xs opacity-100"
+                    : "max-w-0 opacity-0"
+                }`}
+              >
+                <form onSubmit={handleSearch} className='w-[200px] sm:w-64'>
+                  <div className='relative'>
+                    <input
+                      ref={mobileSearchInputRef}
+                      placeholder={`${t("Search")}...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className='w-full pl-8 pr-8 py-2 text-sm border border-[var(--border-color)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-secondary)] placeholder-[var(--text-muted)]'
+                    />
+                    <MdSearch
+                      className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none cursor-pointer'
+                      onClick={handleSearch}
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setMobileSearchOpen(false)}
+                      className='absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors'
+                      aria-label='Close search'
+                    >
+                      <MdClose className='h-4 w-4' />
+                    </button>
+                  </div>
+                </form>
+              </div>
+              <button
+                type='button'
+                onClick={() => setMobileSearchOpen(true)}
+                className={`p-1.5 sm:p-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-opacity duration-300 ease-out ${
+                  mobileSearchOpen
+                    ? "opacity-0 pointer-events-none"
+                    : "opacity-100"
+                }`}
+                aria-label='Search'
+              >
+                <MdSearch className='h-5 w-5 sm:h-6 sm:w-6' />
+              </button>
+            </div>
 
             {/* Favorites - hidden on small screens */}
             <Tooltip arrow title={t("Favorites")} placement='bottom'>
