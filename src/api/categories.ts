@@ -103,8 +103,8 @@ async function syncCategoryPathsToDb(): Promise<void> {
 export async function fetchAllCategories(
   page: number,
   pageSize: number,
-  searchQuery: string
-): Promise<{data: ICategory[]; count: number}> {
+  searchQuery: string,
+): Promise<{ data: ICategory[]; count: number }> {
   let query = supabase
     .from("categories")
     .select("*", { count: "exact" })
@@ -112,12 +112,14 @@ export async function fetchAllCategories(
     .order("id", { ascending: true });
 
   if (searchQuery && searchQuery.trim()) {
-    query = query.or(`name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`);
+    query = query.or(
+      `name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
+    );
   }
 
   const { data, error, count } = await query.range(
     (page - 1) * pageSize,
-    page * pageSize - 1
+    page * pageSize - 1,
   );
 
   if (error) throw error;
@@ -128,6 +130,16 @@ export async function fetchAllCategories(
 }
 
 // ✅ Get category by ID
+export async function fetchCategoryById(id: string): Promise<ICategory | null> {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function createCategory(categoryData: ICategory): Promise<void> {
   const { error } = await supabase.from("categories").insert([categoryData]);
   if (error) throw error;
@@ -138,8 +150,9 @@ export async function createCategory(categoryData: ICategory): Promise<void> {
 // ✅ Update category
 export async function updateCategory(
   id: string,
-  categoryData: ICategory
+  categoryData: ICategory,
 ): Promise<void> {
+  debugger;
   const { error } = await supabase
     .from("categories")
     .update(categoryData)

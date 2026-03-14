@@ -62,6 +62,35 @@ export const uploadImages = async (files: File[]) => {
   return uploadedUrls;
 };
 
+// Fetch Single product
+export const fetchProductById = async (
+  id: string,
+): Promise<IProduct | null> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  return data || null;
+};
+
+// ✅ Fetch product by slug
+export async function fetchProductBySlug(
+  slug: string,
+): Promise<IProduct | null> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, category:category_id (name, name_ar, path, path_ar)")
+    .eq("slug", slug)
+    .single();
+  if (error) throw error;
+
+  return data;
+}
+
 // ✅ Create product
 export const createProduct = async (
   productData: Omit<IProductFormValues, "images"> & { images: string[] },
@@ -76,7 +105,6 @@ export const updateProduct = async (
   id: string,
   productData: Omit<IProductFormValues, "images"> & { images: string[] },
 ) => {
-  console.log(productData);
   const { error } = await supabase
     .from("products")
     .update(productData)
@@ -113,7 +141,7 @@ export async function deleteProduct(product: IProduct): Promise<void> {
 export async function fetchBestSellingProducts(): Promise<IProduct[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, category:category_id (name, name_ar)")
     .order("sales_count", { ascending: false })
     .limit(10);
   if (error) throw error;
@@ -123,7 +151,7 @@ export async function fetchBestSellingProducts(): Promise<IProduct[]> {
 export async function fetchLatestProducts(): Promise<IProduct[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, category:category_id (name, name_ar)")
     .order("created_at", { ascending: false })
     .limit(10);
   if (error) throw error;
@@ -133,11 +161,25 @@ export async function fetchLatestProducts(): Promise<IProduct[]> {
 export async function fetchFeaturedProducts(): Promise<IProduct[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, category:category_id (name, name_ar)")
     .eq("is_featured", true)
     .order("created_at", { ascending: false })
     .limit(10);
 
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchRelatedProducts(
+  categoryId: string,
+  productId: string,
+): Promise<IProduct[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, category:category_id (name, name_ar)")
+    .eq("category_id", categoryId)
+    .not("id", "eq", productId)
+    .limit(10);
   if (error) throw error;
   return data || [];
 }

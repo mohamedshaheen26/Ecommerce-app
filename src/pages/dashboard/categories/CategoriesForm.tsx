@@ -5,15 +5,15 @@ import type { ICategory, ICategoryValidation } from "../../../types";
 
 import { createCategory, updateCategory } from "../../../api/categories";
 
+import { useTranslation } from "react-i18next";
 import FormField from "../../../components/common/FormField";
+import Grid from "../../../components/common/Grid";
 import Input from "../../../components/common/Input";
 import Modal from "../../../components/common/Modal";
 import TextArea from "../../../components/common/TextArea";
-
-import { useTranslation } from "react-i18next";
-import Grid from "../../../components/common/Grid";
 import { useYupForm } from "../../../hooks/useYupForm";
 import { handleError } from "../../../utils/errorHandler";
+import { slugify } from "../../../utils/slugify";
 import { getCategorySchema } from "../../../validation/categorySchema";
 
 interface CategoriesFormProps {
@@ -35,10 +35,13 @@ export default function CategoriesForm({
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useYupForm<ICategoryValidation>(getCategorySchema() as any, {
     name: editingCategory?.name ?? "",
     name_ar: editingCategory?.name_ar ?? "",
+    slug: editingCategory?.slug ?? "",
     description: editingCategory?.description ?? "",
     description_ar: editingCategory?.description_ar ?? "",
     parent_id: editingCategory?.parent_id ?? defaultParentId ?? null,
@@ -51,6 +54,7 @@ export default function CategoriesForm({
       reset({
         name: editingCategory?.name ?? "",
         name_ar: editingCategory?.name_ar ?? "",
+        slug: editingCategory?.slug ?? "",
         description: editingCategory?.description ?? "",
         description_ar: editingCategory?.description_ar ?? "",
         parent_id: editingCategory?.parent_id ?? defaultParentId ?? null,
@@ -60,8 +64,18 @@ export default function CategoriesForm({
     }
   }, [defaultParentId, editingCategory, isOpen, reset]);
 
+  const nameRegister = register("name");
+  const onNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    nameRegister.onBlur(e);
+    const name = getValues("name");
+    if (name) {
+      setValue("slug", slugify(name), { shouldValidate: true });
+    }
+  };
+
   const onSubmit = async (data: ICategoryValidation) => {
     try {
+      debugger;
       if (editingCategory && editingCategory?.id) {
         await updateCategory(editingCategory.id, data);
         toast.success(t("Category updated successfully"));
@@ -101,7 +115,7 @@ export default function CategoriesForm({
           required
           error={errors.name?.message}
         >
-          <Input id='name' {...register("name")} />
+          <Input id='name' {...nameRegister} onBlur={onNameBlur} />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>

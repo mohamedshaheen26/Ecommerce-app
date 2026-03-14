@@ -14,6 +14,7 @@ const columnTranslations: Record<string, string> = {
   employees_email_key: "Errors.Email",
   categories_name_key: "Errors.CategoryName",
   categories_name_ar_key: "Errors.CategoryNameAr",
+  categories_slug_key: "Errors.CategorySlug",
   products_title_key: "Errors.ProductName",
   products_name_ar_key: "Errors.ProductNameAr",
 };

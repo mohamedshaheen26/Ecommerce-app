@@ -236,6 +236,7 @@
     "Email": "Email",
     "CategoryNameAr": "Category Name",
     "CategoryName": "Category Name Second Language",
+    "CategorySlug": "Category slug",
     "ProductNameAr": "Product Name",
     "ProductName": "Product Name Second Language",
     "AlreadyExists": "already exists. Please enter a different value.",
@@ -378,5 +379,8 @@
   "Items": "Items",
   "Add Subcategory": "Add Subcategory",
   "Add Product": "Add Product",
-  "Store": "Store"
+  "Store": "Store",
+  "Hello": "Hello",
+  "reviews": "reviews",
+  "Free shipping on all orders over $100+": "Free shipping on all orders over $100+"
 }

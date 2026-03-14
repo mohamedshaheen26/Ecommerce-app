@@ -12,6 +12,7 @@ import ResetPasswordPage from "../pages/auth/ResetPassword";
 import UnauthorizedPage from "../pages/auth/Unauthorized";
 import HomePage from "../pages/client/HomePage";
 import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
+import ProductPage from "../pages/client/ProductPage";
 import CategoriesRoot from "../pages/dashboard/categories/CategoriesRoot";
 import CustomersRoot from "../pages/dashboard/customers/CustomersRoot";
 import DashboardRoot from "../pages/dashboard/DashboardRoot";
@@ -43,6 +44,7 @@ export default function AppRoutes() {
       {/* Client Routes - Public access (Home page) */}
       <Route path='/' element={<ClientLayout />}>
         <Route index element={<HomePage />} />
+        <Route path='/:slug' element={<ProductPage />} />
         <Route path='cart' element={<div>Cart Page - Coming Soon</div>} />
         <Route
           path='favorites'

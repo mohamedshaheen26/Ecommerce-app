@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
+import { useNavigate } from "react-router-dom";
 import { fetchFeaturedProducts, fetchLatestProducts } from "../../api/product";
+import BestSelling from "../../components/BestSelling";
 import Carousel from "../../components/Carousel";
 import Button from "../../components/common/Button";
+import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
 import type { IProduct } from "../../types";
-import BestSelling from "./BestSelling";
-import Newsletter from "./Newsletter";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const { currentTheme } = useTheme();
   const { currentLang } = useLanguage();
   const { t } = useTranslation();
@@ -65,7 +67,7 @@ const HomePage = () => {
                   currentLang === "ar" ? <BsArrowLeft /> : <BsArrowRight />
                 }
                 variant='secondary'
-                onClick={() => console.log("View All Products Clicked!")}
+                onClick={() => navigate("/products")}
                 size='lg'
                 className='mt-10 hero-btn'
               >
@@ -118,7 +120,7 @@ const HomePage = () => {
                 } text-[var(--text-muted)]`}
               >
                 {t(
-                  "Upgrade your style today and get FREE shipping on all orders! Don't miss out."
+                  "Upgrade your style today and get FREE shipping on all orders! Don't miss out.",
                 )}
               </p>
             </div>
@@ -140,7 +142,7 @@ const HomePage = () => {
                 } text-[var(--text-muted)]`}
               >
                 {t(
-                  "Shop confidently with our Satisfaction Guarantee: Love it or get a refund."
+                  "Shop confidently with our Satisfaction Guarantee: Love it or get a refund.",
                 )}
               </p>
             </div>
@@ -162,7 +164,7 @@ const HomePage = () => {
                 } text-[var(--text-muted)]`}
               >
                 {t(
-                  "Your security is our priority. Your payments are secure with us."
+                  "Your security is our priority. Your payments are secure with us.",
                 )}
               </p>
             </div>
@@ -189,7 +191,7 @@ const HomePage = () => {
               </h4>
               <p className='mb-8 text-md text-[var(--text-muted)]'>
                 {t(
-                  "Step into a world of style and explore our diverse collection of clothing categories."
+                  "Step into a world of style and explore our diverse collection of clothing categories.",
                 )}
               </p>
               <Button
@@ -242,7 +244,14 @@ const HomePage = () => {
             </button>
           </div>
 
-          <Carousel>
+          <Carousel
+            arrows={true}
+            dots={false}
+            infinite={true}
+            speed={1000}
+            autoplay={true}
+            autoplaySpeed={5000}
+          >
             {(loading ? Array(4).fill(0) : productsToDisplay)?.map(
               (product, i) => (
                 <ProductCard
@@ -250,7 +259,7 @@ const HomePage = () => {
                   Product={product}
                   Loading={loading}
                 />
-              )
+              ),
             )}
           </Carousel>
         </div>

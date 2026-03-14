@@ -44,7 +44,8 @@ const Carousel = ({
   children,
   slidesToShow = 4,
   slidesToScroll = 1,
-  dots = false,
+  dots = true,
+  arrows = true,
   infinite = true,
   speed = 500,
   autoplay = false,
@@ -87,13 +88,18 @@ const Carousel = ({
     prevArrow: <PrevArrow />,
     autoplay,
     autoplaySpeed,
+    draggable: true,
+    swipe: true,
+    swipeToSlide: true,
+    touchMove: true,
+    touchThreshold: 10,
     responsive: responsive || defaultResponsive,
     ...rest,
   };
 
   return (
     <div
-      className={`carousel-wrapper w-full overflow-hidden px-12 ${className}`}
+      className={`carousel-wrapper w-full ${arrows ? "px-12" : ""} ${dots ? "pb-8 overflow-visible" : "overflow-hidden"} ${className}`}
     >
       <Slider {...settings}>{children}</Slider>
     </div>

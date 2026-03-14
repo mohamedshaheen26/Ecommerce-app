@@ -1,6 +1,6 @@
 import Button from "../../../../components/common/Button";
 
-const AVAILABLE_SIZES = ["S", "M", "X", "XL", "XXL"];
+const AVAILABLE_SIZES = ["XS", "S", "M", "L", "X", "XL", "XXL"];
 
 interface SizesSelectorProps {
   selectedSizes: string[];

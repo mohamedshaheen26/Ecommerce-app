@@ -18,7 +18,9 @@ const ClientFooter = () => {
                 src='/Footer-Logo.svg'
                 alt='Logo'
                 className={`w-10 h-10 object-contain ${
-                  currentTheme == "dark" || currentTheme == "system" ? "dark:invert" : ""
+                  currentTheme == "dark" || currentTheme == "system"
+                    ? "dark:invert"
+                    : ""
                 }`}
               />
               <h3 className='font-bold text-lg mb-0'>{t("NovaShop")}</h3>

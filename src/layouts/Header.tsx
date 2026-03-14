@@ -11,13 +11,13 @@ import {
   MdMenu,
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import BreadcrumbsComponents from "../components/Breadcrumbs";
 import Button from "../components/common/Button";
 import { NotificationItem } from "../components/common/NotificationItem";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
 import { useNotifications } from "../context/useNotification";
-import { getBreadcrumbs } from "../utils/getBreadcrumbs";
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -30,7 +30,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const { notifications, markAllAsRead } = useNotifications();
   const unreadCount = notifications.filter((n) => !n.read).length;
   const { t } = useTranslation();
-  const breadcrumbs = getBreadcrumbs();
 
   const handleLogout = () => {
     logout();
@@ -61,25 +60,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
             <MdMenu className='h-6 w-6' />
           </button>
 
-          <nav className='hidden sm:flex items-center gap-2'>
-            {breadcrumbs.map((item, index) => (
-              <div key={item.path} className='flex items-center'>
-                {index > 0 && <span className='mx-2 text-gray-400'>/</span>}
-                <span
-                  className={`
-                      text-sm font-medium
-                      ${
-                        index === breadcrumbs.length - 1
-                          ? "text-[var(--text-secondary)]"
-                          : "text-[var(--text-secondary)] hover:text-gray-700"
-                      }
-                    `}
-                >
-                  {t(item.name)}
-                </span>
-              </div>
-            ))}
-          </nav>
+          <BreadcrumbsComponents path={location.pathname} />
         </div>
 
         <div className='flex items-center gap-4'>

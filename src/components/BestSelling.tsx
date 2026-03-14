@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchBestSellingProducts } from "../../api/product";
-import Carousel from "../../components/Carousel";
-import ProductCard from "../../components/ProductCard";
-import type { IProduct } from "../../types";
+import { fetchBestSellingProducts } from "../api/product";
+import type { IProduct } from "../types";
+import Carousel from "./Carousel";
+import ProductCard from "./ProductCard";
 
 const BestSelling = () => {
   const { t } = useTranslation();
   const [bestSellingProducts, setBestSellingProducts] = useState<IProduct[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -37,7 +37,14 @@ const BestSelling = () => {
       </h3>
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <Carousel>
+        <Carousel
+          arrows={true}
+          dots={false}
+          infinite={true}
+          speed={1000}
+          autoplay={true}
+          autoplaySpeed={5000}
+        >
           {bestSellingProducts?.map((product: IProduct) => (
             <ProductCard key={product.id} Product={product} />
           ))}
@@ -48,7 +55,7 @@ const BestSelling = () => {
                 Product={product}
                 Loading={loading}
               />
-            )
+            ),
           )}
         </Carousel>
       </div>
