@@ -59,6 +59,8 @@ const ClientHeader = () => {
   const navigationItems = [
     { path: "/", label: "Home", icon: null },
     { path: "/products", label: "Products", icon: null },
+    { path: "/about", label: "About Us", icon: null },
+    { path: "/contact", label: "Contacts", icon: null },
   ];
 
   const isActive = (path: string) => {
@@ -119,7 +121,7 @@ const ClientHeader = () => {
               className='w-8 h-8 sm:w-10 sm:h-10'
             />
             <span className='text-sm sm:text-lg font-bold transition-opacity duration-300 text-[var(--text-secondary)] hidden md:inline'>
-              {t("NovaShop")}
+              {t("NovaStore")}
             </span>
           </div>
 

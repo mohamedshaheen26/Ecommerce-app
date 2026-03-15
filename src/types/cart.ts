@@ -17,4 +17,6 @@ export interface AddToCartInput {
   quantity: number;
   selectedColor?: string | null;
   selectedSize?: string | null;
+  /** Optional product snapshot for guest cart (when not authenticated) */
+  product?: IProduct | null;
 }

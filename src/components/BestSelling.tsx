@@ -45,15 +45,13 @@ const BestSelling = () => {
           autoplay={true}
           autoplaySpeed={5000}
         >
-          {bestSellingProducts?.map((product: IProduct) => (
-            <ProductCard key={product.id} Product={product} />
-          ))}
           {(loading ? Array(4).fill(0) : bestSellingProducts)?.map(
             (product, i) => (
               <ProductCard
                 key={product?.id || i}
                 Product={product}
                 Loading={loading}
+                showAddToCart
               />
             ),
           )}

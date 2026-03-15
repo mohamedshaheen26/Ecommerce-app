@@ -25,6 +25,8 @@ import ReviewsRoot from "../pages/dashboard/reviews/ReviewsRoot";
 import SettingsRoot from "../pages/dashboard/settings/SettingsRoot";
 import { UserRole } from "../types";
 import ProtectedRoute from "./ProtectedRoute";
+import AboutPage from "../pages/client/AboutPage";
+import ContactPage from "../pages/client/ContactPage";
 
 export default function AppRoutes() {
   return (
@@ -48,6 +50,8 @@ export default function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path='products' element={<ProductsListingPage />} />
         <Route path='cart' element={<CartPage />} />
+        <Route path='about' element={<AboutPage />} />
+        <Route path='contact' element={<ContactPage />} />
         <Route
           path='favorites'
           element={<div>Favorites Page - Coming Soon</div>}

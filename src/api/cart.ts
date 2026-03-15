@@ -80,7 +80,6 @@ export async function addToCart({
   selectedColor,
   selectedSize,
 }: AddToCartInput): Promise<void> {
-  debugger;
   if (quantity <= 0) {
     throw new Error("INVALID_QUANTITY");
   }

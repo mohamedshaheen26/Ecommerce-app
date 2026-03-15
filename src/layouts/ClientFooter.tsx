@@ -23,7 +23,7 @@ const ClientFooter = () => {
                     : ""
                 }`}
               />
-              <h3 className='font-bold text-lg mb-0'>{t("NovaShop")}</h3>
+              <h3 className='font-bold text-lg mb-0'>{t("NovaStore")}</h3>
             </div>
             <p className='mb-10'>{t("ecommerceDescription")}</p>
             <div className='flex gap-7 text-xl'>
@@ -93,20 +93,20 @@ const ClientFooter = () => {
               </h5>
               <ul className='space-y-5'>
                 <li>
-                  <a
-                    href='#'
+                  <Link
+                    to='/about'
                     className='transition-colors border-b-2 text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] border-transparent'
                   >
                     {t("About Us")}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href='#'
+                  <Link
+                    to='/contact'
                     className='transition-colors border-b-2 text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] border-transparent'
                   >
                     {t("Contacts")}
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a
@@ -178,7 +178,7 @@ const ClientFooter = () => {
 
         {/* Footer Bottom */}
         <div className='mt-20 border-t border-[var(--border-color)] text-center text-[var(--text-muted)] py-3'>
-          <p>{t("© 2023 NovaShop. All rights reserved.")}</p>
+          <p>{t("© 2023 NovaStore. All rights reserved.")}</p>
         </div>
       </div>
     </footer>

@@ -564,7 +564,7 @@ export default function ProductsListingPage() {
             {/* Product grid */}
             {loading ? (
               <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-12'>
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: products.length }).map((_, i) => (
                   <ProductCard key={i} Loading className='!mx-0' />
                 ))}
               </div>

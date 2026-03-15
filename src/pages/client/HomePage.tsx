@@ -258,6 +258,7 @@ const HomePage = () => {
                   key={product?.id || i}
                   Product={product}
                   Loading={loading}
+                  showAddToCart
                 />
               ),
             )}

@@ -5,7 +5,7 @@ import { BsChevronDown, BsThreeDots } from "react-icons/bs";
 import { FaRegHeart, FaStar } from "react-icons/fa";
 import { FiCheck, FiShare2 } from "react-icons/fi";
 import { GoStar } from "react-icons/go";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { fetchProductBySlug, fetchRelatedProducts } from "../../api/product";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Carousel from "../../components/Carousel";
@@ -13,17 +13,14 @@ import Button from "../../components/common/Button";
 import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
-import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { ICartItem, IProduct } from "../../types";
 
 const ProductPage = () => {
-  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const { slug } = useParams();
-  const navigate = useNavigate();
   const { addItem, items } = useCart();
   const [product, setProduct] = useState<IProduct>();
   const [loading, setLoading] = useState(true);
@@ -144,12 +141,6 @@ const ProductPage = () => {
   const handleAddToCart = async () => {
     if (!product) return;
 
-    if (!isAuthenticated) {
-      toast.error(t("Please login to continue"));
-      navigate("/login");
-      return;
-    }
-
     if (amount < 1) {
       toast.error(t("Please select valid quantity"));
       return;
@@ -176,6 +167,7 @@ const ProductPage = () => {
         quantity: amount,
         selectedColor: selectedColor || product.colors[0] || null,
         selectedSize: selectedSize || product.sizes[0] || null,
+        product,
       });
       toast.success(t("Added to cart successfully"));
     } catch (error) {
@@ -546,6 +538,7 @@ const ProductPage = () => {
                     key={product?.id}
                     Product={product}
                     Loading={loading}
+                    showAddToCart
                   />
                 ))}
           </Carousel>
