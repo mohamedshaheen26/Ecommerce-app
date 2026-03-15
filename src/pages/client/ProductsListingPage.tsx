@@ -1,27 +1,24 @@
+import { Checkbox, FormControlLabel, Slider } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsChevronDown } from "react-icons/bs";
-import { useSearchParams } from "react-router-dom";
-import { fetchAllCategories } from "../../api/categories";
-import {
-  fetchProductsWithFilters,
-  type ProductFilters,
-} from "../../api/product";
-import ProductCard from "../../components/ProductCard";
-import { useLanguage } from "../../context/LanguageContext";
-import type { ICategory } from "../../types";
-import type { IProduct } from "../../types";
-import { Checkbox, FormControlLabel, Slider } from "@mui/material";
-import ColorsSelector from "../dashboard/products/components/ColorsSelector";
-import SizesSelector from "../dashboard/products/components/SizesSelector";
 import {
   MdClose,
   MdOutlineArrowBackIos,
   MdOutlineArrowForwardIos,
+  MdTune,
 } from "react-icons/md";
+import { useSearchParams } from "react-router-dom";
+import { fetchAllCategories } from "../../api/categories";
+import { fetchProducts, type ProductFilters } from "../../api/product";
 import Newsletter from "../../components/Newsletter";
+import ProductCard from "../../components/ProductCard";
+import { useLanguage } from "../../context/LanguageContext";
+import type { ICategory, IProduct } from "../../types";
+import ColorsSelector from "../dashboard/products/components/ColorsSelector";
+import SizesSelector from "../dashboard/products/components/SizesSelector";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 12;
 const PRICE_MIN_DEFAULT = 0;
 const PRICE_MAX_DEFAULT = 1000;
 
@@ -52,6 +49,7 @@ export default function ProductsListingPage() {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [page, setPage] = useState(1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const searchQueryFromUrl = searchParams.get("q") ?? "";
 
@@ -95,11 +93,7 @@ export default function ProductsListingPage() {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, count } = await fetchProductsWithFilters(
-        page,
-        PAGE_SIZE,
-        filters,
-      );
+      const { data, count } = await fetchProducts(page, PAGE_SIZE, filters);
       setProducts(data || []);
       setTotalCount(count || 0);
     } catch (e) {
@@ -128,6 +122,17 @@ export default function ProductsListingPage() {
     setPage(1);
   }, [searchQueryFromUrl]);
 
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mobileFiltersOpen]);
+
   const toggleCategory = (id: string) => {
     setSelectedCategoryIds((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
@@ -153,14 +158,17 @@ export default function ProductsListingPage() {
     setSelectedCategoryIds((prev) => prev.filter((c) => c !== id));
     setPage(1);
   };
+
   const removeColorFilter = (color: string) => {
     setSelectedColors((prev) => prev.filter((c) => c !== color));
     setPage(1);
   };
+
   const removeSizeFilter = (size: string) => {
     setSelectedSizes((prev) => prev.filter((s) => s !== size));
     setPage(1);
   };
+
   const clearPriceFilter = () => {
     setPriceRange([PRICE_MIN_DEFAULT, PRICE_MAX_DEFAULT]);
     setPriceSliderValue([PRICE_MIN_DEFAULT, PRICE_MAX_DEFAULT]);
@@ -221,136 +229,183 @@ export default function ProductsListingPage() {
     return result;
   }, [totalPages, page]);
 
-  return (
+  const goToPage = (nextPage: number) => {
+    const clampedPage = Math.min(totalPages, Math.max(1, nextPage));
+    if (clampedPage === page) return;
+
+    setPage(clampedPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const filtersContent = (
     <>
-      <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8'>
-        <div className='grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 lg:gap-10'>
-          {/* Sidebar filters */}
-          <aside
-            className={`self-start shadow-md py-8 px-5 rounded-md space-y-8 ${currentLang === "ar" ? "lg:text-right" : ""}`}
-          >
-            {/* Categories */}
-            <div>
-              <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
-                {t("Categories")}
-              </h3>
-              {categoriesLoading ? (
-                <div className='space-y-2'>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className='h-5 bg-[var(--bg-secondary)] rounded animate-pulse'
+      {/* Categories */}
+      <div>
+        <h3 className='text-sm font-semibold text-[var(--text-secondary)] tracking-wide mb-5'>
+          {t("Categories")}
+        </h3>
+        {categoriesLoading ? (
+          <div className='space-y-2'>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className='h-5 bg-[var(--bg-secondary)] rounded animate-pulse'
+              />
+            ))}
+          </div>
+        ) : (
+          <ul className='space-y-2 pr-1'>
+            {categories.map((cat) => (
+              <li
+                key={cat.id}
+                className='border-b border-[var(--border-color)] pb-1'
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      sx={{
+                        color: "var(--accent-light)",
+                        "&.Mui-checked": {
+                          color: "var(--accent-primary)",
+                        },
+                        "&.MuiCheckbox-indeterminate": {
+                          color: "var(--accent-primary)",
+                        },
+                      }}
+                      checked={selectedCategoryIds.includes(cat.id!)}
+                      onChange={() => toggleCategory(cat.id!)}
+                      id={`cat-${cat.id}`}
                     />
-                  ))}
-                </div>
-              ) : (
-                <ul className='space-y-2'>
-                  {categories.map((cat) => (
-                    <li
-                      key={cat.id}
-                      className='border-b border-[var(--border-color)] pb-1'
-                    >
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            sx={{
-                              color: "var(--accent-light)",
-                              "&.Mui-checked": {
-                                color: "var(--accent-primary)",
-                              },
-                              "&.MuiCheckbox-indeterminate": {
-                                color: "var(--accent-primary)",
-                              },
-                            }}
-                            checked={selectedCategoryIds.includes(cat.id!)}
-                            onChange={() => toggleCategory(cat.id!)}
-                            id={`cat-${cat.id}`}
-                          />
-                        }
-                        label={currentLang === "ar" ? cat.name_ar : cat.name}
-                        sx={{
-                          margin: 0,
-                          width: "100%",
-                          "& .MuiTypography-root": {
-                            flex: 1,
-                            width: "100%",
-                          },
-                          "& .MuiFormControlLabel-label": {
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "var(--text-secondary)",
-                          },
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Color */}
-            <div>
-              <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
-                {t("Catalog.Colors")}
-              </h3>
-              <div className='flex flex-wrap gap-2'>
-                <ColorsSelector
-                  selectedColors={selectedColors}
-                  toggleColor={toggleColor}
-                />
-              </div>
-            </div>
-
-            {/* Size */}
-            <div>
-              <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
-                {t("Catalog.Sizes")}
-              </h3>
-              <div className='flex flex-wrap gap-2'>
-                <SizesSelector
-                  selectedSizes={selectedSizes}
-                  toggleSize={toggleSize}
-                />
-              </div>
-            </div>
-
-            {/* Price */}
-            <div>
-              <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
-                {t("Price")}
-              </h3>
-              <div className='space-y-3'>
-                <Slider
-                  value={priceSliderValue}
-                  onChange={(_e, value) =>
-                    setPriceSliderValue(value as [number, number])
                   }
-                  valueLabelDisplay='auto'
-                  valueLabelFormat={(v) => `$${v}`}
-                  min={PRICE_MIN_DEFAULT}
-                  max={PRICE_MAX_DEFAULT}
+                  label={currentLang === "ar" ? cat.name_ar : cat.name}
                   sx={{
-                    color: "var(--text-primary)",
-                    "& .MuiSlider-thumb": {
-                      color: "var(--accent-primary)",
+                    margin: 0,
+                    width: "100%",
+                    "& .MuiTypography-root": {
+                      flex: 1,
+                      width: "100%",
                     },
-                    "& .MuiSlider-track": {
-                      color: "var(--accent-primary)",
-                    },
-                    "& .MuiSlider-rail": {
+                    "& .MuiFormControlLabel-label": {
+                      fontSize: "14px",
+                      fontWeight: "500",
                       color: "var(--text-secondary)",
                     },
                   }}
                 />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Color */}
+      <div>
+        <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
+          {t("Catalog.Colors")}
+        </h3>
+        <div className='flex flex-wrap gap-2'>
+          <ColorsSelector
+            selectedColors={selectedColors}
+            toggleColor={toggleColor}
+          />
+        </div>
+      </div>
+
+      {/* Size */}
+      <div>
+        <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
+          {t("Catalog.Sizes")}
+        </h3>
+        <div className='flex flex-wrap gap-2'>
+          <SizesSelector
+            selectedSizes={selectedSizes}
+            toggleSize={toggleSize}
+          />
+        </div>
+      </div>
+
+      {/* Price */}
+      <div>
+        <h3 className='text-sm font-semibold text-[var(--text-secondary)]  tracking-wide mb-5'>
+          {t("Price")}
+        </h3>
+        <div className='space-y-3'>
+          <Slider
+            value={priceSliderValue}
+            onChange={(_e, value) =>
+              setPriceSliderValue(value as [number, number])
+            }
+            valueLabelDisplay='auto'
+            valueLabelFormat={(v) => `$${v}`}
+            min={PRICE_MIN_DEFAULT}
+            max={PRICE_MAX_DEFAULT}
+            sx={{
+              color: "var(--text-primary)",
+              "& .MuiSlider-thumb": {
+                color: "var(--accent-primary)",
+              },
+              "& .MuiSlider-track": {
+                color: "var(--accent-primary)",
+              },
+              "& .MuiSlider-rail": {
+                color: "var(--text-secondary)",
+              },
+            }}
+          />
+          <button
+            type='button'
+            onClick={applyPriceFilter}
+            className='inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors duration-200 cursor-pointer px-4 py-2 text-sm min-h-[40px] bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)] w-full'
+          >
+            {t("Catalog.Apply")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8'>
+        {mobileFiltersOpen && (
+          <div className='fixed inset-0 z-[999] lg:hidden'>
+            <button
+              type='button'
+              aria-label='Close filters'
+              onClick={() => setMobileFiltersOpen(false)}
+              className='absolute inset-0 bg-black/40'
+            />
+            <aside
+              className={`absolute top-0 h-full w-[86%] max-w-sm overflow-y-auto bg-[var(--bg-primary)] p-4 sm:p-5 shadow-xl space-y-6 ${
+                currentLang === "ar"
+                  ? "right-0 text-right rounded-l-md"
+                  : "left-0 rounded-r-md"
+              }`}
+            >
+              <div className='flex items-center justify-between'>
+                <h2 className='text-base font-semibold text-[var(--text-secondary)]'>
+                  {t("Filters")}
+                </h2>
                 <button
                   type='button'
-                  onClick={applyPriceFilter}
-                  className='inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors duration-200 cursor-pointer px-4 py-2 text-sm min-h-[40px] bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)] w-full'
+                  aria-label='Close filters'
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className='p-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                 >
-                  {t("Catalog.Apply")}
+                  <MdClose className='w-5 h-5' />
                 </button>
               </div>
-            </div>
+              {filtersContent}
+            </aside>
+          </div>
+        )}
+
+        <div className='grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 lg:gap-10'>
+          {/* Sidebar filters */}
+          <aside
+            className={`hidden lg:block self-start shadow-md py-8 px-5 rounded-md space-y-8 ${currentLang === "ar" ? "text-right" : ""}`}
+          >
+            {filtersContent}
           </aside>
 
           {/* Main content */}
@@ -441,8 +496,8 @@ export default function ProductsListingPage() {
                 </div>
               )}
 
-              <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-                <p className='text-sm text-[var(--text-muted)]'>
+              <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between items-end gap-3'>
+                <p className='hidden lg:block text-sm text-[var(--text-muted)]'>
                   {t("Catalog.ShowingResults", {
                     start: totalCount === 0 ? 0 : startItem,
                     end: endItem,
@@ -450,56 +505,67 @@ export default function ProductsListingPage() {
                   })}
                 </p>
 
-                <div className='relative'>
+                <div className='flex items-center gap-2'>
                   <button
                     type='button'
-                    onClick={() => setSortDropdownOpen((o) => !o)}
-                    className='flex items-center gap-2 px-4 py-2 rounded bg-[var(--bg-primary)] text-[var(--text-muted)] text-xs font-medium hover:border-[var(--text-muted)] tracking-widest'
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className='lg:hidden inline-flex items-center justify-center rounded bg-[var(--bg-primary)] text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] w-9 h-9'
+                    aria-label={t("Filters")}
                   >
-                    {t("Catalog.SortBy")}
-                    <BsChevronDown
-                      className={`w-4 h-4 transition-transform ${sortDropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <MdTune className='w-4 h-4' />
                   </button>
-                  {sortDropdownOpen && (
-                    <>
-                      <div
-                        className='fixed inset-0 z-10'
-                        aria-hidden
-                        onClick={() => setSortDropdownOpen(false)}
+
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setSortDropdownOpen((o) => !o)}
+                      className='flex items-center gap-2 px-4 py-2 rounded bg-[var(--bg-primary)] text-[var(--text-muted)] text-xs font-medium hover:border-[var(--text-muted)] tracking-widest'
+                    >
+                      {t("Catalog.SortBy")}
+                      <BsChevronDown
+                        className={`w-4 h-4 transition-transform ${sortDropdownOpen ? "rotate-180" : ""}`}
                       />
-                      <ul className='absolute top-full left-0 mt-1 min-w-[180px] py-1 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] shadow-lg z-20'>
-                        {sortOptions.map((opt) => (
-                          <li key={opt.value}>
-                            <button
-                              type='button'
-                              onClick={() => {
-                                setSortBy(opt.value);
-                                setSortDropdownOpen(false);
-                                setPage(1);
-                              }}
-                              className={`w-full text-left px-4 py-2 text-sm ${
-                                sortBy === opt.value
-                                  ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium"
-                                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
-                              }`}
-                            >
-                              {t(opt.labelKey)}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
+                    </button>
+                    {sortDropdownOpen && (
+                      <>
+                        <div
+                          className='fixed inset-0 z-10'
+                          aria-hidden
+                          onClick={() => setSortDropdownOpen(false)}
+                        />
+                        <ul className='absolute top-full left-0 mt-1 min-w-[180px] py-1 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] shadow-lg z-20'>
+                          {sortOptions.map((opt) => (
+                            <li key={opt.value}>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  setSortBy(opt.value);
+                                  setSortDropdownOpen(false);
+                                  setPage(1);
+                                }}
+                                className={`w-full text-left px-4 py-2 text-sm ${
+                                  sortBy === opt.value
+                                    ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium"
+                                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                                }`}
+                              >
+                                {t(opt.labelKey)}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Product grid */}
             {loading ? (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-12'>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <ProductCard key={i} Loading />
+                  <ProductCard key={i} Loading className='!mx-0' />
                 ))}
               </div>
             ) : products.length === 0 ? (
@@ -512,7 +578,7 @@ export default function ProductsListingPage() {
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-12'>
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -526,15 +592,15 @@ export default function ProductsListingPage() {
             {/* Pagination */}
             {totalPages > 1 && !loading && (
               <div
-                className={`flex items-center justify-center mx-auto gap-1 mt-20 rounded-md px-3 py-1.5 w-fit border border-[var(--border-color)] ${
+                className={`flex flex-wrap items-center justify-center mx-auto mb-2 gap-1 sm:gap-1.5 mt-12 sm:mt-20 rounded-md px-2 sm:px-3 py-1.5 w-full sm:w-fit max-w-full border border-[var(--border-color)] ${
                   currentLang === "ar" ? "flex-row-reverse" : ""
                 }`}
               >
                 <button
                   type='button'
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => goToPage(page - 1)}
                   disabled={page === 1}
-                  className='cursor-pointer px-3 h-9 rounded bg-[var(--bg-primary)] text-[var(--text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-secondary)]'
+                  className='cursor-pointer px-2 sm:px-3 h-8 sm:h-9 rounded bg-[var(--bg-primary)] text-[var(--text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-secondary)]'
                   aria-label='Previous'
                 >
                   <MdOutlineArrowBackIos className='w-4 h-4' />
@@ -543,7 +609,7 @@ export default function ProductsListingPage() {
                   n === "..." ? (
                     <span
                       key={`ellipsis-${i}`}
-                      className='px-2 text-[var(--text-muted)]'
+                      className='px-1 sm:px-2 text-[var(--text-muted)] text-sm'
                     >
                       ...
                     </span>
@@ -551,8 +617,8 @@ export default function ProductsListingPage() {
                     <button
                       key={n}
                       type='button'
-                      onClick={() => setPage(n as number)}
-                      className={`cursor-pointer min-w-[40px] h-9 rounded px-3 font-medium ${
+                      onClick={() => goToPage(n as number)}
+                      className={`cursor-pointer min-w-[34px] sm:min-w-[40px] h-8 sm:h-9 rounded px-2 sm:px-3 text-sm font-medium ${
                         page === n
                           ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
                           : "bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
@@ -564,15 +630,22 @@ export default function ProductsListingPage() {
                 )}
                 <button
                   type='button'
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => goToPage(page + 1)}
                   disabled={page === totalPages}
-                  className='cursor-pointer px-3 h-9 rounded bg-[var(--bg-primary)] text-[var(--text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-secondary)]'
+                  className='cursor-pointer px-2 sm:px-3 h-8 sm:h-9 rounded bg-[var(--bg-primary)] text-[var(--text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-secondary)]'
                   aria-label='Next'
                 >
                   <MdOutlineArrowForwardIos className='w-4 h-4' />
                 </button>
               </div>
             )}
+            <p className='block lg:hidden text-sm text-center text-[var(--text-muted)]'>
+              {t("Catalog.ShowingResults", {
+                start: totalCount === 0 ? 0 : startItem,
+                end: endItem,
+                total: totalCount,
+              })}
+            </p>
           </div>
         </div>
       </div>

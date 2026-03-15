@@ -1,29 +1,38 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { BsChevronDown, BsThreeDots } from "react-icons/bs";
 import { FaRegHeart, FaStar } from "react-icons/fa";
-import { FiMinus, FiPlus, FiShare2 } from "react-icons/fi";
+import { FiCheck, FiShare2 } from "react-icons/fi";
 import { GoStar } from "react-icons/go";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchProductBySlug, fetchRelatedProducts } from "../../api/product";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Carousel from "../../components/Carousel";
 import Button from "../../components/common/Button";
+import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
+import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
-import type { IProduct } from "../../types";
+import type { ICartItem, IProduct } from "../../types";
 
 const ProductPage = () => {
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { addItem, items } = useCart();
   const [product, setProduct] = useState<IProduct>();
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [amount, setAmount] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [activeSection, setActiveSection] = useState<"details" | "reviews">(
     "details",
   );
@@ -62,6 +71,16 @@ const ProductPage = () => {
 
     fetchData();
   }, [slug]);
+
+  useEffect(() => {
+    if (!product) return;
+    if (!selectedColor && product.colors.length > 0) {
+      setSelectedColor(product.colors[0]);
+    }
+    if (!selectedSize && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0]);
+    }
+  }, [product, selectedColor, selectedSize]);
 
   const path =
     currentLang === "ar"
@@ -122,12 +141,49 @@ const ProductPage = () => {
 
   if (!product) return <div>Product not found</div>;
 
-  const handleDecrease = () => {
-    setAmount((prev) => (prev > 1 ? prev - 1 : 1));
-  };
+  const handleAddToCart = async () => {
+    if (!product) return;
 
-  const handleIncrease = () => {
-    setAmount((prev) => prev + 1);
+    if (!isAuthenticated) {
+      toast.error(t("Please login to continue"));
+      navigate("/login");
+      return;
+    }
+
+    if (amount < 1) {
+      toast.error(t("Please select valid quantity"));
+      return;
+    }
+
+    const currentProductQty =
+      items
+        .filter((item: ICartItem) => item.product_id === product.id)
+        .reduce((acc, item) => acc + item.quantity, 0) || 0;
+
+    if (amount + currentProductQty > product.available_quantity) {
+      setErrorMessage(
+        t("Only {{count}} items are available", {
+          count: product.available_quantity,
+        }),
+      );
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+      await addItem({
+        productId: product.id,
+        quantity: amount,
+        selectedColor: selectedColor || product.colors[0] || null,
+        selectedSize: selectedSize || product.sizes[0] || null,
+      });
+      toast.success(t("Added to cart successfully"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("Failed to add item to cart"));
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const demoReviews = [
@@ -203,11 +259,13 @@ const ProductPage = () => {
             </div>
             {/* Rating & Stock */}
             <div className='flex items-center gap-4 mb-6'>
-              <div className='flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full'>
+              <div className='flex items-center gap-1 bg-[var(--bg-secondary)] px-3 py-1.5 rounded-full'>
                 <FaStar className='text-yellow-400' size={16} />
-                <span className='text-sm font-semibold text-gray-900'>5</span>
+                <span className='text-xs font-semibold text-[var(--text-secondary)]'>
+                  5
+                </span>
                 <span
-                  className={`text-sm text-gray-500 ${currentLang === "ar" ? "border-r pr-2 mr-1" : "border-l pl-2 ml-1"} border-gray-300`}
+                  className={`text-xs text-[var(--text-muted)] ${currentLang === "ar" ? "border-r pr-2 mr-1" : "border-l pl-2 ml-1"} border-[var(--border-color)]`}
                 >
                   10 {t("reviews")}
                 </span>
@@ -233,12 +291,24 @@ const ProductPage = () => {
                 {product?.colors.map((color) => (
                   <button
                     key={color}
+                    type='button'
                     onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border-2 border-[var(--border-color)] ${selectedColor === color ? "border-[var(--accent-primary)]" : ""}`}
+                    className={`relative w-8 h-8 rounded-full border-2 transition-all ${
+                      selectedColor === color
+                        ? `border-[var(--accent-primary)]`
+                        : "border-[var(--border-color)] cursor-pointer"
+                    }`}
                     style={{ backgroundColor: color }}
                     title={color}
                     aria-label={`Select color ${color}`}
-                  />
+                    aria-pressed={selectedColor === color}
+                  >
+                    {selectedColor === color && (
+                      <span className='absolute inset-0 flex items-center justify-center text-white'>
+                        <FiCheck size={12} />
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
@@ -250,9 +320,9 @@ const ProductPage = () => {
               <div className='flex flex-wrap gap-3'>
                 {product?.sizes.map((size) => (
                   <Button
-                    className={`rounded-sm ${selectedSize === size ? "border-[var(--accent-primary)]" : ""}`}
+                    className={`rounded-sm border-2`}
                     key={size}
-                    variant={"outline"}
+                    variant={selectedSize === size ? "primary" : "outline"}
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -266,45 +336,26 @@ const ProductPage = () => {
                 {t("Quantity")}
               </span>
               <div className='flex items-center'>
-                <div className='flex items-center border border-[var(--border-color)] rounded-lg overflow-hidden'>
-                  <button
-                    onClick={handleDecrease}
-                    className='cursor-pointer px-4 py-3 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                    disabled={amount <= 1}
-                  >
-                    <FiMinus size={16} />
-                  </button>
-                  <div className='w-12 text-center text-[var(--text-secondary)] font-medium'>
-                    <input
-                      value={amount}
-                      onChange={(e) => setAmount(Number(e.target.value))}
-                      onBlur={(e) => {
-                        if (Number(e.target.value) < 1) {
-                          setAmount(0);
-                        } else if (
-                          Number(e.target.value) > product?.available_quantity
-                        ) {
-                          setAmount(product?.available_quantity);
-                        }
-                      }}
-                      className='w-full text-center text-[var(--text-secondary)] font-medium'
-                    />
-                  </div>
-                  <button
-                    onClick={handleIncrease}
-                    className='cursor-pointer px-4 py-3 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                    disabled={amount >= product?.available_quantity}
-                  >
-                    <FiPlus size={16} />
-                  </button>
-                </div>
+                <QuantitySelector
+                  value={amount}
+                  onChange={setAmount}
+                  min={1}
+                  max={product.available_quantity}
+                  size='md'
+                />
               </div>
+              {errorMessage && (
+                <p className='text-red-500 text-xs mt-1'>{errorMessage}</p>
+              )}
             </div>
             {/* Actions */}
             <div className='flex gap-4 mt-auto'>
               <Button
                 variant='primary'
                 className='flex-1 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] py-4 rounded-xl text-base font-bold transition-all duration-300'
+                onClick={handleAddToCart}
+                isLoading={isAddingToCart}
+                disabled={isAddingToCart}
               >
                 {t("Add to cart")}
               </Button>

@@ -7,6 +7,7 @@ import {
 
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { fetchAllCategories } from "../../../api/categories";
 import FormField from "../../../components/common/FormField";
 import Grid from "../../../components/common/Grid";
 import Input from "../../../components/common/Input";

@@ -3,39 +3,6 @@ import type { IProduct, IProductFormValues } from "../types";
 
 const bucket_productsImg = "images";
 
-// ✅ Fetch products with pagination and search
-export async function fetchProducts(
-  page: number,
-  pageSize: number,
-  searchQuery: string,
-  categoryId?: string,
-): Promise<{ data: IProduct[]; count: number }> {
-  let query = supabase
-    .from("products")
-    .select(`*, category:category_id (name, name_ar)`, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: true });
-
-  if (searchQuery && searchQuery.trim()) {
-    query = query.or(
-      `title.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
-    );
-  }
-
-  if (categoryId) {
-    query = query.eq("category_id", categoryId);
-  }
-
-  const { data, error, count } = await query.range(
-    (page - 1) * pageSize,
-    page * pageSize - 1,
-  );
-
-  if (error) throw error;
-
-  return { data: data || [], count: count || 0 };
-}
-
 export const uploadImages = async (files: File[]) => {
   const uploadedUrls: string[] = [];
 
@@ -185,6 +152,7 @@ export async function fetchRelatedProducts(
 }
 
 export interface ProductFilters {
+  categoryId?: string;
   categoryIds?: string[];
   colors?: string[];
   sizes?: string[];
@@ -194,10 +162,11 @@ export interface ProductFilters {
   searchQuery?: string;
 }
 
-export async function fetchProductsWithFilters(
+// ✅ Fetch products with pagination, search, and optional filters
+export async function fetchProducts(
   page: number,
   pageSize: number,
-  filters: ProductFilters,
+  filters: ProductFilters = {},
 ): Promise<{ data: IProduct[]; count: number }> {
   let query = supabase
     .from("products")
@@ -205,8 +174,16 @@ export async function fetchProductsWithFilters(
       count: "exact",
     });
 
-  const { categoryIds, colors, sizes, priceMin, priceMax, sortBy, searchQuery } =
-    filters;
+  const {
+    categoryId,
+    categoryIds,
+    colors,
+    sizes,
+    priceMin,
+    priceMax,
+    sortBy,
+    searchQuery,
+  } = filters;
 
   if (searchQuery?.trim()) {
     query = query.or(
@@ -214,7 +191,9 @@ export async function fetchProductsWithFilters(
     );
   }
 
-  if (categoryIds?.length) {
+  if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  } else if (categoryIds?.length) {
     query = query.in("category_id", categoryIds);
   }
 
@@ -235,16 +214,24 @@ export async function fetchProductsWithFilters(
 
   switch (sortBy) {
     case "price_asc":
-      query = query.order("price", { ascending: true }).order("id", { ascending: true });
+      query = query
+        .order("price", { ascending: true })
+        .order("id", { ascending: true });
       break;
     case "price_desc":
-      query = query.order("price", { ascending: false }).order("id", { ascending: true });
+      query = query
+        .order("price", { ascending: false })
+        .order("id", { ascending: true });
       break;
     case "name":
-      query = query.order("title", { ascending: true }).order("id", { ascending: true });
+      query = query
+        .order("title", { ascending: true })
+        .order("id", { ascending: true });
       break;
     default:
-      query = query.order("created_at", { ascending: false }).order("id", { ascending: true });
+      query = query
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true });
   }
 
   const { data, error, count } = await query.range(

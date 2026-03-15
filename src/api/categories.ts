@@ -81,7 +81,8 @@ async function syncCategoryPathsToDb(): Promise<void> {
     .filter((category) => category.id)
     .filter(
       (category) =>
-        category.path !== source.find((item) => item.id === category.id)?.path ||
+        category.path !==
+          source.find((item) => item.id === category.id)?.path ||
         category.path_ar !==
           source.find((item) => item.id === category.id)?.path_ar,
     )
@@ -101,9 +102,9 @@ async function syncCategoryPathsToDb(): Promise<void> {
 
 // ✅ Get all categories
 export async function fetchAllCategories(
-  page: number,
-  pageSize: number,
-  searchQuery: string,
+  page?: number,
+  pageSize?: number,
+  searchQuery?: string,
 ): Promise<{ data: ICategory[]; count: number }> {
   let query = supabase
     .from("categories")
@@ -117,10 +118,15 @@ export async function fetchAllCategories(
     );
   }
 
-  const { data, error, count } = await query.range(
-    (page - 1) * pageSize,
-    page * pageSize - 1,
-  );
+  const hasPagination =
+    typeof page === "number" &&
+    page > 0 &&
+    typeof pageSize === "number" &&
+    pageSize > 0;
+
+  const { data, error, count } = hasPagination
+    ? await query.range((page - 1) * pageSize, page * pageSize - 1)
+    : await query;
 
   if (error) throw error;
 

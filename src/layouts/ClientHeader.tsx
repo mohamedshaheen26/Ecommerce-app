@@ -20,11 +20,13 @@ import AccountMenu from "../components/AccountMenu";
 import LanguageMenu from "../components/LanguageMenu";
 import ThemeMenu from "../components/ThemeMenu";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const ClientHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, userRole, logout } = useAuth();
+  const { cartCount } = useCart();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -228,7 +230,7 @@ const ClientHeader = () => {
               >
                 <MdOutlineShoppingCart className='h-5 w-5 sm:h-6 sm:w-6' />
                 <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center'>
-                  0
+                  {cartCount}
                 </span>
               </button>
             </Tooltip>

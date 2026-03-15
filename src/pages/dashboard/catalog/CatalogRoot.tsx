@@ -69,7 +69,7 @@ export default function CatalogRoot() {
 
       const [categoriesRes, productsRes] = await Promise.all([
         fetchAllCategories(1, 1000, ""),
-        fetchProducts(1, 1000, ""),
+        fetchProducts(1, 1000, { searchQuery: "" }),
       ]);
 
       const categories = categoriesRes.data || [];

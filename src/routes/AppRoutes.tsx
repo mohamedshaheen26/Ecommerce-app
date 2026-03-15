@@ -11,6 +11,7 @@ import RegisterPage from "../pages/auth/Register";
 import ResetPasswordPage from "../pages/auth/ResetPassword";
 import UnauthorizedPage from "../pages/auth/Unauthorized";
 import HomePage from "../pages/client/HomePage";
+import CartPage from "../pages/client/CartPage";
 import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
 import ProductPage from "../pages/client/ProductPage";
 import ProductsListingPage from "../pages/client/ProductsListingPage";
@@ -46,8 +47,7 @@ export default function AppRoutes() {
       <Route path='/' element={<ClientLayout />}>
         <Route index element={<HomePage />} />
         <Route path='products' element={<ProductsListingPage />} />
-        <Route path=':slug' element={<ProductPage />} />
-        <Route path='cart' element={<div>Cart Page - Coming Soon</div>} />
+        <Route path='cart' element={<CartPage />} />
         <Route
           path='favorites'
           element={<div>Favorites Page - Coming Soon</div>}
@@ -56,6 +56,7 @@ export default function AppRoutes() {
         <Route path='account' element={<div>Account Page - Coming Soon</div>} />
         <Route path='help' element={<div>Help Page - Coming Soon</div>} />
         <Route path='search' element={<ProductsListingPage />} />
+        <Route path=':slug' element={<ProductPage />} />
       </Route>
 
       {/* Protected Dashboard Routes */}

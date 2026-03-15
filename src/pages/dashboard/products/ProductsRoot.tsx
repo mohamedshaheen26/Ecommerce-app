@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import DeleteModal from "../../../components/common/DeleteModal";
-import Table from "../../../components/common/Table";
-import DropdownMenu from "../../../components/common/DropdownMenu";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import type { ICategory, IProduct } from "../../../types";
-import { deleteProduct, fetchProducts } from "../../../api/product";
+import { useTranslation } from "react-i18next";
 import { fetchAllCategories } from "../../../api/categories";
 import { bulkDelete } from "../../../api/general";
-import ProductsForm from "./ProductsForm";
+import { deleteProduct, fetchProducts } from "../../../api/product";
+import DeleteModal from "../../../components/common/DeleteModal";
+import DropdownMenu from "../../../components/common/DropdownMenu";
 import PageHeader from "../../../components/common/PageHeader";
-import { useTranslation } from "react-i18next";
+import Table from "../../../components/common/Table";
 import { useLanguage } from "../../../context/LanguageContext";
+import type { ICategory, IProduct } from "../../../types";
+import ProductsForm from "./ProductsForm";
 
 export default function ProductsRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -36,11 +36,9 @@ export default function ProductsRoot() {
     try {
       setLoading(true);
 
-      const { data, count } = await fetchProducts(
-        currentPage,
-        pageSize,
-        searchQuery
-      );
+      const { data, count } = await fetchProducts(currentPage, pageSize, {
+        searchQuery,
+      });
       setFilteredProducts(data || []);
       setTotalItems(count || 0);
     } catch (error) {
@@ -52,11 +50,7 @@ export default function ProductsRoot() {
 
   const loadCategories = async () => {
     try {
-      const { data } = await fetchAllCategories(
-        currentPage,
-        pageSize,
-        searchQuery
-      );
+      const { data } = await fetchAllCategories();
       setCategories(data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -88,7 +82,7 @@ export default function ProductsRoot() {
   // Bulk actions handler
   const handleBulkAction = async (
     action: string,
-    selectedIds: (string | number)[]
+    selectedIds: (string | number)[],
   ) => {
     try {
       switch (action) {
@@ -102,19 +96,19 @@ export default function ProductsRoot() {
           break;
         case "archive":
           toast.success(
-            t(`${selectedIds.length} products archived successfully`)
+            t(`${selectedIds.length} products archived successfully`),
           );
           // TODO: Implement archive functionality
           break;
         case "export":
           toast.success(
-            t(`Export completed for ${selectedIds.length} products`)
+            t(`Export completed for ${selectedIds.length} products`),
           );
           // TODO: Implement export functionality
           break;
         case "print":
           toast.success(
-            t(`Print initiated for ${selectedIds.length} products`)
+            t(`Print initiated for ${selectedIds.length} products`),
           );
           // TODO: Implement print functionality
           break;
@@ -166,8 +160,8 @@ export default function ProductsRoot() {
             product.stock_status === "in_stock"
               ? "bg-green-100 text-green-800"
               : product.stock_status === "low_stock"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
           }`}
         >
           {t(`Stock Statuses.${product.stock_status}`)}
