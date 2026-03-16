@@ -1,28 +1,28 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import type { ICustomer } from "../../../types";
+import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { MdLocationOn, MdPhone } from "react-icons/md";
 import {
   deleteCustomerById,
   fetchAllCustomersWithOrders,
 } from "../../../api/customers";
+import { bulkDelete } from "../../../api/general";
+import DeleteModal from "../../../components/common/DeleteModal";
 import DropdownMenu from "../../../components/common/DropdownMenu";
+import PageHeader from "../../../components/common/PageHeader";
 import Table from "../../../components/common/Table";
-import { MdLocationOn, MdPhone } from "react-icons/md";
+import { useLanguage } from "../../../context/LanguageContext";
+import type { ICustomer } from "../../../types";
+import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate } from "../../../utils/formatDate";
 import CustomersFormDetails from "./CustomersFormDetails";
-import { formatCurrency } from "../../../utils/formatCurrency";
-import DeleteModal from "../../../components/common/DeleteModal";
-import PageHeader from "../../../components/common/PageHeader";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../../context/LanguageContext";
-import { bulkDelete } from "../../../api/general";
-import toast from "react-hot-toast";
 
 export default function CustomersRoot() {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomer | null>(
-    null
+    null,
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function CustomersRoot() {
       const { data, count } = await fetchAllCustomersWithOrders(
         currentPage,
         pageSize,
-        searchQuery
+        searchQuery,
       );
       setCustomers(data);
       setTotalItems(count || 0);
@@ -69,7 +69,7 @@ export default function CustomersRoot() {
       if (selectedCustomer.id)
         await deleteCustomerById(selectedCustomer.user_id ?? "");
       setCustomers(
-        customers.filter((customer) => customer.id !== selectedCustomer.id)
+        customers.filter((customer) => customer.id !== selectedCustomer.id),
       );
       setIsDeleteModalOpen(false);
     } catch (error) {
@@ -82,7 +82,7 @@ export default function CustomersRoot() {
   // Bulk actions handler
   const handleBulkAction = async (
     action: string,
-    selectedIds: (string | number)[]
+    selectedIds: (string | number)[],
   ) => {
     try {
       switch (action) {
@@ -93,25 +93,25 @@ export default function CustomersRoot() {
               loading: t("Deleting selected customers"),
               success: t(`Customers deleted successfully`),
               error: t("Failed to delete customers"),
-            }
+            },
           );
           await fetchCustomersWithOrders();
           break;
         case "archive":
           toast.success(
-            t(`${selectedIds.length} customers archived successfully`)
+            t(`${selectedIds.length} customers archived successfully`),
           );
           // TODO: Implement archive functionality
           break;
         case "export":
           toast.success(
-            t(`Export completed for ${selectedIds.length} customers`)
+            t(`Export completed for ${selectedIds.length} customers`),
           );
           // TODO: Implement export functionality
           break;
         case "print":
           toast.success(
-            t(`Print initiated for ${selectedIds.length} customers`)
+            t(`Print initiated for ${selectedIds.length} customers`),
           );
           // TODO: Implement print functionality
           break;
@@ -260,7 +260,11 @@ export default function CustomersRoot() {
         onConfirm={handleDeleteCustomer}
         title='Customer'
         itemType='Customer'
-        itemName={selectedCustomer?.full_name || ""}
+        itemName={
+          currentLang === "ar"
+            ? selectedCustomer?.name_ar || ""
+            : selectedCustomer?.full_name || ""
+        }
         isDeleting={deleting}
       />
     </div>

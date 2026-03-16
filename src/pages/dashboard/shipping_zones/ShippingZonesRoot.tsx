@@ -70,7 +70,9 @@ export default function ShippingZonesRoot() {
       switch (action) {
         case "delete":
           await toast.promise(
-            Promise.all(selectedIds.map((id) => deleteShippingZoneById(String(id)))),
+            Promise.all(
+              selectedIds.map((id) => deleteShippingZoneById(String(id))),
+            ),
             {
               loading: t("Deleting selected shipping zones"),
               success: t("Shipping Zones deleted successfully"),
@@ -90,7 +92,9 @@ export default function ShippingZonesRoot() {
           );
           break;
         case "print":
-          toast.success(t(`Print initiated for ${selectedIds.length} shipping zones`));
+          toast.success(
+            t(`Print initiated for ${selectedIds.length} shipping zones`),
+          );
           break;
         default:
           console.log(`Action: ${action}`, `Selected IDs: ${selectedIds}`);
@@ -217,8 +221,8 @@ export default function ShippingZonesRoot() {
   return (
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg overflow-hidden'>
       <PageHeader
-        title='Shipping Zones'
-        addButtonText='Shipping Zone'
+        title={t("Shipping Zones")}
+        addButtonText={t("Shipping Zone")}
         onAdd={() => {
           setEditingShippingZone(null);
           setIsFormOpen(true);
@@ -263,7 +267,11 @@ export default function ShippingZonesRoot() {
         onConfirm={handleDelete}
         title='Shipping Zone'
         itemType='Shipping Zone'
-        itemName={deletingShippingZone?.name || ""}
+        itemName={
+          currentLang === "ar"
+            ? deletingShippingZone?.name_ar || ""
+            : deletingShippingZone?.name || ""
+        }
         isDeleting={deleting}
       />
     </div>

@@ -15,6 +15,7 @@ import CartPage from "../pages/client/CartPage";
 import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
 import ProductPage from "../pages/client/ProductPage";
 import ProductsListingPage from "../pages/client/ProductsListingPage";
+import CheckoutPage from "../pages/client/CheckoutPage";
 import CategoriesRoot from "../pages/dashboard/categories/CategoriesRoot";
 import CustomersRoot from "../pages/dashboard/customers/CustomersRoot";
 import DashboardRoot from "../pages/dashboard/DashboardRoot";
@@ -52,6 +53,7 @@ export default function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path='products' element={<ProductsListingPage />} />
         <Route path='cart' element={<CartPage />} />
+        <Route path='checkout' element={<CheckoutPage />} />
         <Route path='about' element={<AboutPage />} />
         <Route path='contact' element={<ContactPage />} />
         <Route path='favorites' element={<FavoritesPage />} />

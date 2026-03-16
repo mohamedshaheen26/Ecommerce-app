@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import type { ICategory } from "../../../types";
@@ -8,15 +8,15 @@ import {
   fetchAllCategories,
 } from "../../../api/categories";
 
+import DeleteModal from "../../../components/common/DeleteModal";
 import DropdownMenu from "../../../components/common/DropdownMenu";
 import Table from "../../../components/common/Table";
-import DeleteModal from "../../../components/common/DeleteModal";
 
-import CategoriesForm from "./CategoriesForm";
-import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../../context/LanguageContext";
 import { bulkDelete } from "../../../api/general";
+import PageHeader from "../../../components/common/PageHeader";
+import { useLanguage } from "../../../context/LanguageContext";
+import CategoriesForm from "./CategoriesForm";
 
 export default function CategoriesRoot() {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -24,10 +24,10 @@ export default function CategoriesRoot() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ICategory | null>(
-    null
+    null,
   );
   const [deletingCategory, setDeletingCategory] = useState<ICategory | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -47,7 +47,7 @@ export default function CategoriesRoot() {
       const { data, count } = await fetchAllCategories(
         currentPage,
         pageSize,
-        searchQuery
+        searchQuery,
       );
       setCategories(data);
       setTotalItems(count || 0);
@@ -71,7 +71,7 @@ export default function CategoriesRoot() {
   // Bulk actions handler
   const handleBulkAction = async (
     action: string,
-    selectedIds: (string | number)[]
+    selectedIds: (string | number)[],
   ) => {
     try {
       switch (action) {
@@ -82,25 +82,25 @@ export default function CategoriesRoot() {
               loading: t("Deleting selected categories"),
               success: t(`Categories deleted successfully`),
               error: t("Failed to delete categories"),
-            }
+            },
           );
           await loadCategories();
           break;
         case "archive":
           toast.success(
-            t(`${selectedIds.length} categories archived successfully`)
+            t(`${selectedIds.length} categories archived successfully`),
           );
           // TODO: Implement archive functionality
           break;
         case "export":
           toast.success(
-            t(`Export completed for ${selectedIds.length} categories`)
+            t(`Export completed for ${selectedIds.length} categories`),
           );
           // TODO: Implement export functionality
           break;
         case "print":
           toast.success(
-            t(`Print initiated for ${selectedIds.length} categories`)
+            t(`Print initiated for ${selectedIds.length} categories`),
           );
           // TODO: Implement print functionality
           break;
@@ -129,7 +129,7 @@ export default function CategoriesRoot() {
       } catch (error) {
         console.error("Error deleting category:", error);
         reject(
-          error instanceof Error ? error.message : "Failed to delete category"
+          error instanceof Error ? error.message : "Failed to delete category",
         );
       } finally {
         setDeleting(false);
@@ -262,7 +262,11 @@ export default function CategoriesRoot() {
         onConfirm={handleDelete}
         title='Category'
         itemType='Category'
-        itemName={deletingCategory?.name || ""}
+        itemName={
+          currentLang === "ar"
+            ? deletingCategory?.name_ar || ""
+            : deletingCategory?.name || ""
+        }
         isDeleting={deleting}
       />
     </div>

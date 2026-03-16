@@ -9,7 +9,7 @@ import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
 
-const SHIPPING_COST: number = 0;
+const SHIPPING_COST: number = 100;
 const TAX_RATE = 0.0333333333;
 
 export default function CartPage() {
@@ -278,13 +278,16 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button
-              type='button'
-              className='w-full h-10 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-              disabled={items.length === 0}
+            <Link
+              to='/checkout'
+              className={`w-full h-10 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center justify-center ${
+                items.length === 0
+                  ? "pointer-events-none opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
             >
               {t("Checkout")}
-            </button>
+            </Link>
 
             <Link
               to='/products'

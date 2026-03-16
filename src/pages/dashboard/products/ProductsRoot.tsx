@@ -262,7 +262,11 @@ export default function ProductsRoot() {
         onConfirm={handleDelete}
         title='Product'
         itemType='Product'
-        itemName={selectedProduct?.title || ""}
+        itemName={
+          currentLang === "ar"
+            ? selectedProduct?.name_ar || ""
+            : selectedProduct?.title || ""
+        }
         isDeleting={deleting}
       />
     </div>

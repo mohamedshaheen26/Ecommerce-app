@@ -13,9 +13,18 @@ export async function fetchAllShippingZones(
     .order("id", { ascending: true });
 
   if (searchQuery && searchQuery.trim()) {
-    query = query.or(
-      `name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
-    );
+    const search = searchQuery.trim();
+    const filters = [`name.ilike.%${search}%`, `name_ar.ilike.%${search}%`];
+    const numericValue = Number(search);
+
+    if (!Number.isNaN(numericValue)) {
+      filters.push(`shipping_fee.eq.${numericValue}`);
+      if (Number.isInteger(numericValue)) {
+        filters.push(`estimated_days.eq.${numericValue}`);
+      }
+    }
+
+    query = query.or(filters.join(","));
   }
 
   const hasPagination =
@@ -40,6 +49,19 @@ export async function createShippingZone(
     .from("shipping_zones")
     .insert([shippingZoneData]);
   if (error) throw error;
+}
+
+export async function fetchActiveShippingZones(): Promise<IShippingZone[]> {
+  const { data, error } = await supabase
+    .from("shipping_zones")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []) as IShippingZone[];
 }
 
 export async function updateShippingZone(

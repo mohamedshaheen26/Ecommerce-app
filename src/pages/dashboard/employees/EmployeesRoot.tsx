@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import type { IEmployee } from "../../../types";
 
-import { fetchAllEmployees, deleteEmployeeById } from "../../../api/employee";
+import { deleteEmployeeById, fetchAllEmployees } from "../../../api/employee";
 
+import DeleteModal from "../../../components/common/DeleteModal";
 import DropdownMenu from "../../../components/common/DropdownMenu";
 import Table from "../../../components/common/Table";
-import DeleteModal from "../../../components/common/DeleteModal";
 
-import EmployeesForm from "./EmployeesForm";
-import { MdEmail, MdPhone } from "react-icons/md";
-import PageHeader from "../../../components/common/PageHeader";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../../context/LanguageContext";
+import { MdEmail, MdPhone } from "react-icons/md";
 import { bulkDelete } from "../../../api/general";
+import PageHeader from "../../../components/common/PageHeader";
+import { useLanguage } from "../../../context/LanguageContext";
+import EmployeesForm from "./EmployeesForm";
 
 export default function EmployeesRoot() {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -22,10 +22,10 @@ export default function EmployeesRoot() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<IEmployee | null>(
-    null
+    null,
   );
   const [deletingEmployee, setDeletingEmployee] = useState<IEmployee | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +45,7 @@ export default function EmployeesRoot() {
       const { data, count } = await fetchAllEmployees(
         currentPage,
         pageSize,
-        searchQuery
+        searchQuery,
       );
       setEmployees(data);
       setTotalItems(count || 0);
@@ -83,7 +83,7 @@ export default function EmployeesRoot() {
       } catch (error) {
         console.error("Error deleting employee:", error);
         reject(
-          error instanceof Error ? error.message : "Failed to delete employee"
+          error instanceof Error ? error.message : "Failed to delete employee",
         );
       } finally {
         setDeleting(false);
@@ -100,7 +100,7 @@ export default function EmployeesRoot() {
   // Bulk actions handler
   const handleBulkAction = async (
     action: string,
-    selectedIds: (string | number)[]
+    selectedIds: (string | number)[],
   ) => {
     try {
       switch (action) {
@@ -111,25 +111,25 @@ export default function EmployeesRoot() {
               loading: t("Deleting selected employees"),
               success: t(`Employees deleted successfully`),
               error: t("Failed to delete employees"),
-            }
+            },
           );
           await loadEmployees();
           break;
         case "archive":
           toast.success(
-            t(`${selectedIds.length} Employees archived successfully`)
+            t(`${selectedIds.length} Employees archived successfully`),
           );
           // TODO: Implement archive functionality
           break;
         case "export":
           toast.success(
-            t(`Export completed for ${selectedIds.length} Employees`)
+            t(`Export completed for ${selectedIds.length} Employees`),
           );
           // TODO: Implement export functionality
           break;
         case "print":
           toast.success(
-            t(`Print initiated for ${selectedIds.length} Employees`)
+            t(`Print initiated for ${selectedIds.length} Employees`),
           );
           // TODO: Implement print functionality
           break;
@@ -292,7 +292,11 @@ export default function EmployeesRoot() {
         onConfirm={handleDelete}
         title='Employee'
         itemType='Employee'
-        itemName={deletingEmployee?.full_name || ""}
+        itemName={
+          currentLang === "ar"
+            ? deletingEmployee?.name_ar || ""
+            : deletingEmployee?.full_name || ""
+        }
         isDeleting={deleting}
       />
     </div>

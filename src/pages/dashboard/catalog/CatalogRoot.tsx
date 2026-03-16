@@ -374,8 +374,12 @@ export default function CatalogRoot() {
         itemName={
           deletingItem
             ? deletingItem.type === "category"
-              ? (deletingItem.data as ICategory).name
-              : (deletingItem.data as IProduct).title
+              ? currentLang === "ar"
+                ? (deletingItem.data as ICategory).name_ar
+                : (deletingItem.data as ICategory).name
+              : currentLang === "ar"
+                ? (deletingItem.data as IProduct).name_ar
+                : (deletingItem.data as IProduct).title
             : ""
         }
         isDeleting={deleting}

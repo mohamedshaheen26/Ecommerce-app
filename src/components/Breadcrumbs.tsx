@@ -3,6 +3,7 @@ import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useTranslation } from "react-i18next";
 
 interface BreadcrumbsComponentsProps {
   path: string;
@@ -13,6 +14,7 @@ export default function BreadcrumbsComponents({
   path,
   productName,
 }: BreadcrumbsComponentsProps) {
+  const { t } = useTranslation();
   const pathParts = path
     .split("/")
     .map((item) => item.trim())
@@ -44,14 +46,14 @@ export default function BreadcrumbsComponents({
               href={item.path}
               className='!text-[var(--text-muted)]'
             >
-              {item.name}
+              {t(item.name)}
             </Link>
           ) : (
             <Typography
               key={item.name}
               className='text-[var(--text-secondary)]'
             >
-              {item.name}
+              {t(item.name)}
             </Typography>
           ),
         )}

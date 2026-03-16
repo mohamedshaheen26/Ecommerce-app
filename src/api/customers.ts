@@ -97,6 +97,19 @@ export async function fetchCustomerWithOrders(id: string): Promise<ICustomer | n
   };
 }
 
+export async function fetchCustomerByEmail(
+  email: string,
+): Promise<ICustomer | null> {
+  const { data, error } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as ICustomer | null;
+}
+
 // ✅ Helper: Get orders for one customer
 export async function fetchCustomerOrders(customerId: string): Promise<IOrder[]> {
   const { data, error } = await supabase
