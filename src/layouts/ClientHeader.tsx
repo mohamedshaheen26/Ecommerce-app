@@ -21,12 +21,14 @@ import LanguageMenu from "../components/LanguageMenu";
 import ThemeMenu from "../components/ThemeMenu";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
 
 const ClientHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, userRole, logout } = useAuth();
   const { cartCount } = useCart();
+  const { favoritesCount } = useFavorites();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -219,6 +221,11 @@ const ClientHeader = () => {
                 className='inline-flex cursor-pointer p-1.5 sm:p-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition relative'
               >
                 <MdOutlineFavoriteBorder className='h-5 w-5 sm:h-6 sm:w-6' />
+                {favoritesCount > 0 && (
+                  <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 min-w-4 px-1 sm:h-5 sm:min-w-5 sm:px-1.5 flex items-center justify-center'>
+                    {favoritesCount}
+                  </span>
+                )}
               </button>
             </Tooltip>
 

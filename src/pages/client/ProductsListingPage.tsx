@@ -584,6 +584,7 @@ export default function ProductsListingPage() {
                     key={product.id}
                     Product={product}
                     className='!mx-0'
+                    showAddToCart={true}
                   />
                 ))}
               </div>

@@ -27,6 +27,7 @@ import { UserRole } from "../types";
 import ProtectedRoute from "./ProtectedRoute";
 import AboutPage from "../pages/client/AboutPage";
 import ContactPage from "../pages/client/ContactPage";
+import FavoritesPage from "../pages/client/FavoritesPage";
 
 export default function AppRoutes() {
   return (
@@ -52,10 +53,7 @@ export default function AppRoutes() {
         <Route path='cart' element={<CartPage />} />
         <Route path='about' element={<AboutPage />} />
         <Route path='contact' element={<ContactPage />} />
-        <Route
-          path='favorites'
-          element={<div>Favorites Page - Coming Soon</div>}
-        />
+        <Route path='favorites' element={<FavoritesPage />} />
         <Route path='orders' element={<div>Orders Page - Coming Soon</div>} />
         <Route path='account' element={<div>Account Page - Coming Soon</div>} />
         <Route path='help' element={<div>Help Page - Coming Soon</div>} />

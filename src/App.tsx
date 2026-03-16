@@ -32,7 +32,7 @@ function AppContent() {
       <AppRoutes />
       <Toaster
         position='top-right'
-        containerStyle={{ top: "60px" }}
+        containerStyle={{ top: "100px" }}
         toastOptions={{
           duration: 2000,
           style: { background: "#333", color: "#fff" },

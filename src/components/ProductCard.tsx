@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { BsHeartFill } from "react-icons/bs";
 import { FaRegHeart } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
 import { useLanguage } from "../context/LanguageContext";
 import type { IProduct } from "../types";
 import Loader from "./common/Loader";
@@ -27,6 +29,7 @@ const ProductCard = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addItem, items } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = useRef(false);
@@ -66,6 +69,18 @@ const ProductCard = ({
     }
   };
 
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!Product) return;
+
+    const alreadyFavorite = isFavorite(Product.id);
+    toggleFavorite(Product);
+    toast.success(
+      alreadyFavorite ? t("Removed from favorites") : t("Added to favorites"),
+    );
+  };
+
   if (Loading) {
     return (
       <div className={`text-center sm:text-start mx-4 ${className}`}>
@@ -80,6 +95,7 @@ const ProductCard = ({
   }
 
   if (!Product) return null;
+  const favorite = isFavorite(Product.id);
 
   return (
     <div className={`text-center sm:text-start mx-4 ${className}`}>
@@ -131,11 +147,21 @@ const ProductCard = ({
       >
         <button
           type='button'
-          onClick={(e) => e.stopPropagation()}
-          className='absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-[var(--text-secondary)] shadow-sm transition-colors'
-          aria-label={t("Add to favorites")}
+          onClick={handleToggleFavorite}
+          className={`absolute top-2 right-2 z-10 p-2 rounded-full bg-[var(--bg-primary)] hover:bg-[var(--accent-hover)] shadow-sm transition-colors cursor-pointer ${
+            favorite
+              ? "text-[var(--error)]"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+          aria-label={
+            favorite ? t("Remove from favorites") : t("Add to favorites")
+          }
         >
-          <FaRegHeart className='w-4 h-4' />
+          {favorite ? (
+            <BsHeartFill className='w-4 h-4' />
+          ) : (
+            <FaRegHeart className='w-4 h-4' />
+          )}
         </button>
         <img
           src={Product.images?.[0] || "Hero-Img.png"}
@@ -143,7 +169,7 @@ const ProductCard = ({
           className='w-full h-40 object-contain mb-4 rounded'
         />
         {showAddToCart && Product.stock_status === "in_stock" && (
-          <div className='absolute inset-x-0 bottom-0 p-2 flex justify-center bg-gradient-to-t from-black/60 to-transparent rounded-b-md opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+          <div className='absolute inset-x-0 bottom-0 p-2 flex justify-center bg-gradient-to-t from-[var(--bg-gradient)] to-transparent rounded-b-md opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
             <button
               type='button'
               onClick={handleAddToCart}

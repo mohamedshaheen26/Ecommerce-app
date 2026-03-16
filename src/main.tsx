@@ -5,6 +5,7 @@ import "./index.css";
 
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { FavoritesProvider } from "./context/FavoritesContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { LanguageProvider } from "./context/LanguageContext.tsx";
@@ -15,15 +16,17 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
       <CartProvider>
-        <ThemeProvider>
-          <SettingsProvider>
-            <LanguageProvider>
-              <NotificationsProvider>
-                <App />
-              </NotificationsProvider>
-            </LanguageProvider>
-          </SettingsProvider>
-        </ThemeProvider>
+        <FavoritesProvider>
+          <ThemeProvider>
+            <SettingsProvider>
+              <LanguageProvider>
+                <NotificationsProvider>
+                  <App />
+                </NotificationsProvider>
+              </LanguageProvider>
+            </SettingsProvider>
+          </ThemeProvider>
+        </FavoritesProvider>
       </CartProvider>
     </AuthProvider>
   </StrictMode>

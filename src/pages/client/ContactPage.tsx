@@ -39,7 +39,7 @@ const ContactPage = () => {
             }`}
           >
             <h1 className='text-4xl lg:text-5xl font-bold text-[var(--text-secondary)] mb-4'>
-              {t("Contact")}
+              {t("Contacts")}
             </h1>
             <p className='text-lg text-[var(--text-muted)] max-w-2xl'>
               {t("Get in touch. We'd love to hear from you.")}

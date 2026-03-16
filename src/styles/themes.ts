@@ -23,6 +23,7 @@ export const themes: Record<string, ThemeColors> = {
     "--disabled-btn": "#714b6761",
     "--disabled-input": "#f0f0f0",
     "--shadow": "0 5px 5px 0 rgb(0 0 0 / 0.1)",
+    "--bg-gradient": "rgb(113 75 103 / 34%)",
   },
   dark: {
     "--bg-primary": "#222328",
@@ -46,5 +47,6 @@ export const themes: Record<string, ThemeColors> = {
     "--disabled-btn": "#714b6761",
     "--disabled-input": "#2d2d33",
     "--shadow": "0 5px 5px 0 rgb(0 0 0 / 0.3)",
+    "--bg-gradient": "rgb(113 75 103 / 34%)",
   },
 };
