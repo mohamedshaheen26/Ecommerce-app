@@ -157,11 +157,7 @@ const ProductCard = ({
             favorite ? t("Remove from favorites") : t("Add to favorites")
           }
         >
-          {favorite ? (
-            <BsHeartFill className='w-4 h-4' />
-          ) : (
-            <FaRegHeart className='w-4 h-4' />
-          )}
+          {favorite ? <BsHeartFill size={14} /> : <FaRegHeart size={14} />}
         </button>
         <img
           src={Product.images?.[0] || "Hero-Img.png"}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { BsChevronDown, BsThreeDots } from "react-icons/bs";
+import { BsChevronDown, BsHeartFill, BsThreeDots } from "react-icons/bs";
 import { FaRegHeart, FaStar } from "react-icons/fa";
 import { FiCheck, FiShare2 } from "react-icons/fi";
 import { GoStar } from "react-icons/go";
@@ -14,6 +14,7 @@ import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
+import { useFavorites } from "../../context/FavoritesContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useSettings } from "../../context/SettingsContext";
 import type { ICartItem, IProduct } from "../../types";
@@ -24,6 +25,7 @@ const ProductPage = () => {
   const { settings } = useSettings();
   const { slug } = useParams();
   const { addItem, items } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [product, setProduct] = useState<IProduct>();
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
@@ -210,6 +212,21 @@ const ProductPage = () => {
     },
   ];
 
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!product) return;
+
+    const alreadyFavorite = isFavorite(product.id);
+    toggleFavorite(product);
+    toast.success(
+      alreadyFavorite ? t("Removed from favorites") : t("Added to favorites"),
+    );
+  };
+
+  if (!product) return null;
+  const favorite = isFavorite(product.id);
+
   return (
     <>
       <div className='flex flex-col gap-2 relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4'>
@@ -353,11 +370,23 @@ const ProductPage = () => {
               >
                 {t("Add to cart")}
               </Button>
-              <button className='px-6 py-4 border border-[var(--border-color)] rounded-xl hover:bg-[var(--accent-hover)] hover:border-[var(--border-color)] text-[var(--text-secondary)] transition-all  group'>
-                <FaRegHeart
-                  size={20}
-                  className='group-hover:text-red-500 transition-colors'
-                />
+              <button
+                type='button'
+                onClick={handleToggleFavorite}
+                className={`cursor-pointer px-6 py-4 border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--accent-hover)] rounded-xl transition-all group ${
+                  favorite
+                    ? "text-[var(--error)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+                aria-label={
+                  favorite ? t("Remove from favorites") : t("Add to favorites")
+                }
+              >
+                {favorite ? (
+                  <BsHeartFill size={20} />
+                ) : (
+                  <FaRegHeart size={20} />
+                )}
               </button>
             </div>
             {/* Footer Info */}
