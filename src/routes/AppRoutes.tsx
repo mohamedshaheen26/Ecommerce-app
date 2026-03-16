@@ -23,6 +23,7 @@ import OrdersRoot from "../pages/dashboard/orders/OrdersRoot";
 import ProductsRoot from "../pages/dashboard/products/ProductsRoot";
 import ReviewsRoot from "../pages/dashboard/reviews/ReviewsRoot";
 import SettingsRoot from "../pages/dashboard/settings/SettingsRoot";
+import ShippingZonesRoot from "../pages/dashboard/shipping_zones/ShippingZonesRoot";
 import { UserRole } from "../types";
 import ProtectedRoute from "./ProtectedRoute";
 import AboutPage from "../pages/client/AboutPage";
@@ -132,6 +133,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <ReviewsRoot />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/dashboard/shipping_zones'
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+              <ShippingZonesRoot />
             </ProtectedRoute>
           }
         />

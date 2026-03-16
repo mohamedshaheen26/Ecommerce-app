@@ -1,5 +1,4 @@
 import { FiMinus, FiPlus } from "react-icons/fi";
-import { useLanguage } from "../../context/LanguageContext";
 
 type QuantitySelectorSize = "md" | "sm";
 
@@ -52,7 +51,6 @@ export default function QuantitySelector({
   loading = false,
   className = "",
 }: QuantitySelectorProps) {
-  const { currentLang } = useLanguage();
   const selectedSize = sizeClasses[size];
 
   const clampValue = (nextValue: number) => {

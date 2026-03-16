@@ -6,6 +6,7 @@ import {
   MdCategory,
   MdDashboard,
   MdInventory,
+  MdLocalShipping,
   MdPeople,
   MdSettings,
   MdShoppingCart,
@@ -65,6 +66,12 @@ const navigationItems: NavItem[] = [
     path: "/dashboard/orders",
     title: "Orders",
     icon: MdShoppingCart,
+    allowedRoles: [UserRole.Admin],
+  },
+  {
+    path: "/dashboard/shipping_zones",
+    title: "Shipping Zones",
+    icon: MdLocalShipping,
     allowedRoles: [UserRole.Admin],
   },
   {
