@@ -5,12 +5,20 @@ import type { IOrder, IOrderItem, IOrderWithUserInfo } from "../types";
 const ORDER_SELECT = `
   id,
   customer_id,
+  shipping_zone_id,
   customer: customers (
     full_name,
     name_ar,
     phone,
     address,
     address_ar
+  ),
+  shipping_zone: shipping_zones (
+    id,
+    name,
+    name_ar,
+    shipping_fee,
+    estimated_days
   ),
   status,
   total_amount,
@@ -100,4 +108,71 @@ export async function updateOrderStatus(
     .eq("id", orderId);
 
   if (error) throw error;
+}
+
+type CreateOrderItemInput = {
+  product_id: string;
+  quantity: number;
+  price: number;
+};
+
+type CreateOrderInput = {
+  customer_id: string;
+  shipping_zone_id: string;
+  shipping_address: string;
+  total_amount: number;
+  notes?: string | null;
+  status?: IOrder["status"];
+  items: CreateOrderItemInput[];
+};
+
+export async function createOrder(input: CreateOrderInput): Promise<string> {
+  const {
+    customer_id,
+    shipping_zone_id,
+    shipping_address,
+    total_amount,
+    notes,
+    status,
+    items,
+  } = input;
+
+  if (!items.length) {
+    throw new Error("Cannot create an order without items");
+  }
+
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .insert([
+      {
+        customer_id,
+        shipping_zone_id,
+        shipping_address,
+        total_amount,
+        notes: notes || null,
+        status: status || "pending",
+      },
+    ])
+    .select("id")
+    .single();
+
+  if (orderError || !order?.id) throw orderError;
+
+  const orderItemsPayload = items.map((item) => ({
+    order_id: order.id,
+    product_id: item.product_id,
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("order_items")
+    .insert(orderItemsPayload);
+
+  if (itemsError) {
+    await supabase.from("orders").delete().eq("id", order.id);
+    throw itemsError;
+  }
+
+  return order.id as string;
 }

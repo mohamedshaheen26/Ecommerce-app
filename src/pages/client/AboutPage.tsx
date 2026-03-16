@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../../context/LanguageContext";
 import Button from "../../components/common/Button";
-import { BsArrowRight, BsArrowLeft } from "react-icons/bs";
+import { useLanguage } from "../../context/LanguageContext";
+import { useSettings } from "../../context/SettingsContext";
 
 const AboutPage = () => {
+  const { settings } = useSettings();
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const navigate = useNavigate();
@@ -43,16 +45,15 @@ const AboutPage = () => {
               <h2 className='text-2xl lg:text-3xl font-bold text-[var(--text-secondary)] mb-6'>
                 {t("Our Story")}
               </h2>
-              <p className='text-[var(--text-muted)] mb-4 leading-relaxed'>
-                {t(
-                  "NovaStore started with a simple idea: make online shopping easy, fast, and enjoyable. We curate the best products and deliver them to your door with care.",
-                )}
-              </p>
-              <p className='text-[var(--text-muted)] mb-8 leading-relaxed'>
-                {t(
-                  "Today we serve customers around the world, but we still focus on the same values—quality, trust, and customer satisfaction.",
-                )}
-              </p>
+              <div
+                className='text-[var(--text-muted)] mb-4 leading-relaxed space-y-3'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    (currentLang === "ar"
+                      ? settings.about_us_ar
+                      : settings.about_us) || "",
+                }}
+              />
               <Button
                 variant='secondary'
                 size='lg'

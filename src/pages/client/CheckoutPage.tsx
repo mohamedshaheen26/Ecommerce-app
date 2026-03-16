@@ -10,8 +10,11 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { fetchCustomerByEmail } from "../../api/customers";
+import { createOrder } from "../../api/orders";
 import { fetchActiveShippingZones } from "../../api/shippingZones";
+import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import FormField from "../../components/common/FormField";
+import Newsletter from "../../components/Newsletter";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -31,29 +34,29 @@ type CheckoutFormState = {
   fullName: string;
   phoneNumber: string;
   streetAddress: string;
-  orderNotes: string;
   email: string;
-  shippingZone: IShippingZone | null;
+  orderNotes: string;
 };
 
 const initialFormState: CheckoutFormState = {
   fullName: "",
   phoneNumber: "",
   streetAddress: "",
-  orderNotes: "",
   email: "",
-  shippingZone: null,
+  orderNotes: "",
 };
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const { user, isAuthenticated } = useAuth();
-  const { items } = useCart();
+  const { items, clearItems } = useCart();
   const [formData, setFormData] = useState<CheckoutFormState>(initialFormState);
   const [shippingZones, setShippingZones] = useState<IShippingZone[]>([]);
   const [shippingZonesLoading, setShippingZonesLoading] = useState(true);
   const [selectedShippingZoneId, setSelectedShippingZoneId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const subtotal = useMemo(
     () =>
@@ -146,223 +149,314 @@ export default function CheckoutPage() {
 
   const onPlaceOrder = (e: FormEvent) => {
     e.preventDefault();
+    void (async () => {
+      if (isSubmitting) return;
 
-    if (items.length === 0) {
-      toast.error(t("Your cart is empty!"));
-      return;
-    }
+      if (items.length === 0) {
+        toast.error(t("Your cart is empty!"));
+        return;
+      }
 
-    const requiredFields = [
-      formData.fullName,
-      formData.phoneNumber,
-      formData.streetAddress,
-      formData.shippingZone,
-    ];
-    const hasMissingRequired = requiredFields.some(
-      (value) => !value?.toString().trim(),
-    );
+      const requiredFields = [
+        formData.fullName,
+        formData.phoneNumber,
+        formData.streetAddress,
+      ];
+      const hasMissingRequired = requiredFields.some(
+        (value) => !value?.toString().trim(),
+      );
 
-    if (hasMissingRequired) {
-      toast.error(t("Please fill all required fields"));
-      return;
-    }
+      if (hasMissingRequired) {
+        toast.error(t("Please fill all required fields"));
+        return;
+      }
 
-    if (!selectedShippingZoneId) {
-      toast.error(t("Please select shipping zone"));
-      return;
-    }
+      if (!selectedShippingZoneId || !selectedShippingZone) {
+        toast.error(t("Please select shipping zone"));
+        return;
+      }
 
-    toast.success(t("Order placed successfully"));
+      if (!isAuthenticated || !user?.email) {
+        toast.error(t("Please login to place order"));
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        const customer = await fetchCustomerByEmail(user.email);
+        if (!customer?.id) {
+          toast.error(t("Customer profile not found"));
+          return;
+        }
+
+        await createOrder({
+          customer_id: customer.id,
+          shipping_zone_id: selectedShippingZoneId,
+          shipping_address: formData.streetAddress,
+          total_amount: total,
+          notes: formData.orderNotes || null,
+          items: items.map((item) => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.product?.price || 0,
+          })),
+        });
+
+        await clearItems();
+        setIsOrderPlaced(true);
+        toast.success(t("Order placed successfully"));
+      } catch (error) {
+        console.error("Failed to place order:", error);
+        toast.error(t("Failed to place order"));
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
   };
 
-  return (
-    <section className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-12'>
-      <form
-        onSubmit={onPlaceOrder}
-        className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8 lg:gap-10'
-      >
-        <div
-          className={`${currentLang === "ar" ? "lg:pl-10 lg:border-l border-[var(--border-color)]" : "lg:pr-10 lg:border-r border-[var(--border-color)]"}`}
-        >
-          <h2 className='text-lg font-semibold text-[var(--text-secondary)] mb-7'>
-            {t("Shipping Address")}
-          </h2>
-
-          <div className='space-y-4'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <FormField htmlFor='fullName' label='Full name' required>
-                <TextField
-                  id='fullName'
-                  size='small'
-                  fullWidth
-                  value={formData.fullName}
-                  onChange={onInputChange("fullName")}
-                  sx={muiInputSx}
-                />
-              </FormField>
-              <FormField htmlFor='phoneNumber' label='Phone number' required>
-                <TextField
-                  id='phoneNumber'
-                  size='small'
-                  fullWidth
-                  value={formData.phoneNumber}
-                  onChange={onInputChange("phoneNumber")}
-                  sx={muiInputSx}
-                />
-              </FormField>
-            </div>
-
-            <FormField htmlFor='streetAddress' label='Street Address' required>
-              <TextField
-                id='streetAddress'
-                size='small'
-                fullWidth
-                value={formData.streetAddress}
-                onChange={onInputChange("streetAddress")}
-                sx={muiInputSx}
-              />
-            </FormField>
-
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <FormField htmlFor='shippingZone' label='City' required>
-                <TextField
-                  id='shippingZone'
-                  size='small'
-                  fullWidth
-                  select
-                  value={selectedShippingZoneId}
-                  onChange={(e) => setSelectedShippingZoneId(e.target.value)}
-                  disabled={shippingZonesLoading || shippingZones.length === 0}
-                  sx={muiInputSx}
-                >
-                  {shippingZones.map((zone) => (
-                    <MenuItem key={zone.id} value={zone.id || ""}>
-                      {currentLang === "ar"
-                        ? zone.name_ar || zone.name
-                        : zone.name || zone.name_ar}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                {!shippingZonesLoading && shippingZones.length === 0 && (
-                  <p className='text-xs mt-1 text-[var(--text-muted)]'>
-                    {t("No shipping zones available")}
-                  </p>
-                )}
-              </FormField>
-              <FormField htmlFor='email' label='Email'>
-                <TextField
-                  id='email'
-                  size='small'
-                  fullWidth
-                  type='email'
-                  value={formData.email}
-                  onChange={onInputChange("email")}
-                  sx={muiInputSx}
-                />
-              </FormField>
-            </div>
-
-            <div className='pt-2 space-y-3'>
-              <FormField htmlFor='orderNotes' label='Order Notes'>
-                <TextField
-                  id='orderNotes'
-                  size='small'
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={formData.orderNotes}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      orderNotes: e.target.value,
-                    }))
-                  }
-                  sx={muiInputSx}
-                />
-              </FormField>
-            </div>
-          </div>
-        </div>
-
-        <aside className='self-start'>
-          <h2 className='text-lg font-semibold text-[var(--text-secondary)] mb-5'>
-            {t("Your Order")}
-          </h2>
-
-          <div className='flex items-center justify-between mb-5'>
-            <div className='flex items-center gap-2'>
-              {items.slice(0, 4).map((item) => (
-                <img
-                  key={item.id}
-                  src={
-                    item.product?.images?.[0] || item.product?.image_url || ""
-                  }
-                  alt={
-                    currentLang === "ar"
-                      ? item.product?.name_ar || item.product?.title
-                      : item.product?.title
-                  }
-                  className='w-9 h-9 rounded-full object-cover bg-[var(--bg-secondary)] border border-[var(--border-color)]'
-                />
-              ))}
-            </div>
+  if (isOrderPlaced) {
+    return (
+      <>
+        <BreadcrumbsComponents
+          title='Checkout'
+          path={`NovaStore/checkout`}
+          className={`${isOrderPlaced ? "bg-[var(--bg-success)]" : ""}`}
+        />
+        <section className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-16 md:py-24'>
+          <div className='mx-auto max-w-md text-center'>
+            <img
+              src='/Order-Complete.svg'
+              alt='Order complete'
+              className='w-20 h-20 mx-auto mb-6'
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <h2 className='text-3xl font-semibold text-[var(--text-secondary)] mb-3'>
+              {t("Thank you for shopping")}
+            </h2>
+            <p className='text-sm text-[var(--text-muted)] mb-8'>
+              {t(
+                "Your order has been successfully placed and is now being processed.",
+              )}
+            </p>
             <Link
-              to='/cart'
-              className='h-9 px-4 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              to='/account'
+              className='inline-flex items-center justify-center h-11 px-6 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity'
             >
-              {t("Edit Cart")}
+              {t("Go to my account")}
             </Link>
           </div>
+        </section>
+        <Newsletter />
+      </>
+    );
+  }
 
-          <div className='space-y-2 text-sm'>
-            <div className='flex items-center justify-between text-[var(--text-muted)]'>
-              <span>{t("Subtotal")}:</span>
-              <span className='text-[var(--text-secondary)]'>
-                ${subtotal.toFixed(2)}
-              </span>
+  return (
+    <>
+      <BreadcrumbsComponents
+        title='Checkout'
+        path={`NovaStore/checkout`}
+        className={`${isOrderPlaced ? "bg-[var(--success)]" : ""}`}
+      />
+      <section className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-12'>
+        <form
+          onSubmit={onPlaceOrder}
+          className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8 lg:gap-10'
+        >
+          <div
+            className={`${currentLang === "ar" ? "lg:pl-10 lg:border-l border-[var(--border-color)]" : "lg:pr-10 lg:border-r border-[var(--border-color)]"}`}
+          >
+            <h2 className='text-lg font-semibold text-[var(--text-secondary)] mb-7'>
+              {t("Shipping Address")}
+            </h2>
+
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <FormField htmlFor='fullName' label='Full name' required>
+                  <TextField
+                    id='fullName'
+                    size='small'
+                    fullWidth
+                    value={formData.fullName}
+                    onChange={onInputChange("fullName")}
+                    sx={muiInputSx}
+                  />
+                </FormField>
+                <FormField htmlFor='phoneNumber' label='Phone number' required>
+                  <TextField
+                    id='phoneNumber'
+                    size='small'
+                    fullWidth
+                    value={formData.phoneNumber}
+                    onChange={onInputChange("phoneNumber")}
+                    sx={muiInputSx}
+                  />
+                </FormField>
+              </div>
+
+              <FormField
+                htmlFor='streetAddress'
+                label='Street Address'
+                required
+              >
+                <TextField
+                  id='streetAddress'
+                  size='small'
+                  fullWidth
+                  value={formData.streetAddress}
+                  onChange={onInputChange("streetAddress")}
+                  sx={muiInputSx}
+                />
+              </FormField>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <FormField htmlFor='shippingZone' label='City' required>
+                  <TextField
+                    id='shippingZone'
+                    size='small'
+                    fullWidth
+                    select
+                    value={selectedShippingZoneId}
+                    onChange={(e) => setSelectedShippingZoneId(e.target.value)}
+                    disabled={
+                      shippingZonesLoading || shippingZones.length === 0
+                    }
+                    sx={muiInputSx}
+                  >
+                    {shippingZones.map((zone) => (
+                      <MenuItem key={zone.id} value={zone.id || ""}>
+                        {currentLang === "ar"
+                          ? zone.name_ar || zone.name
+                          : zone.name || zone.name_ar}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  {!shippingZonesLoading && shippingZones.length === 0 && (
+                    <p className='text-xs mt-1 text-[var(--text-muted)]'>
+                      {t("No shipping zones available")}
+                    </p>
+                  )}
+                </FormField>
+                <FormField htmlFor='email' label='Email'>
+                  <TextField
+                    id='email'
+                    size='small'
+                    fullWidth
+                    type='email'
+                    value={formData.email}
+                    onChange={onInputChange("email")}
+                    sx={muiInputSx}
+                  />
+                </FormField>
+              </div>
+
+              <div className='pt-2 space-y-3'>
+                <FormField htmlFor='orderNotes' label='Order Notes'>
+                  <TextField
+                    id='orderNotes'
+                    size='small'
+                    fullWidth
+                    multiline
+                    rows={4}
+                    value={formData.orderNotes}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        orderNotes: e.target.value,
+                      }))
+                    }
+                    sx={muiInputSx}
+                  />
+                </FormField>
+              </div>
             </div>
-            <div className='flex items-center justify-between text-[var(--text-muted)]'>
-              <span>{t("Shipping")}:</span>
-              <span className='text-[var(--text-secondary)]'>
-                {shippingCost === 0 ? t("Free") : `$${shippingCost.toFixed(2)}`}
-              </span>
+          </div>
+
+          <aside className='self-start'>
+            <h2 className='text-lg font-semibold text-[var(--text-secondary)] mb-5'>
+              {t("Your Order")}
+            </h2>
+
+            <div className='flex items-center justify-between mb-5'>
+              <div className='flex items-center gap-2'>
+                {items.slice(0, 4).map((item) => (
+                  <img
+                    key={item.id}
+                    src={
+                      item.product?.images?.[0] || item.product?.image_url || ""
+                    }
+                    alt={
+                      currentLang === "ar"
+                        ? item.product?.name_ar || item.product?.title
+                        : item.product?.title
+                    }
+                    className='w-9 h-9 rounded-full object-cover bg-[var(--bg-secondary)] border border-[var(--border-color)]'
+                  />
+                ))}
+              </div>
+              <Link
+                to='/cart'
+                className='h-9 px-4 inline-flex items-center justify-center rounded-md border border-[var(--border-color)] text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              >
+                {t("Edit Cart")}
+              </Link>
             </div>
-            {selectedShippingZone && (
+
+            <div className='space-y-2 text-sm'>
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
-                <span>{t("Estimated Delivery Days")}:</span>
+                <span>{t("Subtotal")}:</span>
                 <span className='text-[var(--text-secondary)]'>
-                  {selectedShippingZone.estimated_days}
+                  ${subtotal.toFixed(2)}
                 </span>
               </div>
-            )}
-            <div className='flex items-center justify-between text-[var(--text-muted)]'>
-              <span>{t("Tax")}:</span>
-              <span className='text-[var(--text-secondary)]'>
-                ${tax.toFixed(2)}
+              <div className='flex items-center justify-between text-[var(--text-muted)]'>
+                <span>{t("Shipping")}:</span>
+                <span className='text-[var(--text-secondary)]'>
+                  {shippingCost === 0
+                    ? t("Free")
+                    : `$${shippingCost.toFixed(2)}`}
+                </span>
+              </div>
+              {selectedShippingZone && (
+                <div className='flex items-center justify-between text-[var(--text-muted)]'>
+                  <span>{t("Estimated Delivery Days")}:</span>
+                  <span className='text-[var(--text-secondary)]'>
+                    {selectedShippingZone.estimated_days}
+                  </span>
+                </div>
+              )}
+              <div className='flex items-center justify-between text-[var(--text-muted)]'>
+                <span>{t("Tax")}:</span>
+                <span className='text-[var(--text-secondary)]'>
+                  ${tax.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className='my-4 border-t border-[var(--border-color)]' />
+
+            <div className='flex items-center justify-between mb-5'>
+              <span className='text-sm font-semibold text-[var(--text-secondary)]'>
+                {t("Total")}
+              </span>
+              <span className='text-lg font-semibold text-[var(--text-secondary)]'>
+                ${total.toFixed(2)}
               </span>
             </div>
-          </div>
 
-          <div className='my-4 border-t border-[var(--border-color)]' />
-
-          <div className='flex items-center justify-between mb-5'>
-            <span className='text-sm font-semibold text-[var(--text-secondary)]'>
-              {t("Total")}
-            </span>
-            <span className='text-lg font-semibold text-[var(--text-secondary)]'>
-              ${total.toFixed(2)}
-            </span>
-          </div>
-
-          <button
-            type='submit'
-            disabled={items.length === 0}
-            className='w-full h-11 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            {t("Place Order")}
-          </button>
-        </aside>
-      </form>
-    </section>
+            <button
+              type='submit'
+              disabled={items.length === 0 || isSubmitting}
+              className='w-full h-11 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              {isSubmitting ? t("Processing Order...") : t("Place Order")}
+            </button>
+          </aside>
+        </form>
+      </section>
+      <Newsletter />
+    </>
   );
 }

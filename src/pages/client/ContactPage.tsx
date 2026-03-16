@@ -4,6 +4,7 @@ import { MdEmail, MdLocationOn, MdPhone } from "react-icons/md";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { useLanguage } from "../../context/LanguageContext";
+import { useSettings } from "../../context/SettingsContext";
 
 const ContactPage = () => {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ const ContactPage = () => {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const { settings } = useSettings();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -70,7 +72,7 @@ const ContactPage = () => {
                       {t("Address")}
                     </p>
                     <p className='text-[var(--text-muted)]'>
-                      123 Commerce Street, City, Country
+                      {settings.address}
                     </p>
                   </div>
                 </li>
@@ -86,7 +88,7 @@ const ContactPage = () => {
                       href='mailto:support@NovaStore.com'
                       className='text-[var(--text-muted)] hover:text-[var(--accent-primary)]'
                     >
-                      support@NovaStore.com
+                      {settings.support_email}
                     </a>
                   </div>
                 </li>
@@ -99,7 +101,7 @@ const ContactPage = () => {
                       {t("Phone")}
                     </p>
                     <p className='text-[var(--text-muted)]'>
-                      +1 (555) 123-4567
+                      {settings.phone_number}
                     </p>
                   </div>
                 </li>

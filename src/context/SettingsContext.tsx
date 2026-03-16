@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import type { ISettings } from "../types/setting";
+import { createContext, useContext, useEffect, useState } from "react";
 import { apiUpdateSettings, fetchSettings } from "../api/settings";
+import type { ISettings } from "../types/setting";
 
 interface SettingsContextType {
   settings: ISettings;
@@ -11,15 +11,22 @@ interface SettingsContextType {
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ISettings>({
     site_name: "",
     site_name_ar: "",
+    about_us: "",
+    about_us_ar: "",
+    address: "",
+    address_ar: "",
+    phone_number: "",
     support_email: "",
     monthly_order_goal: 1000,
+    first_order_discount: 25,
+    free_shipping_minimum: 100,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,15 +43,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setSettings({
           site_name: data.site_name,
           site_name_ar: data.site_name_ar,
+          about_us: data.about_us,
+          about_us_ar: data.about_us_ar,
+          address: data.address,
+          address_ar: data.address_ar,
+          phone_number: data.phone_number,
           support_email: data.support_email,
           monthly_order_goal: data.monthly_order_goal,
+          first_order_discount: data.first_order_discount,
+          free_shipping_minimum: data.free_shipping_minimum,
         });
       }
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while fetching settings"
+          : "An error occurred while fetching settings",
       );
     } finally {
       setIsLoading(false);
@@ -66,7 +80,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while updating settings"
+          : "An error occurred while updating settings",
       );
       throw err;
     } finally {

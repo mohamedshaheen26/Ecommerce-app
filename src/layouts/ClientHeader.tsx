@@ -11,6 +11,7 @@ import {
   MdSearch,
 } from "react-icons/md";
 import {
+  Link,
   NavLink,
   useLocation,
   useNavigate,
@@ -22,6 +23,7 @@ import ThemeMenu from "../components/ThemeMenu";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
+import { useSettings } from "../context/SettingsContext";
 
 const ClientHeader = () => {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const ClientHeader = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (location.pathname === "/search") {
@@ -85,12 +88,19 @@ const ClientHeader = () => {
               play={window.innerWidth < 768}
             >
               <div className='flex items-center space-x-2 text-[var(--text-muted)]'>
-                <span>{t("Get 25% OFF on your first order.")}</span>
-                <span>
-                  <button className=' hover:text-[var(--accent-hover)] cursor-pointer'>
+                <p>
+                  {t("Get")}{" "}
+                  <strong className='text-[var(--accent-primary)]'>
+                    {settings.first_order_discount}%
+                  </strong>{" "}
+                  {t("OFF on your first order.")}{" "}
+                  <Link
+                    to='/products'
+                    className='font-medium hover:text-[var(--accent-hover)] cursor-pointer'
+                  >
                     {t("Order now")}
-                  </button>
-                </span>
+                  </Link>
+                </p>
               </div>
             </Marquee>
             <div className='flex items-center gap-3'>

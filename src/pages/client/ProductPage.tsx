@@ -15,11 +15,13 @@ import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useSettings } from "../../context/SettingsContext";
 import type { ICartItem, IProduct } from "../../types";
 
 const ProductPage = () => {
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
+  const { settings } = useSettings();
   const { slug } = useParams();
   const { addItem, items } = useCart();
   const [product, setProduct] = useState<IProduct>();
@@ -360,7 +362,12 @@ const ProductPage = () => {
             </div>
             {/* Footer Info */}
             <div className='mt-2 flex flex-col gap-2 text-xs text-[var(--text-muted)]'>
-              <p>— {t("Free shipping on all orders over $100+")}</p>
+              <p>
+                —{" "}
+                {t("Free shipping on all orders over {{amount}}+", {
+                  amount: settings.free_shipping_minimum,
+                })}
+              </p>
             </div>
           </div>
         </div>

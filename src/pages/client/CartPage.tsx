@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
 import { useCart } from "../../context/CartContext";
@@ -82,6 +83,7 @@ export default function CartPage() {
 
   return (
     <>
+      <BreadcrumbsComponents title='Cart' path={`NovaStore/cart`} />
       <section className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 md:py-12'>
         <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 lg:gap-12'>
           <div>
