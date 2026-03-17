@@ -138,14 +138,19 @@ export async function updateCustomer(id: string, customerData: Partial<ICustomer
 
 // ✅ Delete customer
 export async function deleteCustomerById(userId: string) {
-  debugger;
-  const response = await fetch("api/delete-user", {
+  const response = await fetch("/api/delete-user", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
 
-  const data = await response.json();
+  const raw = await response.text();
+  let data: { error?: string } = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = { error: raw || "Unknown error" };
+  }
 
   if (!response.ok) throw new Error(data.error || "Unknown error");
 

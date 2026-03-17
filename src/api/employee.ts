@@ -124,13 +124,14 @@ export async function changePassword(newPassword: string) {
 
 // ✅ Admin Change Password
 export async function adminChangePassword(userId: string, newPassword: string) {
-  const response = await fetch("api/change-password", {
+  const response = await fetch("/api/change-password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, newPassword }),
   });
 
-  const data = await response.json();
+  const raw = await response.text();
+  const data = raw ? JSON.parse(raw) : {};
 
   if (!response.ok) throw new Error(data.error || "Unknown error");
 
@@ -139,13 +140,19 @@ export async function adminChangePassword(userId: string, newPassword: string) {
 
 // ✅ Delete Employee
 export async function deleteEmployeeById(userId: string) {
-  const response = await fetch("api/delete-user", {
+  const response = await fetch("/api/delete-user", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
 
-  const data = await response.json();
+  const raw = await response.text();
+  let data: { error?: string } = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = { error: raw || "Unknown error" };
+  }
 
   if (!response.ok) throw new Error(data.error || "Unknown error");
 

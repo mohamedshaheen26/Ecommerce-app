@@ -6,9 +6,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { UserRole } from "../types";
-import { supabase } from "../lib/supabase";
 import { signUpWithEmailOrUsername } from "../api/auth";
+import { supabase } from "../lib/supabase";
+import { UserRole } from "../types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -20,7 +20,7 @@ interface AuthContextType {
     email: string,
     password: string,
     fullName: string,
-    phone: string
+    phone: string,
   ) => Promise<void>;
   logout: () => void;
 }
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
   const [user, setUser] = useState<any | null>(null);
   const roleChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
-    null
+    null,
   );
 
   const SUPER_ADMIN_EMAILS: string = "admin@example.com";
@@ -49,14 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchUserRoleByEmail = async (
-    email: string
+    email: string,
   ): Promise<UserRole | null> => {
     if (isSuperAdmin(email)) return UserRole.Admin;
     const { data: employeeData, error: employeeError } = await supabase
       .from("employees")
       .select("role")
       .eq("email", email)
-      .single();
+      .maybeSingle();
+
+    if (employeeError) {
+      console.error("Failed to fetch employee role:", employeeError);
+      return null;
+    }
 
     if (!employeeError && employeeData?.role) {
       return employeeData.role as UserRole;
@@ -86,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         async () => {
           const nextRole = await fetchUserRoleByEmail(email);
           if (nextRole) setUserRole(nextRole);
-        }
+        },
       )
       .subscribe();
 
@@ -145,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserRole(UserRole.User);
           setUser(null);
         }
-      }
+      },
     );
     return () => {
       listener.subscription.unsubscribe();
@@ -161,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     fullName: string,
-    phone: string
+    phone: string,
   ) => {
     await signUpWithEmailOrUsername(email, password, fullName, phone);
   };
