@@ -1,6 +1,6 @@
-# 🛒 E-Commerce Admin Dashboard
+# 🛒 NovaStore - E-Commerce Platform
 
-A modern, full-featured e-commerce admin dashboard built with **React**, **TypeScript**, **Vite**, and **Supabase**. Manage products, categories, orders, customers, employees, and reviews with a responsive UI and role-based access control.
+NovaStore is a modern, full-featured e-commerce platform built with **React**, **TypeScript**, **Vite**, and **Supabase**, and it includes a dedicated customer-facing **storefront** plus an admin dashboard for managing products, categories, orders, customers, employees, and reviews.
 
 ## ✨ Features
 
@@ -23,6 +23,15 @@ A modern, full-featured e-commerce admin dashboard built with **React**, **TypeS
 - **🔑 Authentication**: Secure login with Supabase
 - **📊 Data Visualization**: Charts and graphs for analytics
 - **🚀 Performance Optimized**: Virtual scrolling for large datasets
+- **⚙️ Admin Utility APIs**: User admin operations via local Express endpoints and Vercel serverless functions (`change-password`, `delete-user`)
+
+## 🆕 New Features (Latest Update)
+
+- **🛍️ Client Storefront**: Public pages for home, product listing, product details, cart, checkout, favorites, about, and contact
+- **🧭 Expanded Routing**: Dedicated `ClientLayout` for storefront routes and protected `MainLayout` for dashboard routes
+- **🔒 Improved Route Protection**: Role-based guards for dashboard modules (Admin and Employee permissions)
+- **🌐 Better Language UX**: Automatic document `lang` and `dir` switching for English/Arabic
+- **🔔 Global Notifications**: Unified toast notifications across app sections
 
 ## 🛠️ Tech Stack
 
@@ -73,13 +82,15 @@ Create a `.env` file in the root directory:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 Create a `.env` file in the `api` directory:
 
 ```env
 SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 ### 3. Development
@@ -104,12 +115,12 @@ npm run preview
 
 ## 📁 Project Structure
 
-```
+```text
 src/
 ├── api/              # API endpoints
 ├── components/       # Reusable components
 ├── context/          # React Context (Auth, Theme, Language)
-├── pages/            # Page components (auth, dashboard)
+├── pages/            # Page components (auth, client, dashboard)
 ├── hooks/            # Custom React hooks
 ├── layouts/          # Layout components
 ├── routes/           # Routing configuration
@@ -118,6 +129,9 @@ src/
 ├── validation/       # Form validation schemas
 ├── i18n/             # Internationalization setup
 └── locales/          # Translation files (en.json, ar.json)
+
+api/                  # Vercel serverless handlers
+server.js             # Local Express admin utility server
 ```
 
 ## 🔐 Authentication & Authorization
@@ -143,6 +157,11 @@ Switch between light and dark themes. Theme definitions are in `src/styles/theme
 - **Customers**: `GET /api/customers`, `GET /api/customers/:id`
 - **Employees**: `GET|POST|PUT|DELETE /api/employees`
 - **Dashboard**: `GET /api/dashboard`
+
+### Additional Admin Utility Routes
+
+- **Local Express**: `POST /change-password`, `POST /delete-user`
+- **Vercel Functions**: `POST /api/change-password`, `POST /api/delete-user`
 
 ## 🧪 Available Scripts
 
