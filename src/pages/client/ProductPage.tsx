@@ -6,27 +6,43 @@ import { FaRegHeart, FaStar } from "react-icons/fa";
 import { FiCheck, FiShare2 } from "react-icons/fi";
 import { GoStar } from "react-icons/go";
 import { useParams } from "react-router-dom";
+import { fetchCustomerByEmail } from "../../api/customers";
 import { fetchProductBySlug, fetchRelatedProducts } from "../../api/product";
+import { createProductReview, fetchProductReviews } from "../../api/review";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Carousel from "../../components/Carousel";
 import Button from "../../components/common/Button";
+import Loader from "../../components/common/Loader";
 import QuantitySelector from "../../components/common/QuantitySelector";
 import VerticalTabs, {
   type VerticalTabItem,
 } from "../../components/common/VerticalTabs";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
+import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useSettings } from "../../context/SettingsContext";
-import { StockStatus, type ICartItem, type IProduct } from "../../types";
+import { useTheme } from "../../context/ThemeContext";
+import {
+  StockStatus,
+  type ICartItem,
+  type IProduct,
+  type IProductReview,
+  type IProductReviewsResult,
+  type ReviewSort,
+} from "../../types";
+import { formatDate } from "../../utils/formatDate";
 
 const ProductPage = () => {
+  const REVIEWS_PER_PAGE = 4;
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const { settings } = useSettings();
   const { slug } = useParams();
+  const { currentTheme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
   const { addItem, items } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [product, setProduct] = useState<IProduct>();
@@ -40,10 +56,37 @@ const ProductPage = () => {
   const [activeSection, setActiveSection] = useState<"details" | "reviews">(
     "details",
   );
+  const [reviewSort, setReviewSort] = useState<ReviewSort>("newest");
+  const [reviewPage, setReviewPage] = useState(1);
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviews, setReviews] = useState<IProductReview[]>([]);
+  const [reviewsCount, setReviewsCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewsReloadKey, setReviewsReloadKey] = useState(0);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [reviewSortDropdownOpen, setReviewSortDropdownOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
+
+  useEffect(() => {
+    setReviewPage(1);
+    setReviewSort("newest");
+    setIsReviewFormOpen(false);
+    setReviewRating(0);
+    setReviewComment("");
+    setReviews([]);
+    setReviewsCount(0);
+    setAverageRating(0);
+  }, [slug]);
+
+  useEffect(() => {
+    setReviewPage(1);
+  }, [reviewSort]);
 
   useEffect(() => {
     async function fetchData() {
@@ -85,6 +128,50 @@ const ProductPage = () => {
       setSelectedSize(product.sizes[0]);
     }
   }, [product, selectedColor, selectedSize]);
+
+  useEffect(() => {
+    async function loadReviews() {
+      if (!product?.id) return;
+      const startedAt = Date.now();
+      try {
+        setIsLoadingReviews(true);
+        const pagedResult: IProductReviewsResult = await fetchProductReviews(
+          product.id,
+          reviewPage,
+          REVIEWS_PER_PAGE,
+          reviewSort,
+        );
+        setReviews((prevReviews) => {
+          if (reviewPage === 1) {
+            return pagedResult.data;
+          }
+
+          const existingIds = new Set(prevReviews.map((item) => item.id));
+          const newRows = pagedResult.data.filter(
+            (item) => !existingIds.has(item.id),
+          );
+          return [...prevReviews, ...newRows];
+        });
+        setReviewsCount(pagedResult.count);
+        setAverageRating(pagedResult.averageRating);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (reviewPage > 1) {
+          const minVisibleMs = 450;
+          const elapsed = Date.now() - startedAt;
+          if (elapsed < minVisibleMs) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, minVisibleMs - elapsed),
+            );
+          }
+        }
+        setIsLoadingReviews(false);
+      }
+    }
+
+    loadReviews();
+  }, [product?.id, reviewPage, reviewSort, reviewsReloadKey]);
 
   const path =
     currentLang === "ar"
@@ -185,36 +272,6 @@ const ProductPage = () => {
     }
   };
 
-  const demoReviews = [
-    {
-      id: 1,
-      name: "Emily Davis",
-      date: t("1 week ago"),
-      comment: t(
-        "This company always goes above and beyond to satisfy their customers.",
-      ),
-      rating: 4,
-    },
-    {
-      id: 2,
-      name: "Daniel Smith",
-      date: t("2 months ago"),
-      comment: t(
-        "I can't believe how affordable and high-quality this item is!",
-      ),
-      rating: 4,
-    },
-    {
-      id: 3,
-      name: "Benjamin Clark",
-      date: t("23 april"),
-      comment: t(
-        "These guys know their stuff, and it shows in their products.",
-      ),
-      rating: 4,
-    },
-  ];
-
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -229,6 +286,110 @@ const ProductPage = () => {
 
   if (!product) return null;
   const favorite = isFavorite(product.id);
+
+  type ProductReview = {
+    id: string;
+    name: string;
+    comment: string;
+    rating: number;
+    created_at: string | null;
+  };
+
+  const clampRating = (value: number) => Math.max(0, Math.min(5, value));
+  const getString = (value: unknown) =>
+    typeof value === "string" ? value.trim() : "";
+  const getNumber = (value: unknown) => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
+    return NaN;
+  };
+
+  const normalizedReviews: ProductReview[] = (() => {
+    return reviews
+      .map((review, index) => {
+        const name = getString(review.name) || t("Anonymous");
+        const comment = getString(review.comment);
+        const rating = clampRating(getNumber(review.rating));
+        if (!comment || Number.isNaN(rating)) return null;
+
+        return {
+          id: getString(review.id) || `${product.id}-review-${index}`,
+          name,
+          comment,
+          rating,
+          created_at: getString(review.created_at) || null,
+        };
+      })
+      .filter((reviewItem): reviewItem is ProductReview => Boolean(reviewItem));
+  })();
+
+  const totalReviewPages = Math.max(
+    1,
+    Math.ceil(reviewsCount / REVIEWS_PER_PAGE),
+  );
+  const displayedReviews = normalizedReviews;
+  const hasMoreReviews = reviewPage < totalReviewPages;
+
+  const handleReviewButtonClick = () => {
+    if (!isAuthenticated || !user?.email) {
+      toast.error(t("Please login to write a review"));
+      return;
+    }
+    setIsReviewFormOpen((prev) => !prev);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!product) return;
+    if (!isAuthenticated || !user?.email) {
+      toast.error(t("Please login to write a review"));
+      return;
+    }
+    if (reviewRating < 1 || reviewRating > 5) {
+      toast.error(t("Please provide a rating"));
+      return;
+    }
+    if (!reviewComment.trim()) {
+      toast.error(t("Please write your review"));
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
+      const customer = await fetchCustomerByEmail(user.email);
+      const fallbackName =
+        typeof user.user_metadata?.full_name === "string"
+          ? user.user_metadata.full_name
+          : "";
+      const customerName =
+        currentLang === "ar"
+          ? customer?.name_ar || customer?.full_name || fallbackName
+          : customer?.full_name || customer?.name_ar || fallbackName;
+
+      await createProductReview({
+        productId: product.id,
+        customerId: customer?.id ?? null,
+        customerName: customerName || t("Anonymous"),
+        comment: reviewComment,
+        rating: reviewRating,
+      });
+
+      setIsReviewFormOpen(false);
+      setReviewComment("");
+      setReviewRating(0);
+      setReviewPage(1);
+      setReviewsReloadKey((prev) => prev + 1);
+      toast.success(t("Review submitted successfully"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("Failed to submit review"));
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   const sectionTabs: VerticalTabItem<"details" | "reviews">[] = [
     {
       id: "details",
@@ -279,14 +440,26 @@ const ProductPage = () => {
                 autoplay={true}
                 autoplaySpeed={5000}
               >
-                {product?.images?.map((image) => (
+                {product?.images.length > 0 ? (
+                  product?.images.map((image) => (
+                    <img
+                      key={image}
+                      src={image}
+                      alt={product?.title}
+                      className='h-[360px] mx-auto object-contain object-center transition-transform duration-500 group-hover:scale-105'
+                    />
+                  ))
+                ) : (
                   <img
-                    key={image}
-                    src={image}
+                    src={product?.image_url || "Image_not_Available.jpg"}
                     alt={product?.title}
-                    className='h-[360px] mx-auto object-contain object-center transition-transform duration-500 group-hover:scale-105'
+                    className={`h-[360px] mx-auto object-contain object-center transition-transform duration-500 group-hover:scale-105 ${
+                      currentTheme == "dark" || currentTheme == "system"
+                        ? "dark:invert"
+                        : ""
+                    }`}
                   />
-                ))}
+                )}
               </Carousel>
             </div>
           </div>
@@ -306,12 +479,12 @@ const ProductPage = () => {
               <div className='flex items-center gap-1 bg-[var(--bg-secondary)] px-3 py-1.5 rounded-full'>
                 <FaStar className='text-yellow-400' size={16} />
                 <span className='text-xs font-semibold text-[var(--text-secondary)]'>
-                  5
+                  {averageRating ? averageRating.toFixed(1) : "0.0"}
                 </span>
                 <span
                   className={`text-xs text-[var(--text-muted)] ${currentLang === "ar" ? "border-r pr-2 mr-1" : "border-l pl-2 ml-1"} border-[var(--border-color)]`}
                 >
-                  10 {t("reviews")}
+                  {reviewsCount} {t("reviews")}
                 </span>
               </div>
               <span
@@ -477,87 +650,265 @@ const ProductPage = () => {
 
                   <div className='flex items-end gap-3'>
                     <span className='text-3xl font-semibold text-[var(--text-secondary)] leading-none'>
-                      4.2
+                      {averageRating ? averageRating.toFixed(1) : "0.0"}
                     </span>
                     <span className='text-xs text-[var(--text-muted)] mb-1'>
-                      — 54 {t("Reviews")}
+                      — {reviewsCount} {t("Reviews")}
                     </span>
                   </div>
 
                   <Button
                     variant='outline'
                     className='cursor-pointer rounded-md text-sm font-medium'
+                    onClick={handleReviewButtonClick}
                   >
                     {t("Write a review")}
                   </Button>
                 </div>
 
+                {isReviewFormOpen && (
+                  <div className='rounded-xl border border-[var(--border-color)] p-4 sm:p-5 bg-[var(--bg-secondary)] space-y-4'>
+                    <div>
+                      <p className='text-sm font-medium text-[var(--text-secondary)] mb-2'>
+                        {t("Your rating")}
+                      </p>
+                      <div className='flex items-center gap-1'>
+                        {Array.from({ length: 5 }, (_, i) => {
+                          const value = i + 1;
+                          const active = value <= reviewRating;
+                          return (
+                            <button
+                              key={value}
+                              type='button'
+                              onClick={() => setReviewRating(value)}
+                              aria-label={t("Rate {{count}} stars", {
+                                count: value,
+                              })}
+                              className='cursor-pointer'
+                            >
+                              {active ? (
+                                <FaStar
+                                  size={18}
+                                  className='text-yellow-400 transition-colors'
+                                />
+                              ) : (
+                                <GoStar
+                                  size={18}
+                                  className='text-[var(--text-muted)] transition-colors'
+                                />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor='review-comment'
+                        className='text-sm font-medium text-[var(--text-secondary)] mb-2 block'
+                      >
+                        {t("Your review")}
+                      </label>
+                      <textarea
+                        id='review-comment'
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder={t(
+                          "Share your experience with this product",
+                        )}
+                        rows={4}
+                        maxLength={800}
+                        className='w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-primary)]'
+                      />
+                    </div>
+
+                    <div className='flex items-center justify-end gap-2'>
+                      <Button
+                        variant='outline'
+                        className='cursor-pointer'
+                        onClick={() => setIsReviewFormOpen(false)}
+                        disabled={isSubmittingReview}
+                      >
+                        {t("Cancel")}
+                      </Button>
+                      <Button
+                        variant='primary'
+                        className='cursor-pointer'
+                        onClick={handleSubmitReview}
+                        isLoading={isSubmittingReview}
+                      >
+                        {t("Submit review")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className='flex items-center justify-end gap-2 mb-3 text-[10px] font-semibold tracking-[0.1em] uppercase text-[var(--text-muted)]'>
-                  <span className='text-[var(--text-secondary)]'>
-                    {t("Sort by")}
-                  </span>
-                  <BsChevronDown />
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setReviewSortDropdownOpen((o) => !o)}
+                      className='flex items-center gap-2 px-4 py-2 rounded bg-[var(--bg-primary)] text-[var(--text-muted)] text-xs font-medium tracking-widest'
+                    >
+                      {t("Catalog.SortBy")}
+                      <BsChevronDown
+                        className={`w-4 h-4 transition-transform ${reviewSortDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {reviewSortDropdownOpen && (
+                      <>
+                        <div
+                          className='fixed inset-0 z-10'
+                          aria-hidden
+                          onClick={() => setReviewSortDropdownOpen(false)}
+                        />
+                        <ul className='absolute top-full right-0 mt-1 min-w-[180px] py-1 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] shadow-lg z-20'>
+                          {[
+                            { value: "newest", labelKey: "Newest" },
+                            { value: "highest", labelKey: "Highest rating" },
+                            { value: "lowest", labelKey: "Lowest rating" },
+                          ].map((opt) => (
+                            <li key={opt.value}>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  setReviewSort(opt.value as ReviewSort);
+                                  setReviewSortDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2 text-sm ${
+                                  reviewSort === opt.value
+                                    ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium"
+                                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                                }`}
+                              >
+                                {t(opt.labelKey)}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className='w-full h-px bg-[var(--border-color)]' />
 
                 <div className='space-y-10'>
-                  {demoReviews.map((review) => (
-                    <div key={review.id} className='flex gap-4'>
-                      <div className='w-10 h-10 rounded-full bg-[#eef1ff] text-[#a0a7cf] flex items-center justify-center text-sm font-semibold shrink-0'>
-                        {review.name
-                          .split(" ")
-                          .map((part) => part[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
+                  {isLoadingReviews && reviewPage === 1 ? (
+                    Array.from({ length: REVIEWS_PER_PAGE }, (_, index) => (
+                      <div key={`review-skeleton-${index}`} className='flex gap-4'>
+                        <div className='w-10 h-10 rounded-full bg-[var(--bg-secondary)] animate-pulse shrink-0' />
+                        <div className='flex-1 space-y-2'>
+                          <div className='flex items-start justify-between gap-3'>
+                            <div className='space-y-2'>
+                              <div className='h-4 w-40 rounded bg-[var(--bg-secondary)] animate-pulse' />
+                              <div className='h-3 w-24 rounded bg-[var(--bg-secondary)] animate-pulse' />
+                            </div>
+                            <div className='h-4 w-24 rounded bg-[var(--bg-secondary)] animate-pulse' />
+                          </div>
+                          <div className='h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse' />
+                          <div className='h-4 w-11/12 rounded bg-[var(--bg-secondary)] animate-pulse' />
+                        </div>
                       </div>
-
-                      <div className='flex-1 space-y-2'>
-                        <div className='flex items-start justify-between gap-3'>
-                          <div className='space-y-1'>
-                            <p className='font-semibold text-[var(--text-secondary)]'>
-                              {review.name}
-                            </p>
-                            <p className='text-xs uppercase tracking-wider text-[var(--text-muted)]'>
-                              {review.date}
-                            </p>
-                          </div>
-
-                          <div className='flex items-center gap-1'>
-                            {Array.from({ length: 5 }, (_, i) =>
-                              i < review.rating ? (
-                                <FaStar
-                                  key={i}
-                                  size={14}
-                                  className='text-[var(--text-secondary)]'
-                                />
-                              ) : (
-                                <GoStar
-                                  key={i}
-                                  size={14}
-                                  className='text-[var(--text-secondary)]'
-                                />
-                              ),
-                            )}
-                          </div>
+                    ))
+                  ) : displayedReviews.length > 0 ? (
+                    displayedReviews.map((review) => (
+                      <div key={review.id} className='flex gap-4'>
+                        <div className='w-10 h-10 rounded-full bg-[#eef1ff] text-[#a0a7cf] flex items-center justify-center text-sm font-semibold shrink-0'>
+                          {review.name
+                            .split(" ")
+                            .map((part) => part[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
                         </div>
 
-                        <p className='text-[var(--text-muted)] leading-7'>
-                          {review.comment}
-                        </p>
+                        <div className='flex-1 space-y-2'>
+                          <div className='flex items-start justify-between gap-3'>
+                            <div className='space-y-1'>
+                              <p className='font-semibold text-[var(--text-secondary)]'>
+                                {review.name}
+                              </p>
+                              <p className='text-xs uppercase tracking-wider text-[var(--text-muted)]'>
+                                {formatDate(
+                                  review.created_at || new Date().toISOString(),
+                                )}
+                              </p>
+                            </div>
+
+                            <div className='flex items-center gap-1'>
+                              {Array.from({ length: 5 }, (_, i) =>
+                                i < review.rating ? (
+                                  <FaStar
+                                    key={i}
+                                    size={14}
+                                    className='text-[var(--warning)]'
+                                  />
+                                ) : (
+                                  <GoStar
+                                    key={i}
+                                    size={14}
+                                    className='text-[var(--text-secondary)]'
+                                  />
+                                ),
+                              )}
+                            </div>
+                          </div>
+
+                          <p className='text-[var(--text-muted)] leading-7'>
+                            {review.comment}
+                          </p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className='rounded-xl p-5 flex flex-col items-center justify-center'>
+                      <span className='mb-3 text-[var(--text-muted)] text-3xl'>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          fill='none'
+                          viewBox='0 0 28 28'
+                          width='60'
+                          height='60'
+                        >
+                          <circle cx='14' cy='14' r='13' fill='#EEF1FF' />
+                          <path
+                            d='M9 11.6a.9.9 0 0 1 .9-.9h8.2a.9.9 0 1 1 0 1.8H9.9A.9.9 0 0 1 9 11.6Zm0 4a.9.9 0 0 1 .9-.9h8.2a.9.9 0 1 1 0 1.8H9.9a.9.9 0 0 1-.9-.9Z'
+                            fill='#A0A7CF'
+                          />
+                          <path
+                            d='M18.8 18c0 2.43-1.92 4.4-4.28 4.4-2.36 0-4.28-1.97-4.28-4.4 0-2.42 1.92-4.4 4.28-4.4 2.36 0 4.28 1.98 4.28 4.4Z'
+                            fill='#A0A7CF'
+                            opacity='0.22'
+                          />
+                        </svg>
+                      </span>
+                      <p className='text-[var(--text-secondary)] font-semibold mb-2 text-center'>
+                        {t("No reviews yet")}
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                <div className='pt-4 text-center'>
-                  <Button
-                    variant='outline'
-                    className='cursor-pointer rounded-md text-sm font-medium mx-auto block'
-                  >
-                    {t("Load more reviews")}
-                  </Button>
-                </div>
+                {(hasMoreReviews || (isLoadingReviews && reviewPage > 1)) && (
+                  <div className='pt-4 text-center'>
+                    {isLoadingReviews && reviewPage > 1 && (
+                      <div className='flex items-center justify-center gap-2 mb-2 text-xs text-[var(--text-muted)]'>
+                        <Loader />
+                      </div>
+                    )}
+                    {hasMoreReviews && (
+                      <Button
+                        variant='outline'
+                        className='cursor-pointer rounded-md text-sm font-medium mx-auto block'
+                        onClick={() => setReviewPage((prev) => prev + 1)}
+                        disabled={isLoadingReviews}
+                      >
+                        {t("Load more reviews")}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

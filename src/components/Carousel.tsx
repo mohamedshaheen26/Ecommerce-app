@@ -83,14 +83,15 @@ const Carousel = ({
   ];
 
   const settings: Settings = {
+    arrows,
     dots,
     infinite,
     speed,
     slidesToShow,
     slidesToScroll,
     rtl: isRTL,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
+    nextArrow: arrows ? <NextArrow /> : undefined,
+    prevArrow: arrows ? <PrevArrow /> : undefined,
     autoplay,
     autoplaySpeed,
     draggable: true,

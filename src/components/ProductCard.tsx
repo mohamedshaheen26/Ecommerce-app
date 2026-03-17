@@ -8,7 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 import { StockStatus, type IProduct } from "../types";
+import Carousel from "./Carousel";
 import Loader from "./common/Loader";
 
 interface ProductCardProps {
@@ -33,7 +35,7 @@ const ProductCard = ({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = useRef(false);
-
+  const { currentTheme } = useTheme();
   const dragThreshold = 8;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -167,13 +169,39 @@ const ProductCard = ({
             })}
           </div>
         )}
-        <img
-          src={Product.images?.[0] || "Hero-Img.png"}
-          alt='Product 1'
-          className='w-full h-40 object-contain mb-4 rounded'
-        />
+
+        <Carousel
+          slidesToShow={1}
+          arrows={false}
+          dots={true}
+          infinite={true}
+          speed={1000}
+          autoplay={true}
+          autoplaySpeed={5000}
+        >
+          {Product.images.length > 0 ? (
+            Product.images.map((image) => (
+              <img
+                key={image}
+                src={image}
+                alt={Product?.title}
+                className='w-full h-40 object-contain mb-4 rounded'
+              />
+            ))
+          ) : (
+            <img
+              src={Product.image_url || "Image_not_Available.jpg"}
+              alt='Product 1'
+              className={`w-full h-40 object-contain mb-4 rounded ${
+                currentTheme == "dark" || currentTheme == "system"
+                  ? "dark:invert"
+                  : ""
+              }`}
+            />
+          )}
+        </Carousel>
         {showAddToCart && Product.stock_status !== StockStatus.OUT_OF_STOCK && (
-          <div className='absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/25 to-transparent rounded-b-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200'>
+          <div className='absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-[var(--bg-gradient)] to-transparent rounded-b-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200'>
             <div className='flex flex-col items-center gap-2.5'>
               <button
                 type='button'
