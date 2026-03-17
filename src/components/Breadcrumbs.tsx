@@ -34,7 +34,6 @@ export default function BreadcrumbsComponents({
       path: "#",
     });
   }
-  console.log(breadcrumbs);
 
   return (
     <div

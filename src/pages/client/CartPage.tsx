@@ -87,8 +87,6 @@ export default function CartPage() {
     }
   };
 
-  console.log(items);
-
   return (
     <>
       <BreadcrumbsComponents title='Cart' path={`NovaStore/cart`} />

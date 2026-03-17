@@ -11,6 +11,9 @@ import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Carousel from "../../components/Carousel";
 import Button from "../../components/common/Button";
 import QuantitySelector from "../../components/common/QuantitySelector";
+import VerticalTabs, {
+  type VerticalTabItem,
+} from "../../components/common/VerticalTabs";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
@@ -226,6 +229,36 @@ const ProductPage = () => {
 
   if (!product) return null;
   const favorite = isFavorite(product.id);
+  const sectionTabs: VerticalTabItem<"details" | "reviews">[] = [
+    {
+      id: "details",
+      label: t("Details"),
+      icon: (isActive) => (
+        <BsThreeDots
+          size={16}
+          className={
+            isActive
+              ? "text-[var(--text-secondary)]"
+              : "text-[var(--text-muted)]"
+          }
+        />
+      ),
+    },
+    {
+      id: "reviews",
+      label: t("Reviews"),
+      icon: (isActive) => (
+        <GoStar
+          size={14}
+          className={
+            isActive
+              ? "text-[var(--text-secondary)]"
+              : "text-[var(--text-muted)]"
+          }
+        />
+      ),
+    },
+  ];
 
   return (
     <>
@@ -416,45 +449,11 @@ const ProductPage = () => {
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-8 lg:gap-12 pt-12 mt-4 my-22'>
-          <div className='space-y-2'>
-            <button
-              className={`cursor-pointer w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeSection === "details"
-                  ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-                  : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-secondary)]"
-              }`}
-              onClick={() => setActiveSection("details")}
-            >
-              <BsThreeDots
-                size={16}
-                className={
-                  activeSection === "details"
-                    ? "text-[var(--text-secondary)]"
-                    : "text-[var(--text-muted)]"
-                }
-              />
-              {t("Details")}
-            </button>
-
-            <button
-              className={`cursor-pointer w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeSection === "reviews"
-                  ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-                  : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-secondary)]"
-              }`}
-              onClick={() => setActiveSection("reviews")}
-            >
-              <GoStar
-                className={
-                  activeSection === "reviews"
-                    ? "text-[var(--text-secondary)]"
-                    : "text-[var(--text-muted)]"
-                }
-                size={14}
-              />
-              {t("Reviews")}
-            </button>
-          </div>
+          <VerticalTabs
+            items={sectionTabs}
+            activeTab={activeSection}
+            onChange={setActiveSection}
+          />
 
           <div className='text-[var(--text-muted)]'>
             {activeSection === "details" ? (
