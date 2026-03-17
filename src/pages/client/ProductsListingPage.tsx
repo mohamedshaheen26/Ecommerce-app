@@ -10,7 +10,11 @@ import {
 } from "react-icons/md";
 import { useSearchParams } from "react-router-dom";
 import { fetchAllCategories } from "../../api/categories";
-import { fetchProducts, type ProductFilters } from "../../api/product";
+import {
+  fetchMaxProductPrice,
+  fetchProducts,
+  type ProductFilters,
+} from "../../api/product";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useLanguage } from "../../context/LanguageContext";
@@ -38,6 +42,7 @@ export default function ProductsListingPage() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [priceMaxLimit, setPriceMaxLimit] = useState(PRICE_MAX_DEFAULT);
   const [priceRange, setPriceRange] = useState<[number, number]>([
     PRICE_MIN_DEFAULT,
     PRICE_MAX_DEFAULT,
@@ -60,7 +65,7 @@ export default function ProductsListingPage() {
       colors: selectedColors.length > 0 ? selectedColors : undefined,
       sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
       priceMin: priceRange[0] > PRICE_MIN_DEFAULT ? priceRange[0] : undefined,
-      priceMax: priceRange[1] < PRICE_MAX_DEFAULT ? priceRange[1] : undefined,
+      priceMax: priceRange[1] < priceMaxLimit ? priceRange[1] : undefined,
       sortBy,
       searchQuery: searchQueryFromUrl.trim() || undefined,
     }),
@@ -69,6 +74,7 @@ export default function ProductsListingPage() {
       selectedColors,
       selectedSizes,
       priceRange,
+      priceMaxLimit,
       sortBy,
       searchQueryFromUrl,
     ],
@@ -112,6 +118,26 @@ export default function ProductsListingPage() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  useEffect(() => {
+    const loadPriceMax = async () => {
+      try {
+        const maxPrice = await fetchMaxProductPrice();
+        const normalizedMax = Math.max(
+          PRICE_MIN_DEFAULT,
+          Math.ceil(maxPrice || 0),
+        );
+
+        setPriceMaxLimit(normalizedMax);
+        setPriceRange([PRICE_MIN_DEFAULT, normalizedMax]);
+        setPriceSliderValue([PRICE_MIN_DEFAULT, normalizedMax]);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    loadPriceMax();
+  }, []);
 
   useEffect(() => {
     const cat = searchParams.get("category");
@@ -170,8 +196,8 @@ export default function ProductsListingPage() {
   };
 
   const clearPriceFilter = () => {
-    setPriceRange([PRICE_MIN_DEFAULT, PRICE_MAX_DEFAULT]);
-    setPriceSliderValue([PRICE_MIN_DEFAULT, PRICE_MAX_DEFAULT]);
+    setPriceRange([PRICE_MIN_DEFAULT, priceMaxLimit]);
+    setPriceSliderValue([PRICE_MIN_DEFAULT, priceMaxLimit]);
     setPage(1);
   };
 
@@ -199,7 +225,7 @@ export default function ProductsListingPage() {
     selectedColors.length > 0 ||
     selectedSizes.length > 0 ||
     priceRange[0] > PRICE_MIN_DEFAULT ||
-    priceRange[1] < PRICE_MAX_DEFAULT ||
+    priceRange[1] < priceMaxLimit ||
     searchQueryFromUrl.trim().length > 0;
 
   const sortOptions: { value: SortOption; labelKey: string }[] = [
@@ -338,7 +364,7 @@ export default function ProductsListingPage() {
             valueLabelDisplay='auto'
             valueLabelFormat={(v) => `$${v}`}
             min={PRICE_MIN_DEFAULT}
-            max={PRICE_MAX_DEFAULT}
+            max={priceMaxLimit}
             sx={{
               color: "var(--text-primary)",
               "& .MuiSlider-thumb": {
@@ -480,7 +506,7 @@ export default function ProductsListingPage() {
                     </span>
                   ))}
                   {(priceRange[0] > PRICE_MIN_DEFAULT ||
-                    priceRange[1] < PRICE_MAX_DEFAULT) && (
+                    priceRange[1] < priceMaxLimit) && (
                     <span className='inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)] font-medium'>
                       ${priceRange[0].toFixed(0)} - ${priceRange[1].toFixed(0)}
                       <button

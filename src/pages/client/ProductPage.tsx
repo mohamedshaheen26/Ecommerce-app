@@ -17,7 +17,7 @@ import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useSettings } from "../../context/SettingsContext";
-import type { ICartItem, IProduct } from "../../types";
+import { StockStatus, type ICartItem, type IProduct } from "../../types";
 
 const ProductPage = () => {
   const { t } = useTranslation();
@@ -281,7 +281,9 @@ const ProductPage = () => {
                   10 {t("reviews")}
                 </span>
               </div>
-              <span className='text-xs px-3 py-1.5 rounded-full text-[var(--text-secondary)] border border-[var(--border-color)] uppercase tracking-wide'>
+              <span
+                className={`text-xs px-3 py-1.5 rounded-full ${product?.stock_status === StockStatus.OUT_OF_STOCK ? "text-[var(--error)]" : product?.stock_status === StockStatus.LOW_STOCK ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"} border border-[var(--border-color)] uppercase tracking-wide`}
+              >
                 {t(`Stock Statuses.${product?.stock_status}`)}
               </span>
             </div>
@@ -358,6 +360,15 @@ const ProductPage = () => {
               {errorMessage && (
                 <p className='text-red-500 text-xs mt-1'>{errorMessage}</p>
               )}
+
+              {product.stock_status === StockStatus.LOW_STOCK && (
+                <div className='mt-1 flex items-center gap-2 text-[var(--warning)] text-xs'>
+                  <span className='animate-pulse w-2 h-2 bg-[var(--warning)] rounded-full'></span>
+                  {t("Only {{count}} left!", {
+                    count: product.available_quantity,
+                  })}
+                </div>
+              )}
             </div>
             {/* Actions */}
             <div className='flex gap-4 mt-auto'>
@@ -366,7 +377,10 @@ const ProductPage = () => {
                 className='flex-1 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] py-4 rounded-xl text-base font-bold transition-all duration-300'
                 onClick={handleAddToCart}
                 isLoading={isAddingToCart}
-                disabled={isAddingToCart}
+                disabled={
+                  isAddingToCart ||
+                  product.stock_status === StockStatus.OUT_OF_STOCK
+                }
               >
                 {t("Add to cart")}
               </Button>

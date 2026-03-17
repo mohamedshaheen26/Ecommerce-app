@@ -1,3 +1,5 @@
+import { t } from "i18next";
+import toast from "react-hot-toast";
 import { supabase } from "../lib/supabase";
 import type { IOrder, IOrderItem, IOrderWithUserInfo } from "../types";
 
@@ -32,13 +34,15 @@ const ORDER_SELECT = `
 async function fetchOrderItems(orderId: string): Promise<IOrderItem[]> {
   const { data, error } = await supabase
     .from("order_items")
-    .select(`
+    .select(
+      `
       id,
       product_id,
       quantity,
       price,
       product:products(title, name_ar, image_url)
-    `)
+    `,
+    )
     .eq("order_id", orderId);
 
   if (error) {
@@ -53,7 +57,7 @@ async function fetchOrderItems(orderId: string): Promise<IOrderItem[]> {
 export async function fetchOrders(
   page: number,
   pageSize: number,
-  searchQuery: string
+  searchQuery: string,
 ): Promise<{ data: IOrderWithUserInfo[]; count: number }> {
   let query = supabase
     .from("orders")
@@ -66,7 +70,7 @@ export async function fetchOrders(
       .from("customers")
       .select("id")
       .or(
-        `full_name.ilike.%${searchQuery}%,name_ar.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`
+        `full_name.ilike.%${searchQuery}%,name_ar.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`,
       );
 
     if (customerError) throw customerError;
@@ -82,7 +86,7 @@ export async function fetchOrders(
 
   const { data, error, count } = await query.range(
     (page - 1) * pageSize,
-    page * pageSize - 1
+    page * pageSize - 1,
   );
 
   if (error) throw error;
@@ -91,16 +95,19 @@ export async function fetchOrders(
     (data || []).map(async (order) => ({
       ...order,
       order_items: await fetchOrderItems(order.id),
-    }))
+    })),
   );
 
-  return { data: completeOrders as unknown as IOrderWithUserInfo[], count: count || 0 };
+  return {
+    data: completeOrders as unknown as IOrderWithUserInfo[],
+    count: count || 0,
+  };
 }
 
 // ✅ Update order status
 export async function updateOrderStatus(
   orderId: string,
-  newStatus: IOrder["status"]
+  newStatus: IOrder["status"],
 ): Promise<void> {
   const { error } = await supabase
     .from("orders")
@@ -126,53 +133,27 @@ type CreateOrderInput = {
   items: CreateOrderItemInput[];
 };
 
-export async function createOrder(input: CreateOrderInput): Promise<string> {
-  const {
-    customer_id,
-    shipping_zone_id,
-    shipping_address,
-    total_amount,
-    notes,
-    status,
-    items,
-  } = input;
+export async function createOrder(input: CreateOrderInput) {
+  debugger
+  try {
+    const { error, data } = await supabase.rpc("create_order_with_items", {
+      p_customer_id: input.customer_id,
+      p_shipping_zone_id: input.shipping_zone_id,
+      p_shipping_address: input.shipping_address,
+      p_total_amount: input.total_amount,
+      p_notes: input.notes,
+      p_items: input.items,
+    });
 
-  if (!items.length) {
-    throw new Error("Cannot create an order without items");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    toast.error(t("Failed to create order"));
+    return;
   }
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert([
-      {
-        customer_id,
-        shipping_zone_id,
-        shipping_address,
-        total_amount,
-        notes: notes || null,
-        status: status || "pending",
-      },
-    ])
-    .select("id")
-    .single();
-
-  if (orderError || !order?.id) throw orderError;
-
-  const orderItemsPayload = items.map((item) => ({
-    order_id: order.id,
-    product_id: item.product_id,
-    quantity: item.quantity,
-    price: item.price,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(orderItemsPayload);
-
-  if (itemsError) {
-    await supabase.from("orders").delete().eq("id", order.id);
-    throw itemsError;
-  }
-
-  return order.id as string;
 }

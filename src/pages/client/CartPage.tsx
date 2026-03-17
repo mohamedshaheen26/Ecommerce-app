@@ -9,6 +9,7 @@ import Newsletter from "../../components/Newsletter";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
+import { StockStatus } from "../../types";
 
 const SHIPPING_COST: number = 100;
 const TAX_RATE = 0.0333333333;
@@ -26,15 +27,20 @@ export default function CartPage() {
 
   const subtotal = useMemo(
     () =>
-      items.reduce((acc, item) => {
-        return acc + (item.product?.price || 0) * item.quantity;
-      }, 0),
+      items
+        .filter(
+          (item) => item.product?.stock_status !== StockStatus.OUT_OF_STOCK,
+        )
+        .reduce((acc, item) => {
+          return acc + (item.product?.price || 0) * item.quantity;
+        }, 0),
     [items],
   );
   const tax = useMemo(
     () => Number((subtotal * TAX_RATE).toFixed(2)),
     [subtotal],
   );
+
   const total = subtotal + SHIPPING_COST + tax;
 
   const updateQuantity = async (id: string, nextQuantity: number) => {
@@ -80,6 +86,8 @@ export default function CartPage() {
       setClearCartLoading(false);
     }
   };
+
+  console.log(items);
 
   return (
     <>
@@ -206,19 +214,28 @@ export default function CartPage() {
                         <p className='text-sm font-semibold text-[var(--text-secondary)]'>
                           ${(item.product?.price || 0).toFixed(2)}
                         </p>
+                        {item.product?.stock_status ===
+                          StockStatus.OUT_OF_STOCK && (
+                          <p className='text-xs text-[var(--error)]'>
+                            {t("This item is currently out of stock.")}
+                          </p>
+                        )}
                         <div className='flex items-center gap-2'>
-                          <QuantitySelector
-                            value={item.quantity}
-                            onChange={(nextValue) =>
-                              updateQuantity(item.id, nextValue)
-                            }
-                            min={1}
-                            max={item.product?.available_quantity}
-                            size='sm'
-                            editable={false}
-                            loading={isQuantityPending}
-                            disabled={isRemovePending}
-                          />
+                          {item.product?.stock_status !==
+                            StockStatus.OUT_OF_STOCK && (
+                            <QuantitySelector
+                              value={item.quantity}
+                              onChange={(nextValue) =>
+                                updateQuantity(item.id, nextValue)
+                              }
+                              min={1}
+                              max={item.product?.available_quantity}
+                              size='sm'
+                              editable={false}
+                              loading={isQuantityPending}
+                              disabled={isRemovePending}
+                            />
+                          )}
                           <button
                             type='button'
                             onClick={() => handleRemoveItem(item.id)}
@@ -283,7 +300,11 @@ export default function CartPage() {
             <Link
               to='/checkout'
               className={`w-full h-10 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center justify-center ${
-                items.length === 0
+                items.length === 0 ||
+                items.some(
+                  (item) =>
+                    item.product?.stock_status === StockStatus.OUT_OF_STOCK,
+                )
                   ? "pointer-events-none opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
               }`}

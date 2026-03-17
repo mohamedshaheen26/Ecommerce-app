@@ -162,6 +162,19 @@ export interface ProductFilters {
   searchQuery?: string;
 }
 
+export async function fetchMaxProductPrice(): Promise<number> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("price")
+    .order("price", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return Number(data?.price ?? 0);
+}
+
 // ✅ Fetch products with pagination, search, and optional filters
 export async function fetchProducts(
   page: number,

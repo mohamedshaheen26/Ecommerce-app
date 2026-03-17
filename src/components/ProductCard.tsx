@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useLanguage } from "../context/LanguageContext";
-import type { IProduct } from "../types";
+import { StockStatus, type IProduct } from "../types";
 import Loader from "./common/Loader";
 
 interface ProductCardProps {
@@ -159,25 +159,35 @@ const ProductCard = ({
         >
           {favorite ? <BsHeartFill size={14} /> : <FaRegHeart size={14} />}
         </button>
+        {Product.stock_status === StockStatus.LOW_STOCK && (
+          <div className='absolute top-2 left-2 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-primary)] border border-[var(--warning)] text-[var(--warning)] text-[11px] font-semibold shadow-sm'>
+            <span className='animate-pulse w-1.5 h-1.5 bg-[var(--warning)] rounded-full'></span>
+            {t("Only {{count}} left!", {
+              count: Product.available_quantity,
+            })}
+          </div>
+        )}
         <img
           src={Product.images?.[0] || "Hero-Img.png"}
           alt='Product 1'
           className='w-full h-40 object-contain mb-4 rounded'
         />
-        {showAddToCart && Product.stock_status === "in_stock" && (
-          <div className='absolute inset-x-0 bottom-0 p-2 flex justify-center bg-gradient-to-t from-[var(--bg-gradient)] to-transparent rounded-b-md opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-            <button
-              type='button'
-              onClick={handleAddToCart}
-              disabled={isAddingToCart}
-              className='flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)] transition-colors text-sm font-medium cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
-            >
-              {isAddingToCart ? (
-                <Loader />
-              ) : (
-                <FiShoppingCart className='w-4 h-4 shrink-0' />
-              )}
-            </button>
+        {showAddToCart && Product.stock_status !== StockStatus.OUT_OF_STOCK && (
+          <div className='absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/25 to-transparent rounded-b-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200'>
+            <div className='flex flex-col items-center gap-2.5'>
+              <button
+                type='button'
+                onClick={handleAddToCart}
+                disabled={isAddingToCart}
+                className='w-full max-w-[170px] flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)] transition-colors text-sm font-medium cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
+              >
+                {isAddingToCart ? (
+                  <Loader />
+                ) : (
+                  <FiShoppingCart className='w-4 h-4 shrink-0' />
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -187,10 +197,16 @@ const ProductCard = ({
       <div
         className={`flex items-center justify-center sm:justify-start gap-3 flex-wrap`}
       >
-        <div className='inline-block border border-[var(--border-color)] text-[var(--text-secondary)] px-4 py-1 rounded-full text-xs font-semibold'>
-          {Product.stock_status === "in_stock"
+        <div
+          className={`inline-block border border-[var(--border-color)] ${Product.stock_status === StockStatus.OUT_OF_STOCK ? "text-[var(--error)]" : Product.stock_status === StockStatus.LOW_STOCK ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"} px-4 py-1 rounded-full text-xs font-semibold`}
+        >
+          {Product.stock_status === StockStatus.IN_STOCK
             ? t("Stock Statuses.in_stock")
-            : t("Stock Statuses.out_of_stock")}
+            : Product.stock_status === StockStatus.LOW_STOCK
+              ? t("Stock Statuses.low_stock")
+              : Product.stock_status === StockStatus.OUT_OF_STOCK
+                ? t("Stock Statuses.out_of_stock")
+                : ""}
         </div>
         <span className='text-[var(--text-muted)] ml-2'>${Product.price}</span>
       </div>

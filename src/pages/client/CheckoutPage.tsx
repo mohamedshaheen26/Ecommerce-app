@@ -189,7 +189,7 @@ export default function CheckoutPage() {
           return;
         }
 
-        await createOrder({
+        const order = await createOrder({
           customer_id: customer.id,
           shipping_zone_id: selectedShippingZoneId,
           shipping_address: formData.streetAddress,
@@ -201,6 +201,11 @@ export default function CheckoutPage() {
             price: item.product?.price || 0,
           })),
         });
+
+        if (!order) {
+          toast.error(t("Failed to place order"));
+          return;
+        }
 
         await clearItems();
         setIsOrderPlaced(true);
@@ -449,7 +454,7 @@ export default function CheckoutPage() {
             <button
               type='submit'
               disabled={items.length === 0 || isSubmitting}
-              className='w-full h-11 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
+              className='cursor-pointer w-full h-11 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {isSubmitting ? t("Processing Order...") : t("Place Order")}
             </button>

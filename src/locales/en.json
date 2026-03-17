@@ -476,6 +476,8 @@
   "Cart empty": "Cart empty",
   "Product image": "Product image",
   "Only {{count}} items are available": "Only {{count}} items are available",
+  "Only {{count}} left!": "Only {{count}} left!",
+  "This item is currently out of stock.": "This item is currently out of stock.",
   "Adding…": "Adding…",
   "Add to cart": "Add to cart",
   "Catalog": {

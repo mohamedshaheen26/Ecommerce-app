@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Newsletter from "../../components/Newsletter";
 import ProductCard from "../../components/ProductCard";
 import { useFavorites } from "../../context/FavoritesContext";
@@ -11,6 +12,7 @@ export default function FavoritesPage() {
 
   return (
     <>
+      <BreadcrumbsComponents title='Favorites' path={`NovaStore/favorites`} />
       <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8'>
         <div className='flex items-center justify-between mb-7 pb-4 border-b border-[var(--border-color)]'>
           <h1 className='text-xl sm:text-2xl font-semibold text-[var(--text-secondary)]'>

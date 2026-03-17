@@ -36,7 +36,6 @@ const INITIAL_FORM_VALUES: IProductFormValues = {
   description: "",
   description_ar: "",
   category_id: "",
-  stock_status: "",
   available_quantity: 0,
   colors: [],
   sizes: [],
@@ -76,7 +75,6 @@ export default function ProductsForm({
     description: editingProduct?.description ?? "",
     description_ar: editingProduct?.description_ar ?? "",
     category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
-    stock_status: editingProduct?.stock_status ?? "",
     available_quantity: editingProduct?.available_quantity ?? 0,
     images: editingProduct?.images ?? [],
     colors: editingProduct?.colors ?? [],
@@ -99,7 +97,6 @@ export default function ProductsForm({
         description: editingProduct?.description ?? "",
         description_ar: editingProduct?.description_ar ?? "",
         category_id: editingProduct?.category_id ?? defaultCategoryId ?? "",
-        stock_status: editingProduct?.stock_status ?? "",
         available_quantity: editingProduct?.available_quantity ?? 0,
         colors: editingProduct?.colors ?? [],
         sizes: editingProduct?.sizes ?? [],
@@ -150,7 +147,6 @@ export default function ProductsForm({
 
   const onSubmit = async (data: IProductValidation) => {
     try {
-      debugger;
       let uploadedUrls: string[] = [];
       if (newImages.length > 0) {
         uploadedUrls = await uploadImages(newImages);
@@ -164,6 +160,7 @@ export default function ProductsForm({
       const productData = {
         ...data,
         description: data.description,
+        description_ar: data.description_ar,
         colors: data.colors,
         sizes: data.sizes,
         images: allImages,
@@ -220,23 +217,6 @@ export default function ProductsForm({
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
         <FormField
-          htmlFor='stock_status'
-          label='Stock Status'
-          error={errors.stock_status?.message}
-          required
-        >
-          <Select
-            id='stock_status'
-            {...register("stock_status")}
-            options={[
-              { value: "", label: "Select a Status" },
-              { value: "in_stock", label: "Stock Statuses.in_stock" },
-              { value: "low_stock", label: "Stock Statuses.low_stock" },
-              { value: "out_of_stock", label: "Stock Statuses.out_of_stock" },
-            ]}
-          />
-        </FormField>
-        <FormField
           htmlFor='available_quantity'
           label='Available Quantity'
           error={errors.available_quantity?.message}
@@ -249,8 +229,6 @@ export default function ProductsForm({
             min='0'
           />
         </FormField>
-      </Grid>
-      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='slug'
           label='Slug'
@@ -258,20 +236,6 @@ export default function ProductsForm({
           required
         >
           <Input id='slug' {...register("slug")} disabled />
-        </FormField>
-        <FormField
-          htmlFor='price'
-          label='Price'
-          error={errors.price?.message}
-          required
-        >
-          <Input
-            id='price'
-            {...register("price")}
-            min='0'
-            type='number'
-            step='any'
-          />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
@@ -293,8 +257,19 @@ export default function ProductsForm({
             ]}
           />
         </FormField>
-        <FormField htmlFor='colors' label='Colors'>
-          <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
+        <FormField
+          htmlFor='price'
+          label='Price'
+          error={errors.price?.message}
+          required
+        >
+          <Input
+            id='price'
+            {...register("price")}
+            min='0'
+            type='number'
+            step='any'
+          />
         </FormField>
       </Grid>
       <Grid columns={{ default: 1, md: 2 }}>
@@ -315,6 +290,9 @@ export default function ProductsForm({
           </FormField>
         </Grid>
         <Grid columns={1}>
+          <FormField htmlFor='colors' label='Colors'>
+            <ColorsSelector selectedColors={colors} toggleColor={toggleColor} />
+          </FormField>
           <FormField htmlFor='sizes' label='Sizes'>
             <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
           </FormField>

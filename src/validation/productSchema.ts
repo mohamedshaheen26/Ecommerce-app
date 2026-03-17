@@ -1,5 +1,5 @@
 import * as yup from "yup";
-import { StockStatus, type IProductValidation } from "../types";
+import { type IProductValidation } from "../types";
 
 import { useTranslation } from "react-i18next";
 
@@ -15,16 +15,6 @@ export const getProductSchema = () => {
     description: yup.string().default("").defined(),
     description_ar: yup.string().default("").defined(),
     category_id: yup.string().required(t("validations.category_required")),
-    stock_status: yup
-      .mixed<StockStatus>()
-      .transform((curr, orig) => orig === "" ? undefined : curr)
-      .required(t("validations.stock_required"))
-      .oneOf(
-        [StockStatus.IN_STOCK, StockStatus.OUT_OF_STOCK, StockStatus.LOW_STOCK],
-        t("validations.stock_status_values", {
-          values: `"${StockStatus.IN_STOCK}", "${StockStatus.OUT_OF_STOCK}", "${StockStatus.LOW_STOCK}"`, 
-        })
-      ),
     available_quantity: yup
       .number()
       .required(t("validations.stock_required"))

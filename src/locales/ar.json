@@ -494,6 +494,8 @@
   "Cart empty": "السلة فارغة",
   "Product image": "صورة المنتج",
   "Only {{count}} items are available": "المتوفر فقط {{count}} قطعة من هذا المنتج",
+  "Only {{count}} left!": "المتوفر فقط {{count}} قطعة من هذا المنتج",
+  "This item is currently out of stock.": "هذا المنتج غير متاح الآن",
   "Catalog": {
     "Colors": "الالوان",
     "Sizes": "المقاسات",

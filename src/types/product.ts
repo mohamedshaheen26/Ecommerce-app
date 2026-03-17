@@ -36,7 +36,6 @@ export interface IProductFormValues {
   description: string;
   description_ar: string;
   category_id: string;
-  stock_status: StockStatus | "";
   available_quantity: number;
   images: string[];
   colors: string[];
@@ -51,7 +50,6 @@ export interface IProductValidation {
   description: string;
   description_ar: string;
   category_id: string;
-  stock_status: StockStatus | "";
   available_quantity: number;
   images: string[];
   colors: string[];
