@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { createCoupon, updateCoupon } from "../../../api/coupons";
-import Checkbox from "../../../components/common/Checkbox";
 import FormField from "../../../components/common/FormField";
 import Grid from "../../../components/common/Grid";
 import Input from "../../../components/common/Input";

@@ -1,8 +1,10 @@
-const { createClient } = require("@supabase/supabase-js");
-const path = require("path");
-const dotenv = require("dotenv");
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load root .env for local runs (GitHub Actions uses secrets env).
+// Load root .env for local runs; GitHub Actions provides these via secrets.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -15,110 +17,53 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkSupabaseConnectivity() {
-  const url = String(supabaseUrl).replace(/\/+$/, "");
+async function updateCoupons() {
+  const now = new Date().toISOString();
 
-  if (!/^https?:\/\/.+/i.test(url)) {
-    console.error("Invalid SUPABASE_URL (must start with http/https):", supabaseUrl);
-    process.exit(1);
-  }
-
-  // Quick health check to distinguish "bad URL / blocked network" from "DB/RLS error".
-  // We hit the REST endpoint with an API key header; if networking is OK, we should
-  // at least get an HTTP response (even 401/404 is fine for connectivity purposes).
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-
-  try {
-    const res = await fetch(`${url}/rest/v1/`, {
-      method: "GET",
-      headers: {
-        apikey: supabaseKey,
-      },
-      signal: controller.signal,
-    });
-
-    if (!res.ok) {
-      // Still considered "reachable"; print status for debugging.
-      console.log("Supabase reachable:", res.status, res.statusText);
-    }
-  } catch (err) {
-    console.error("Cannot reach Supabase (network/DNS/proxy/TLS issue).");
-    console.error("SUPABASE_URL:", url);
-    console.error("Error:", err?.cause ?? err);
-    process.exit(1);
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function updateCouponsStatus() {
-  await checkSupabaseConnectivity();
-  const now = new Date();
-
-  const { data: coupons, error: fetchError } = await supabase
+  const { data: coupons, error } = await supabase
     .from("coupons")
     .select("id, starts_at, expires_at, is_active");
 
-  if (fetchError) {
-    console.error("Error fetching coupons:", fetchError);
-    process.exit(1);
+  if (error) {
+    console.error("Error fetching coupons:", error);
+    return;
   }
 
-  const idsToActivate = [];
-  const idsToDeactivate = [];
-
-  for (const c of coupons ?? []) {
-    const startsAt = c.starts_at ? new Date(c.starts_at) : null;
-    const expiresAt = c.expires_at ? new Date(c.expires_at) : null;
-
-    // If dates are invalid/missing, treat as inactive.
-    const shouldBeActive =
-      startsAt instanceof Date &&
-      !Number.isNaN(startsAt.getTime()) &&
-      expiresAt instanceof Date &&
-      !Number.isNaN(expiresAt.getTime()) &&
-      startsAt <= now &&
-      expiresAt >= now;
-
-    if (shouldBeActive && !c.is_active) idsToActivate.push(c.id);
-    if (!shouldBeActive && c.is_active) idsToDeactivate.push(c.id);
-  }
-
+  const couponsToCheck = coupons ?? [];
   let updatedCount = 0;
 
-  if (idsToActivate.length) {
-    const { error } = await supabase
-      .from("coupons")
-      .update({ is_active: true })
-      .in("id", idsToActivate);
-    if (error) {
-      console.error("Error activating coupons:", error);
-      process.exit(1);
+  for (const coupon of couponsToCheck) {
+    let newStatus = false;
+    if (
+      new Date(coupon.starts_at) <= new Date() &&
+      new Date(coupon.expires_at) >= new Date()
+    ) {
+      newStatus = true;
     }
-    updatedCount += idsToActivate.length;
+
+    if (coupon.is_active !== newStatus) {
+      const { error: updateError } = await supabase
+        .from("coupons")
+        .update({ is_active: newStatus, last_checked_at: now })
+        .eq("id", coupon.id);
+
+      if (updateError) {
+        console.error(`Error updating coupon ${coupon.id}:`, updateError);
+      } else {
+        console.log(`Coupon ${coupon.id} updated: is_active = ${newStatus}`);
+        updatedCount += 1;
+      }
+    }
   }
 
-  if (idsToDeactivate.length) {
-    const { error } = await supabase
-      .from("coupons")
-      .update({ is_active: false })
-      .in("id", idsToDeactivate);
-    if (error) {
-      console.error("Error deactivating coupons:", error);
-      process.exit(1);
-    }
-    updatedCount += idsToDeactivate.length;
-  }
-
-  console.log("Coupons status update ran at", now.toISOString(), {
-    updatedCount,
-    activated: idsToActivate.length,
-    deactivated: idsToDeactivate.length,
+  console.log("Coupon status updater completed:", {
+    checked: couponsToCheck.length,
+    updated: updatedCount,
+    ranAt: now,
   });
 }
 
-updateCouponsStatus().catch((err) => {
+updateCoupons().catch((err) => {
   console.error("Unexpected error:", err);
   process.exit(1);
 });
