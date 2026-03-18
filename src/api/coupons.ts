@@ -14,7 +14,7 @@ export async function fetchAllCoupons(
   searchQuery?: string,
 ): Promise<{ data: ICoupon[]; count: number }> {
   let query = supabase
-    .from("coupons")
+    .from("coupons_with_status")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });

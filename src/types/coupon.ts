@@ -14,6 +14,7 @@ export interface ICoupon {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
+  computed_is_active: boolean;
   created_at?: string;
 }
 
@@ -27,4 +28,5 @@ export interface ICouponValidation {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
+  computed_is_active: boolean;
 }
