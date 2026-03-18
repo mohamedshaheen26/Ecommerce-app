@@ -5,6 +5,7 @@ import {
   MdAccountTree,
   MdCategory,
   MdDashboard,
+  MdDiscount,
   MdInventory,
   MdLocalShipping,
   MdPeople,
@@ -69,15 +70,21 @@ const navigationItems: NavItem[] = [
     allowedRoles: [UserRole.Admin],
   },
   {
+    path: "/dashboard/reviews",
+    title: "Reviews",
+    icon: MdStarBorder,
+    allowedRoles: [UserRole.Admin],
+  },
+  {
     path: "/dashboard/shipping_zones",
     title: "Shipping Zones",
     icon: MdLocalShipping,
     allowedRoles: [UserRole.Admin],
   },
   {
-    path: "/dashboard/reviews",
-    title: "Reviews",
-    icon: MdStarBorder,
+    path: "/dashboard/coupons",
+    title: "Coupons",
+    icon: MdDiscount,
     allowedRoles: [UserRole.Admin],
   },
   {

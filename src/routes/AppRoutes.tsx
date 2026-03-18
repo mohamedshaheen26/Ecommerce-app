@@ -31,6 +31,7 @@ import AboutPage from "../pages/client/AboutPage";
 import ContactPage from "../pages/client/ContactPage";
 import FavoritesPage from "../pages/client/FavoritesPage";
 import ProfilePage from "../pages/client/ProfilePage";
+import CouponsRoot from "../pages/dashboard/coupons/CouponsRoot";
 
 export default function AppRoutes() {
   return (
@@ -144,6 +145,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={[UserRole.Admin]}>
               <ShippingZonesRoot />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/dashboard/coupons'
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+              <CouponsRoot />
             </ProtectedRoute>
           }
         />
