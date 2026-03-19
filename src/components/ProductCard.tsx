@@ -17,7 +17,6 @@ interface ProductCardProps {
   Product?: IProduct;
   Loading?: boolean;
   className?: string;
-  /** When true, shows an Add to cart button (e.g. in carousels) */
   showAddToCart?: boolean;
 }
 
@@ -210,7 +209,7 @@ const ProductCard = ({
                 className='w-full max-w-[170px] flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-[var(--accent-primary)] text-[var(--text-primary)] hover:bg-[var(--accent-hover)] transition-colors text-sm font-medium cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
               >
                 {isAddingToCart ? (
-                  <Loader />
+                  <Loader className='text-[var(--bg-secondary)]' />
                 ) : (
                   <FiShoppingCart className='w-4 h-4 shrink-0' />
                 )}

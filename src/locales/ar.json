@@ -270,7 +270,11 @@
     "starts_at_required": "تاريخ البدء مطلوب.",
     "starts_at_future": "لا يمكن أن يكون تاريخ البدء في الماضي.",
     "expires_at_required": "تاريخ الانتهاء مطلوب.",
-    "expires_at_after_starts_at": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء."
+    "expires_at_after_starts_at": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء.",
+    "full_name_required": "الاسم الكامل مطلوب.",
+    "phone_number_required": "رقم الهاتف مطلوب.",
+    "street_address_required": "عنوان الشارع مطلوب.",
+    "order_notes_max": "ملاحظات الطلب يجب أن يكون أقل من 255 حرف."
   },
   "Errors": {
     "EmployeesNameAr": "اسم الموظف",

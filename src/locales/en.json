@@ -269,7 +269,11 @@
     "starts_at_required": "Starts date is required.",
     "starts_at_future": "Starts date cannot be in the past.",
     "expires_at_required": "Expires date is required.",
-    "expires_at_after_starts_at": "Expires date must be after starts date."
+    "expires_at_after_starts_at": "Expires date must be after starts date.",
+    "full_name_required": "Full name is required.",
+    "phone_number_required": "Phone number is required.",
+    "street_address_required": "Street address is required.",
+    "order_notes_max": "Order notes must be less than 255 characters."
   },
   "Errors": {
     "EmployeesNameAr": "Employee Name",

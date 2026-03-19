@@ -2,7 +2,7 @@ const Loader = ({ className }: { className?: string }) => {
   return (
     <div className={`flex justify-center ${className}`}>
       <svg
-        className='animate-spin h-5 w-5 text-[var(--accent-primary)]'
+        className={`animate-spin h-5 w-5 ${className ?? "text-[var(--accent-primary)]"}`}
         xmlns='http://www.w3.org/2000/svg'
         fill='none'
         viewBox='0 0 24 24'

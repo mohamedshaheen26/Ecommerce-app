@@ -75,7 +75,6 @@ export default function CategoriesForm({
 
   const onSubmit = async (data: ICategoryValidation) => {
     try {
-      debugger;
       if (editingCategory && editingCategory?.id) {
         await updateCategory(editingCategory.id, data);
         toast.success(t("Category updated successfully"));

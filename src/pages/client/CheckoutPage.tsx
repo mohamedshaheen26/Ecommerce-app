@@ -1,11 +1,4 @@
-import { MenuItem, TextField } from "@mui/material";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -19,44 +12,40 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { IShippingZone } from "../../types";
+import Grid from "../../components/common/Grid";
+import Input from "../../components/common/Input";
+import { useYupForm } from "../../hooks/useYupForm";
+import { getCheckoutFormSchema } from "../../validation/checkoutSchema";
+import type { ICheckout } from "../../types/checkout";
+import Select from "../../components/common/Select";
+import TextArea from "../../components/common/TextArea";
 
 const TAX_RATE = 0.04;
-const muiInputSx = {
-  "& .MuiOutlinedInput-root": {
-    color: "var(--text-secondary)",
-    "& fieldset": { borderColor: "var(--border-color)" },
-    "&:hover fieldset": { borderColor: "var(--accent-primary)" },
-    "&.Mui-focused fieldset": { borderColor: "var(--accent-primary)" },
-  },
-};
-
-type CheckoutFormState = {
-  fullName: string;
-  phoneNumber: string;
-  streetAddress: string;
-  email: string;
-  orderNotes: string;
-};
-
-const initialFormState: CheckoutFormState = {
-  fullName: "",
-  phoneNumber: "",
-  streetAddress: "",
-  email: "",
-  orderNotes: "",
-};
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const { items, clearItems } = useCart();
-  const [formData, setFormData] = useState<CheckoutFormState>(initialFormState);
   const [shippingZones, setShippingZones] = useState<IShippingZone[]>([]);
   const [shippingZonesLoading, setShippingZonesLoading] = useState(true);
-  const [selectedShippingZoneId, setSelectedShippingZoneId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useYupForm<ICheckout>(getCheckoutFormSchema() as any, {
+    fullName: "",
+    phoneNumber: "",
+    streetAddress: "",
+    shippingZone: "",
+    email: "",
+    orderNotes: "",
+  });
 
   const subtotal = useMemo(
     () =>
@@ -70,6 +59,7 @@ export default function CheckoutPage() {
     () => Number((subtotal * TAX_RATE).toFixed(2)),
     [subtotal],
   );
+  const selectedShippingZoneId = watch("shippingZone");
   const selectedShippingZone = useMemo(
     () => shippingZones.find((zone) => zone.id === selectedShippingZoneId),
     [shippingZones, selectedShippingZoneId],
@@ -85,13 +75,16 @@ export default function CheckoutPage() {
       (typeof authMeta.phone === "string" ? authMeta.phone : "") || "";
     const authEmail = user?.email || "";
 
-    setFormData((prev) => ({
-      ...prev,
-      fullName: prev.fullName || authFullName,
-      phoneNumber: prev.phoneNumber || authPhone,
-      email: prev.email || authEmail,
-    }));
-  }, [user]);
+    if (!getValues("fullName") && authFullName) {
+      setValue("fullName", authFullName);
+    }
+    if (!getValues("phoneNumber") && authPhone) {
+      setValue("phoneNumber", authPhone);
+    }
+    if (!getValues("email") && authEmail) {
+      setValue("email", authEmail);
+    }
+  }, [getValues, setValue, user]);
 
   useEffect(() => {
     const loadCustomerProfile = async () => {
@@ -101,26 +94,30 @@ export default function CheckoutPage() {
         const customer = await fetchCustomerByEmail(user.email);
         if (!customer) return;
 
-        setFormData((prev) => ({
-          ...prev,
-          fullName:
-            prev.fullName ||
-            (currentLang === "ar" ? customer.name_ar : customer.full_name) ||
-            "",
-          phoneNumber: prev.phoneNumber || customer.phone || "",
-          email: prev.email || customer.email || "",
-          streetAddress:
-            prev.streetAddress ||
-            (currentLang === "ar" ? customer.address_ar : customer.address) ||
-            "",
-        }));
+        const customerName =
+          (currentLang === "ar" ? customer.name_ar : customer.full_name) || "";
+        const customerAddress =
+          (currentLang === "ar" ? customer.address_ar : customer.address) || "";
+
+        if (!getValues("fullName") && customerName) {
+          setValue("fullName", customerName);
+        }
+        if (!getValues("phoneNumber") && customer.phone) {
+          setValue("phoneNumber", customer.phone);
+        }
+        if (!getValues("email") && customer.email) {
+          setValue("email", customer.email);
+        }
+        if (!getValues("streetAddress") && customerAddress) {
+          setValue("streetAddress", customerAddress);
+        }
       } catch (error) {
         console.error("Failed to auto-fill customer profile:", error);
       }
     };
 
     loadCustomerProfile();
-  }, [currentLang, isAuthenticated, user?.email]);
+  }, [currentLang, getValues, isAuthenticated, setValue, user?.email]);
 
   useEffect(() => {
     const loadShippingZones = async () => {
@@ -128,8 +125,8 @@ export default function CheckoutPage() {
         setShippingZonesLoading(true);
         const zones = await fetchActiveShippingZones();
         setShippingZones(zones);
-        if (zones.length > 0 && zones[0].id) {
-          setSelectedShippingZoneId(zones[0].id);
+        if (!getValues("shippingZone") && zones.length > 0 && zones[0].id) {
+          setValue("shippingZone", zones[0].id);
         }
       } catch (error) {
         console.error("Failed to load shipping zones:", error);
@@ -140,84 +137,54 @@ export default function CheckoutPage() {
     };
 
     loadShippingZones();
-  }, [t]);
+  }, [getValues, setValue, t]);
 
-  const onInputChange =
-    (field: keyof CheckoutFormState) => (e: ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-    };
+  const onPlaceOrder = handleSubmit(async (values) => {
+    if (isSubmitting) return;
 
-  const onPlaceOrder = (e: FormEvent) => {
-    e.preventDefault();
-    void (async () => {
-      if (isSubmitting) return;
+    if (items.length === 0) {
+      toast.error(t("Your cart is empty!"));
+      return;
+    }
 
-      if (items.length === 0) {
-        toast.error(t("Your cart is empty!"));
+    if (!isAuthenticated || !user?.email) {
+      toast.error(t("Please login to place order"));
+      return;
+    }
+
+    try {
+      const customer = await fetchCustomerByEmail(user.email);
+      if (!customer?.id) {
+        toast.error(t("Customer profile not found"));
         return;
       }
 
-      const requiredFields = [
-        formData.fullName,
-        formData.phoneNumber,
-        formData.streetAddress,
-      ];
-      const hasMissingRequired = requiredFields.some(
-        (value) => !value?.toString().trim(),
-      );
+      const order = await createOrder({
+        customer_id: customer.id,
+        shipping_zone_id: values.shippingZone,
+        shipping_address: values.streetAddress,
+        total_amount: total,
+        notes: values.orderNotes || null,
+        items: items.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.product?.price || 0,
+        })),
+      });
 
-      if (hasMissingRequired) {
-        toast.error(t("Please fill all required fields"));
-        return;
-      }
-
-      if (!selectedShippingZoneId || !selectedShippingZone) {
-        toast.error(t("Please select shipping zone"));
-        return;
-      }
-
-      if (!isAuthenticated || !user?.email) {
-        toast.error(t("Please login to place order"));
-        return;
-      }
-
-      try {
-        setIsSubmitting(true);
-        const customer = await fetchCustomerByEmail(user.email);
-        if (!customer?.id) {
-          toast.error(t("Customer profile not found"));
-          return;
-        }
-
-        const order = await createOrder({
-          customer_id: customer.id,
-          shipping_zone_id: selectedShippingZoneId,
-          shipping_address: formData.streetAddress,
-          total_amount: total,
-          notes: formData.orderNotes || null,
-          items: items.map((item) => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.product?.price || 0,
-          })),
-        });
-
-        if (!order) {
-          toast.error(t("Failed to place order"));
-          return;
-        }
-
-        await clearItems();
-        setIsOrderPlaced(true);
-        toast.success(t("Order placed successfully"));
-      } catch (error) {
-        console.error("Failed to place order:", error);
+      if (!order) {
         toast.error(t("Failed to place order"));
-      } finally {
-        setIsSubmitting(false);
+        return;
       }
-    })();
-  };
+
+      await clearItems();
+      setIsOrderPlaced(true);
+      toast.success(t("Order placed successfully"));
+    } catch (error) {
+      console.error("Failed to place order:", error);
+      toast.error(t("Failed to place order"));
+    }
+  });
 
   if (isOrderPlaced) {
     return (
@@ -278,102 +245,76 @@ export default function CheckoutPage() {
             </h2>
 
             <div className='space-y-4'>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                <FormField htmlFor='fullName' label='Full name' required>
-                  <TextField
-                    id='fullName'
-                    size='small'
-                    fullWidth
-                    value={formData.fullName}
-                    onChange={onInputChange("fullName")}
-                    sx={muiInputSx}
-                  />
+              <Grid columns={{ default: 1, md: 2 }}>
+                <FormField
+                  htmlFor='fullName'
+                  label='Full name'
+                  required
+                  error={errors.fullName?.message}
+                >
+                  <Input id='fullName' {...register("fullName")} />
                 </FormField>
-                <FormField htmlFor='phoneNumber' label='Phone number' required>
-                  <TextField
-                    id='phoneNumber'
-                    size='small'
-                    fullWidth
-                    value={formData.phoneNumber}
-                    onChange={onInputChange("phoneNumber")}
-                    sx={muiInputSx}
-                  />
+                <FormField
+                  htmlFor='phoneNumber'
+                  label='Phone number'
+                  required
+                  error={errors.phoneNumber?.message}
+                >
+                  <Input id='phoneNumber' {...register("phoneNumber")} />
                 </FormField>
-              </div>
+              </Grid>
 
               <FormField
                 htmlFor='streetAddress'
                 label='Street Address'
                 required
+                error={errors.streetAddress?.message}
               >
-                <TextField
-                  id='streetAddress'
-                  size='small'
-                  fullWidth
-                  value={formData.streetAddress}
-                  onChange={onInputChange("streetAddress")}
-                  sx={muiInputSx}
-                />
+                <Input id='streetAddress' {...register("streetAddress")} />
               </FormField>
 
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                <FormField htmlFor='shippingZone' label='City' required>
-                  <TextField
+                <FormField
+                  htmlFor='shippingZone'
+                  label='City'
+                  required
+                  error={errors.shippingZone?.message}
+                >
+                  <Select
                     id='shippingZone'
-                    size='small'
-                    fullWidth
-                    select
-                    value={selectedShippingZoneId}
-                    onChange={(e) => setSelectedShippingZoneId(e.target.value)}
-                    disabled={
-                      shippingZonesLoading || shippingZones.length === 0
-                    }
-                    sx={muiInputSx}
-                  >
-                    {shippingZones.map((zone) => (
-                      <MenuItem key={zone.id} value={zone.id || ""}>
-                        {currentLang === "ar"
-                          ? zone.name_ar || zone.name
-                          : zone.name || zone.name_ar}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    {...register("shippingZone")}
+                    options={[
+                      ...shippingZones.map((zone) => ({
+                        value: zone.id ? zone.id : "",
+                        label:
+                          currentLang === "ar"
+                            ? zone.name_ar || zone.name
+                            : zone.name || zone.name_ar,
+                      })),
+                    ]}
+                  />
                   {!shippingZonesLoading && shippingZones.length === 0 && (
                     <p className='text-xs mt-1 text-[var(--text-muted)]'>
                       {t("No shipping zones available")}
                     </p>
                   )}
                 </FormField>
-                <FormField htmlFor='email' label='Email'>
-                  <TextField
-                    id='email'
-                    size='small'
-                    fullWidth
-                    type='email'
-                    value={formData.email}
-                    onChange={onInputChange("email")}
-                    sx={muiInputSx}
-                  />
+                <FormField
+                  htmlFor='email'
+                  label='Email'
+                  error={errors.email?.message}
+                >
+                  <Input id='email' {...register("email")} />
                 </FormField>
               </div>
 
               <div className='pt-2 space-y-3'>
-                <FormField htmlFor='orderNotes' label='Order Notes'>
-                  <TextField
-                    id='orderNotes'
-                    size='small'
-                    fullWidth
-                    multiline
-                    rows={4}
-                    value={formData.orderNotes}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        orderNotes: e.target.value,
-                      }))
-                    }
-                    sx={muiInputSx}
-                  />
+                <FormField
+                  htmlFor='orderNotes'
+                  label='Order Notes'
+                  error={errors.orderNotes?.message}
+                >
+                  <TextArea id='orderNotes' {...register("orderNotes")} />
                 </FormField>
               </div>
             </div>
