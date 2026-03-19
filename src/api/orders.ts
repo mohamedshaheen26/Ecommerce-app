@@ -131,22 +131,23 @@ type CreateOrderInput = {
   notes?: string | null;
   status?: IOrder["status"];
   items: CreateOrderItemInput[];
+  coupon_id?: string | null;
 };
 
 export async function createOrder(input: CreateOrderInput) {
-  debugger
   try {
-    const { error, data } = await supabase.rpc("create_order_with_items", {
+    const { error, data } = await supabase.rpc("create_order", {
       p_customer_id: input.customer_id,
       p_shipping_zone_id: input.shipping_zone_id,
       p_shipping_address: input.shipping_address,
       p_total_amount: input.total_amount,
       p_notes: input.notes,
       p_items: input.items,
+      p_coupon_id: input.coupon_id,
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error(t(error.message));
       return;
     }
 

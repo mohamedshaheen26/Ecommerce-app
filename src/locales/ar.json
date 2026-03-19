@@ -556,7 +556,7 @@
   "Cart empty": "السلة فارغة",
   "Product image": "صورة المنتج",
   "Only {{count}} items are available": "المتوفر فقط {{count}} قطعة من هذا المنتج",
-  "Only {{count}} left!": "المتوفر فقط {{count}} قطعة من هذا المنتج",
+  "Only {{count}} left!": "أخر {{count}} قطع",
   "This item is currently out of stock.": "هذا المنتج غير متاح الآن",
   "Catalog": {
     "Colors": "الالوان",
@@ -590,5 +590,23 @@
   "Coupons deleted successfully": "تم حذف الخصومات بنجاح",
   "Failed to delete coupons": "فشل حذف الخصومات",
   "Percentage": "النسبة المئوية",
-  "Fixed": "المبلغ الثابت"
+  "Fixed": "المبلغ الثابت",
+  "Coupon Code": "كود الخصم",
+  "Enter coupon code": "ادخل كود الخصم",
+  "Applied coupon": "الكوبون المطبق",
+  "Applying...": "جاري التطبيق...",
+  "Remove": "ازالة",
+  "Coupon applied successfully": "تم تطبيق الكوبون بنجاح",
+  "Coupon removed": "تم ازالة الكوبون",
+  "Invalid coupon code": "كود الخصم غير صالح",
+  "This coupon is not active yet": "هذا الكوبون غير نشط بعد",
+  "This coupon has expired": "انتهت صلاحية هذا الكوبون",
+  "Minimum order amount not met for this coupon": "لم يتم الوصول للحد الادنى للطلب لهذا الكوبون",
+  "Failed to apply coupon": "فشل تطبيق الكوبون",
+  "Estimated": "متوقع",
+  "Tax": "الضريبة",
+  "Discount": "الخصم",
+  "INVALID_COUPON": "كود الخصم غير صالح",
+  "COUPON_ALREADY_USED": "كوبون مستخدم من قبل",
+  "COUPON_LIMIT_REACHED": "تم الوصول لحد الاستخدام لهذا الكوبون"
 }

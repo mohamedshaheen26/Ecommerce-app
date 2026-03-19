@@ -10,7 +10,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     { error, className = "", fullWidth = true, leftIcon, rightIcon, ...props },
-    ref
+    ref,
   ) => {
     return (
       <div className={`relative`}>
@@ -41,7 +41,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && <p className='mt-1 text-sm text-red-500'>{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 export default Input;

@@ -11,7 +11,7 @@ import Newsletter from "../../components/Newsletter";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
-import type { IShippingZone } from "../../types";
+import { DiscountType, type ICoupon, type IShippingZone } from "../../types";
 import Grid from "../../components/common/Grid";
 import Input from "../../components/common/Input";
 import { useYupForm } from "../../hooks/useYupForm";
@@ -19,6 +19,8 @@ import { getCheckoutFormSchema } from "../../validation/checkoutSchema";
 import type { ICheckout } from "../../types/checkout";
 import Select from "../../components/common/Select";
 import TextArea from "../../components/common/TextArea";
+import { fetchActiveCoupons } from "../../api/coupons";
+import Loader from "../../components/common/Loader";
 
 const TAX_RATE = 0.04;
 
@@ -30,6 +32,9 @@ export default function CheckoutPage() {
   const [shippingZones, setShippingZones] = useState<IShippingZone[]>([]);
   const [shippingZonesLoading, setShippingZonesLoading] = useState(true);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<ICoupon | null>(null);
 
   const {
     register,
@@ -65,7 +70,34 @@ export default function CheckoutPage() {
     [shippingZones, selectedShippingZoneId],
   );
   const shippingCost = Number(selectedShippingZone?.shipping_fee || 0);
-  const total = subtotal + shippingCost + tax;
+
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon || subtotal <= 0) return 0;
+
+    if (subtotal < Number(appliedCoupon.min_order_amount || 0)) {
+      return 0;
+    }
+
+    if (appliedCoupon.discount_type === DiscountType.PERCENTAGE) {
+      const percentageDiscount =
+        subtotal * (Number(appliedCoupon.discount_value || 0) / 100);
+      const maxDiscount = Number(appliedCoupon.max_discount_amount || 0);
+      const discount =
+        maxDiscount > 0
+          ? Math.min(percentageDiscount, maxDiscount)
+          : percentageDiscount;
+      return Number(discount.toFixed(2));
+    }
+
+    return Number(
+      Math.min(subtotal, Number(appliedCoupon.discount_value || 0)).toFixed(2),
+    );
+  }, [appliedCoupon, subtotal]);
+
+  const total = Math.max(
+    0,
+    Number((subtotal + shippingCost + tax - couponDiscount).toFixed(2)),
+  );
 
   useEffect(() => {
     const authMeta = user?.user_metadata ?? {};
@@ -139,16 +171,18 @@ export default function CheckoutPage() {
     loadShippingZones();
   }, [getValues, setValue, t]);
 
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    if (subtotal >= Number(appliedCoupon.min_order_amount || 0)) return;
+
+    setAppliedCoupon(null);
+  }, [appliedCoupon, subtotal]);
+
   const onPlaceOrder = handleSubmit(async (values) => {
     if (isSubmitting) return;
 
     if (items.length === 0) {
       toast.error(t("Your cart is empty!"));
-      return;
-    }
-
-    if (!isAuthenticated || !user?.email) {
-      toast.error(t("Please login to place order"));
       return;
     }
 
@@ -170,6 +204,7 @@ export default function CheckoutPage() {
           quantity: item.quantity,
           price: item.product?.price || 0,
         })),
+        coupon_id: appliedCoupon?.id || null,
       });
 
       if (!order) {
@@ -185,6 +220,54 @@ export default function CheckoutPage() {
       toast.error(t("Failed to place order"));
     }
   });
+
+  const handleApplyCoupon = async () => {
+    if (couponLoading || !couponCode.trim()) return;
+    debugger;
+    try {
+      setCouponLoading(true);
+      const activeCoupons = await fetchActiveCoupons();
+      const normalizedInput = couponCode.trim().toLowerCase();
+      const matchingCoupon = activeCoupons.find(
+        (coupon) => coupon.code?.trim().toLowerCase() === normalizedInput,
+      );
+
+      if (!matchingCoupon) {
+        toast.error(t("Invalid coupon code"));
+        return;
+      }
+
+      if (!matchingCoupon.computed_is_active) {
+        toast.error(t("This coupon is not active yet"));
+        return;
+      }
+
+      if (matchingCoupon.usage_limit === matchingCoupon.used_count) {
+        toast.error(t("COUPON_LIMIT_REACHED"));
+        return;
+      }
+
+      if (subtotal < Number(matchingCoupon.min_order_amount || 0)) {
+        toast.error(t("Minimum order amount not met for this coupon"));
+        return;
+      }
+
+      setAppliedCoupon(matchingCoupon);
+      setCouponCode(matchingCoupon.code);
+      toast.success(t("Coupon applied successfully"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("Failed to apply coupon"));
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.success(t("Coupon removed"));
+  };
 
   if (isOrderPlaced) {
     return (
@@ -350,6 +433,51 @@ export default function CheckoutPage() {
               </Link>
             </div>
 
+            {items.length > 0 && (
+              <div className='space-y-2 mb-2  '>
+                <label
+                  htmlFor='cart-coupon-code'
+                  className='block text-sm font-medium text-[var(--text-secondary)]'
+                >
+                  {t("Coupon Code")}
+                </label>
+                <div className='flex items-center gap-2'>
+                  <Input
+                    id='cart-coupon-code'
+                    type='text'
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder={t("Enter coupon code")}
+                    disabled={couponLoading || appliedCoupon !== null}
+                    fullWidth={true}
+                  />
+                  {!appliedCoupon ? (
+                    <button
+                      type='button'
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className='h-10 px-4 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex-1'
+                    >
+                      {couponLoading ? <Loader /> : t("Apply")}
+                    </button>
+                  ) : (
+                    <button
+                      type='button'
+                      onClick={handleRemoveCoupon}
+                      className='h-10 px-4 rounded-md border border-[var(--border-color)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] cursor-pointer flex-1'
+                    >
+                      {t("Remove")}
+                    </button>
+                  )}
+                </div>
+                {appliedCoupon && (
+                  <p className='text-xs text-green-600'>
+                    {t("Applied coupon")}: {appliedCoupon.code}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className='space-y-2 text-sm'>
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
                 <span>{t("Subtotal")}:</span>
@@ -379,6 +507,14 @@ export default function CheckoutPage() {
                   ${tax.toFixed(2)}
                 </span>
               </div>
+              {couponDiscount > 0 && (
+                <div className='flex items-center justify-between text-[var(--text-muted)]'>
+                  <span>{t("Discount")}</span>
+                  <span className='text-green-600'>
+                    -${couponDiscount.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className='my-4 border-t border-[var(--border-color)]' />

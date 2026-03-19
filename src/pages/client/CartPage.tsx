@@ -1,22 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { fetchActiveCoupons } from "../../api/coupons";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
-import { StockStatus } from "../../types";
+import { DiscountType, StockStatus, type ICoupon } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import Input from "../../components/common/Input";
+import Loader from "../../components/common/Loader";
 
-const SHIPPING_COST: number = 100;
-const TAX_RATE = 0.0333333333;
+const EstimatedShippingCost: number = 50;
+const EstimatedTaxRate: number = 0.0333333333;
 
 export default function CartPage() {
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const { currentTheme } = useTheme();
   const { items, updateItemQuantity, removeItem, clearItems } = useCart();
   const [pendingQuantityId, setPendingQuantityId] = useState<string | null>(
@@ -24,6 +29,9 @@ export default function CartPage() {
   );
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [clearCartLoading, setClearCartLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<ICoupon | null>(null);
 
   const subtotal = useMemo(
     () =>
@@ -37,11 +45,47 @@ export default function CartPage() {
     [items],
   );
   const tax = useMemo(
-    () => Number((subtotal * TAX_RATE).toFixed(2)),
+    () => Number((subtotal * EstimatedTaxRate).toFixed(2)),
     [subtotal],
   );
 
-  const total = subtotal + SHIPPING_COST + tax;
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon || subtotal <= 0) return 0;
+
+    if (subtotal < Number(appliedCoupon.min_order_amount || 0)) {
+      return 0;
+    }
+
+    if (appliedCoupon.discount_type === DiscountType.PERCENTAGE) {
+      const percentageDiscount =
+        subtotal * (Number(appliedCoupon.discount_value || 0) / 100);
+      const maxDiscount = Number(appliedCoupon.max_discount_amount || 0);
+      const discount =
+        maxDiscount > 0
+          ? Math.min(percentageDiscount, maxDiscount)
+          : percentageDiscount;
+      return Number(discount.toFixed(2));
+    }
+
+    return Number(
+      Math.min(subtotal, Number(appliedCoupon.discount_value || 0)).toFixed(2),
+    );
+  }, [appliedCoupon, subtotal]);
+
+  const total = Math.max(
+    0,
+    Number(
+      (subtotal + EstimatedShippingCost + tax - couponDiscount).toFixed(2),
+    ),
+  );
+
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    if (subtotal >= Number(appliedCoupon.min_order_amount || 0)) return;
+
+    setAppliedCoupon(null);
+    toast.error(t("Minimum order amount not met for this coupon"));
+  }, [appliedCoupon, subtotal, t]);
 
   const updateQuantity = async (id: string, nextQuantity: number) => {
     if (nextQuantity < 1) return;
@@ -85,6 +129,54 @@ export default function CartPage() {
     } finally {
       setClearCartLoading(false);
     }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (couponLoading || !couponCode.trim()) return;
+
+    try {
+      setCouponLoading(true);
+      const activeCoupons = await fetchActiveCoupons();
+      const normalizedInput = couponCode.trim().toLowerCase();
+      const matchingCoupon = activeCoupons.find(
+        (coupon) => coupon.code?.trim().toLowerCase() === normalizedInput,
+      );
+
+      if (!matchingCoupon) {
+        toast.error(t("Invalid coupon code"));
+        return;
+      }
+
+      if (!matchingCoupon.computed_is_active) {
+        toast.error(t("This coupon is not active yet"));
+        return;
+      }
+
+      if (matchingCoupon.usage_limit === matchingCoupon.used_count) {
+        toast.error(t("COUPON_LIMIT_REACHED"));
+        return;
+      }
+
+      if (subtotal < Number(matchingCoupon.min_order_amount || 0)) {
+        toast.error(t("Minimum order amount not met for this coupon"));
+        return;
+      }
+
+      setAppliedCoupon(matchingCoupon);
+      setCouponCode(matchingCoupon.code);
+      toast.success(t("Coupon applied successfully"));
+    } catch (error) {
+      console.error(error);
+      toast.error(t("Failed to apply coupon"));
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.success(t("Coupon removed"));
   };
 
   return (
@@ -261,27 +353,81 @@ export default function CartPage() {
               {t("Order Summary")}
             </h2>
 
+            {items.length > 0 && (
+              <div className='space-y-2'>
+                <label
+                  htmlFor='cart-coupon-code'
+                  className='block text-sm font-medium text-[var(--text-secondary)]'
+                >
+                  {t("Coupon Code")}
+                </label>
+                <div className='flex items-center gap-2'>
+                  <Input
+                    id='cart-coupon-code'
+                    type='text'
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder={t("Enter coupon code")}
+                    disabled={couponLoading || appliedCoupon !== null}
+                    fullWidth={true}
+                  />
+                  {!appliedCoupon ? (
+                    <button
+                      type='button'
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className='h-10 px-4 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex-1'
+                    >
+                      {couponLoading ? <Loader /> : t("Apply")}
+                    </button>
+                  ) : (
+                    <button
+                      type='button'
+                      onClick={handleRemoveCoupon}
+                      className='h-10 px-4 rounded-md border border-[var(--border-color)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] cursor-pointer flex-1'
+                    >
+                      {t("Remove")}
+                    </button>
+                  )}
+                </div>
+                {appliedCoupon && (
+                  <p className='text-xs text-green-600'>
+                    {t("Applied coupon")}: {appliedCoupon.code}
+                  </p>
+                )}
+              </div>
+            )}
             <div className='space-y-2 text-sm'>
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
                 <span>{t("Subtotal")}</span>
                 <span className='text-[var(--text-secondary)]'>
-                  ${subtotal.toFixed(2)}
+                  {items.length > 0 ? `$${subtotal.toFixed(2)}` : "-"}
                 </span>
               </div>
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
                 <span>{t("Shipping")}</span>
                 <span className='text-[var(--text-secondary)]'>
-                  {SHIPPING_COST === 0
-                    ? t("Free")
-                    : `$${SHIPPING_COST.toFixed(2)}`}
+                  {items.length > 0
+                    ? `$${EstimatedShippingCost.toFixed(2)} (${t("Estimated")})`
+                    : "-"}
                 </span>
               </div>
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
                 <span>{t("Tax")}</span>
                 <span className='text-[var(--text-secondary)]'>
-                  ${tax.toFixed(2)}
+                  {items.length > 0
+                    ? `$${tax.toFixed(2)} (${t("Estimated")})`
+                    : "-"}
                 </span>
               </div>
+              {couponDiscount > 0 && (
+                <div className='flex items-center justify-between text-[var(--text-muted)]'>
+                  <span>{t("Discount")}</span>
+                  <span className='text-green-600'>
+                    -${couponDiscount.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className='pt-3 border-t border-[var(--border-color)]'>
@@ -290,13 +436,13 @@ export default function CartPage() {
                   {t("Total")}
                 </span>
                 <span className='text-lg font-semibold text-[var(--text-secondary)]'>
-                  ${total.toFixed(2)}
+                  {items.length > 0 ? `$${total.toFixed(2)}` : "-"}
                 </span>
               </div>
             </div>
 
             <Link
-              to='/checkout'
+              to={isAuthenticated ? "/checkout" : "/login"}
               className={`w-full h-10 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center justify-center ${
                 items.length === 0 ||
                 items.some(

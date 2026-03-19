@@ -53,9 +53,8 @@ export async function fetchAllCoupons(
 
 export async function fetchActiveCoupons(): Promise<ICoupon[]> {
   const { data, error } = await supabase
-    .from("coupons")
+    .from("coupons_with_status")
     .select("*")
-    .eq("is_active", true)
     .order("created_at", { ascending: false })
     .order("id", { ascending: true });
 
