@@ -1,5 +1,32 @@
 import { supabase } from "../lib/supabase";
 import type { IBestSellingProduct, IRecentOrder } from "../types/dashboard";
+import type { IDashboardStats } from "../types/dashboard";
+import type { DashboardPeriod } from "../types/dashboard";
+
+export async function getDashboardStats(
+  period: DashboardPeriod = "30d",
+): Promise<IDashboardStats> {
+  const response = await fetch(`/api/dashboard-stats?period=${period}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const raw = await response.text();
+  const parsed = raw ? JSON.parse(raw) : null;
+
+  if (!response.ok) {
+    const errorMessage =
+      parsed &&
+      typeof parsed === "object" &&
+      "error" in parsed &&
+      typeof parsed.error === "string"
+        ? parsed.error
+        : "Failed to fetch dashboard stats";
+    throw new Error(errorMessage);
+  }
+
+  return parsed as IDashboardStats;
+}
 
 export async function getTotalSalesCurrentMonth(): Promise<number> {
   const firstDayOfMonth = new Date();
