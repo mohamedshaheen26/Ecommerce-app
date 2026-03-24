@@ -5,10 +5,17 @@ import { useTranslation } from "react-i18next";
 import { FiEdit, FiFileText, FiFolder, FiPlus, FiTrash2 } from "react-icons/fi";
 
 import {
-  deleteCategoryById,
   fetchAllCategories,
+  fetchChildCategoryParentIds,
+  fetchRootCategories,
+  fetchSubCategoriesByParent,
+  deleteCategoryById,
 } from "../../../api/categories";
-import { deleteProduct, fetchProducts } from "../../../api/product";
+import {
+  deleteProduct,
+  fetchProductCategoryIds,
+  fetchProductsByCategory,
+} from "../../../api/product";
 import { useLanguage } from "../../../context/LanguageContext";
 import type { ICategory, IProduct } from "../../../types";
 
@@ -28,6 +35,7 @@ interface CatalogRow extends TreeGridRow {
   name: string;
   price?: number;
   stock_status?: string;
+  hasChildren?: boolean;
   originalData: ICategory | IProduct;
 }
 
@@ -36,8 +44,18 @@ export default function CatalogRoot() {
   const { currentLang } = useLanguage();
 
   const [data, setData] = useState<CatalogRow[]>([]);
+  const [formCategories, setFormCategories] = useState<ICategory[]>([]);
+  const [loadedCategoryIds, setLoadedCategoryIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [loadingCategoryIds, setLoadingCategoryIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // --- Forms State ---
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
@@ -63,79 +81,178 @@ export default function CatalogRoot() {
   const [deleting, setDeleting] = useState(false);
 
   // --- Data Fetching ---
+  const buildCategoryRow = useCallback(
+    (category: ICategory, hasChildren = false): CatalogRow => ({
+      id: category.id!,
+      type: "category",
+      name: currentLang === "ar" ? category.name_ar : category.name,
+      hasChildren,
+      originalData: category,
+    }),
+    [currentLang],
+  );
+
+  const buildProductRow = useCallback(
+    (product: IProduct): CatalogRow => ({
+      id: product.id,
+      type: "product",
+      name: currentLang === "ar" ? product.name_ar : product.title,
+      price: product.price,
+      stock_status: product.stock_status,
+      originalData: product,
+    }),
+    [currentLang],
+  );
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      const { data: rootCategories, count } = await fetchRootCategories(
+        currentPage,
+        pageSize,
+        searchQuery,
+      );
 
-      const [categoriesRes, productsRes] = await Promise.all([
-        fetchAllCategories(1, 1000, ""),
-        fetchProducts(1, 1000, { searchQuery: "" }),
+      const rootIds = rootCategories
+        .map((category) => category.id)
+        .filter(Boolean) as string[];
+
+      const [categoryParentIds, productCategoryIds] = await Promise.all([
+        fetchChildCategoryParentIds(rootIds),
+        fetchProductCategoryIds(rootIds),
       ]);
 
-      const categories = categoriesRes.data || [];
-      const products = productsRes.data || [];
+      const expandableRootIdSet = new Set([
+        ...categoryParentIds,
+        ...productCategoryIds,
+      ]);
 
-      const categoryMap = new Map<string, CatalogRow>();
-      const rootCategories: CatalogRow[] = [];
+      const rootRows = rootCategories
+        .filter((category) => category.id)
+        .map((category) =>
+          buildCategoryRow(category, expandableRootIdSet.has(category.id!)),
+        );
 
-      // Convert categories to rows first.
-      categories.forEach((cat) => {
-        if (!cat.id) return;
-        categoryMap.set(cat.id, {
-          id: cat.id,
-          type: "category",
-          name: currentLang === "ar" ? cat.name_ar : cat.name,
-          originalData: cat,
-          subRows: [],
-        });
-      });
-
-      // Build the parent -> child category tree.
-      categories.forEach((cat) => {
-        if (!cat.id) return;
-        const currentRow = categoryMap.get(cat.id);
-        if (!currentRow) return;
-
-        if (cat.parent_id) {
-          const parentRow = categoryMap.get(cat.parent_id);
-          if (parentRow?.subRows) {
-            parentRow.subRows.push(currentRow);
-            return;
-          }
-        }
-
-        rootCategories.push(currentRow);
-      });
-
-      // Distribute Products into Categories
-      products.forEach((prod) => {
-        const parentRow = categoryMap.get(prod.category_id);
-        const prodRow: CatalogRow = {
-          id: prod.id,
-          type: "product",
-          name: currentLang === "ar" ? prod.name_ar : prod.title,
-          price: prod.price,
-          stock_status: prod.stock_status,
-          originalData: prod,
-        };
-
-        if (parentRow && parentRow.subRows) {
-          parentRow.subRows.push(prodRow);
-        }
-      });
-
-      setData(rootCategories);
+      setData(rootRows);
+      setTotalItems(count || 0);
+      setLoadedCategoryIds(new Set());
     } catch (error) {
       console.error("Error loading catalog:", error);
       toast.error(t("Failed to load catalog data"));
     } finally {
       setLoading(false);
     }
-  }, [currentLang, t]);
+  }, [buildCategoryRow, currentPage, pageSize, searchQuery, t]);
+
+  const attachChildrenToCategory = useCallback(
+    (rows: CatalogRow[], categoryId: string, children: CatalogRow[]): CatalogRow[] =>
+      rows.map((row) => {
+        if (row.id === categoryId && row.type === "category") {
+          return { ...row, subRows: children };
+        }
+
+        if (row.subRows?.length) {
+          return {
+            ...row,
+            subRows: attachChildrenToCategory(
+              row.subRows as CatalogRow[],
+              categoryId,
+              children,
+            ),
+          };
+        }
+
+        return row;
+      }),
+    [],
+  );
+
+  const loadCategoryChildren = useCallback(
+    async (row: CatalogRow) => {
+      if (row.type !== "category") return;
+      if (!row.id || loadedCategoryIds.has(row.id)) return;
+      if (loadingCategoryIds.has(row.id)) return;
+
+      setLoadingCategoryIds((prev) => {
+        const next = new Set(prev);
+        next.add(row.id);
+        return next;
+      });
+      try {
+        const [subCategories, products] = await Promise.all([
+          fetchSubCategoriesByParent(row.id),
+          fetchProductsByCategory(row.id),
+        ]);
+
+        const subCategoryIds = subCategories
+          .map((category) => category.id)
+          .filter(Boolean) as string[];
+
+        const [categoryParentIds, productCategoryIds] = await Promise.all([
+          fetchChildCategoryParentIds(subCategoryIds),
+          fetchProductCategoryIds(subCategoryIds),
+        ]);
+
+        const expandableSubCategoryIdSet = new Set([
+          ...categoryParentIds,
+          ...productCategoryIds,
+        ]);
+
+        const childCategoryRows = subCategories
+          .filter((category) => category.id)
+          .map((category) =>
+            buildCategoryRow(
+              category,
+              expandableSubCategoryIdSet.has(category.id!),
+            ),
+          );
+
+        const productRows = products.map((product) => buildProductRow(product));
+        const children = [...childCategoryRows, ...productRows];
+
+        setData((prev) => attachChildrenToCategory(prev, row.id, children));
+        setLoadedCategoryIds((prev) => {
+          const next = new Set(prev);
+          next.add(row.id);
+          return next;
+        });
+      } catch (error) {
+        console.error("Error loading category children:", error);
+        toast.error(t("Failed to load catalog data"));
+      } finally {
+        setLoadingCategoryIds((prev) => {
+          const next = new Set(prev);
+          next.delete(row.id);
+          return next;
+        });
+      }
+    },
+    [
+      attachChildrenToCategory,
+      buildCategoryRow,
+      buildProductRow,
+      loadedCategoryIds,
+      loadingCategoryIds,
+      t,
+    ],
+  );
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const loadFormCategories = async () => {
+      try {
+        const { data: categories } = await fetchAllCategories(1, 1000, "");
+        setFormCategories(categories || []);
+      } catch (error) {
+        console.error("Error loading categories for forms:", error);
+      }
+    };
+
+    loadFormCategories();
+  }, []);
 
   // --- Handlers ---
 
@@ -289,23 +406,7 @@ export default function CatalogRoot() {
     },
   ];
 
-  const flattenedCategories = useMemo(() => {
-    const result: ICategory[] = [];
-
-    const walk = (rows: CatalogRow[]) => {
-      rows.forEach((row) => {
-        if (row.type === "category") {
-          result.push(row.originalData as ICategory);
-        }
-        if (row.subRows?.length) {
-          walk(row.subRows as CatalogRow[]);
-        }
-      });
-    };
-
-    walk(data);
-    return result;
-  }, [data]);
+  const flattenedCategories = useMemo(() => formCategories, [formCategories]);
 
   return (
     <div className='bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg flex flex-col overflow-hidden'>
@@ -314,7 +415,10 @@ export default function CatalogRoot() {
         addButtonText={t("Category")}
         onAdd={handleCreateCategory}
         searchQuery={searchQuery}
-        onSearch={setSearchQuery}
+        onSearch={(value) => {
+          setSearchQuery(value);
+          setCurrentPage(1);
+        }}
       />
 
       <TreeGrid<CatalogRow>
@@ -322,9 +426,24 @@ export default function CatalogRoot() {
         columns={columns}
         actions={actions}
         isLoading={loading}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         expandIconColumn='name'
+        getRowCanExpand={(row) => row.type === "category" && !!row.hasChildren}
+        onRowExpandToggle={(row, isExpanding) => {
+          if (isExpanding) {
+            loadCategoryChildren(row);
+          }
+        }}
+        enablePagination
+        manualPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(nextPageSize) => {
+          setPageSize(nextPageSize);
+          setCurrentPage(1);
+        }}
+        isRowLoading={(row) => row.type === "category" && loadingCategoryIds.has(row.id)}
       />
 
       {/* Forms */}
@@ -337,6 +456,8 @@ export default function CatalogRoot() {
           }}
           onSuccess={async () => {
             await loadData();
+            const { data: categories } = await fetchAllCategories(1, 1000, "");
+            setFormCategories(categories || []);
             setIsCategoryFormOpen(false);
             setSelectedParentCategoryId(undefined);
           }}

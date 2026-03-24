@@ -19,19 +19,25 @@ export async function getTotalSalesCurrentMonth(): Promise<number> {
 
   if (error) throw error;
 
-  const totalSales = data?.reduce((sum, order) => {
-    if (order.status === "delivered") {
+  const totalSales =
+    data?.reduce((sum, order) => {
       return sum + order.total_amount;
-    }
-    return sum;
-  }, 0) || 0;
+    }, 0) || 0;
 
   return totalSales;
 }
 
 export async function getSalesPerDayCurrentMonth(): Promise<number[]> {
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  const startOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  );
+  const endOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0,
+  );
 
   const { data, error } = await supabase
     .from("orders")
@@ -63,8 +69,16 @@ export async function getCustomerCount(): Promise<number> {
 }
 
 export async function getCustomerPerDayCurrentMonth(): Promise<number[]> {
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  const startOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  );
+  const endOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0,
+  );
 
   const { data, error } = await supabase
     .from("customers")
@@ -106,7 +120,9 @@ export async function getOrderCountCurrentMonth(): Promise<number> {
   return count || 0;
 }
 
-export async function getBestSellingProducts(limit = 3): Promise<IBestSellingProduct[]> {
+export async function getBestSellingProducts(
+  limit = 3,
+): Promise<IBestSellingProduct[]> {
   const { data, error } = await supabase
     .from("products")
     .select("title, name_ar, sales_count")
@@ -127,7 +143,7 @@ export async function getRecentOrders(limit = 6): Promise<IRecentOrder[]> {
         status,
         total_amount,
         created_at
-      `
+      `,
     )
     .order("created_at", { ascending: false })
     .limit(limit);

@@ -6,6 +6,7 @@ import FormField from "../../../components/common/FormField";
 import Grid from "../../../components/common/Grid";
 import Input from "../../../components/common/Input";
 import Modal from "../../../components/common/Modal";
+import Select from "../../../components/common/Select";
 import { useYupForm } from "../../../hooks/useYupForm";
 import {
   DiscountType,
@@ -13,9 +14,8 @@ import {
   type ICouponValidation,
 } from "../../../types";
 import { handleError } from "../../../utils/errorHandler";
-import Select from "../../../components/common/Select";
-import { getCouponSchema } from "../../../validation/couponSchema";
 import { formatForDatetimeLocal } from "../../../utils/formatForDatetimeLocal";
+import { getCouponSchema } from "../../../validation/couponSchema";
 
 interface CouponsFormProps {
   isOpen: boolean;
@@ -50,7 +50,6 @@ export default function CouponsForm({
     expires_at: editingCoupon?.expires_at
       ? formatForDatetimeLocal(new Date(editingCoupon.expires_at))
       : formatForDatetimeLocal(new Date()),
-    is_active: editingCoupon?.is_active ?? true,
   });
   const discountType = watch("discount_type");
 
@@ -69,7 +68,6 @@ export default function CouponsForm({
         expires_at: editingCoupon?.expires_at
           ? formatForDatetimeLocal(new Date(editingCoupon.expires_at))
           : formatForDatetimeLocal(new Date()),
-        is_active: editingCoupon?.is_active ?? true,
       });
     }
   }, [editingCoupon, isOpen, reset]);
@@ -192,7 +190,8 @@ export default function CouponsForm({
             {...register("usage_limit")}
           />
         </FormField>
-
+      </Grid>
+      <Grid columns={{ default: 1, md: 2 }}>
         <FormField
           htmlFor='starts_at'
           label='Starts Date'

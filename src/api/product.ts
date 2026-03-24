@@ -256,3 +256,36 @@ export async function fetchProducts(
 
   return { data: (data || []) as IProduct[], count: count || 0 };
 }
+
+export async function fetchProductsByCategory(categoryId: string): Promise<IProduct[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select(`*, category:category_id (name, name_ar, path, path_ar)`)
+    .eq("category_id", categoryId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []) as IProduct[];
+}
+
+export async function fetchProductCategoryIds(
+  categoryIds: string[],
+): Promise<string[]> {
+  if (categoryIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("category_id")
+    .in("category_id", categoryIds);
+
+  if (error) throw error;
+
+  const unique = new Set<string>();
+  (data || []).forEach((item) => {
+    if (item.category_id) unique.add(item.category_id);
+  });
+
+  return Array.from(unique);
+}

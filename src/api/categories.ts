@@ -135,6 +135,68 @@ export async function fetchAllCategories(
   return { data: categoriesWithPath, count: count || 0 };
 }
 
+export async function fetchRootCategories(
+  page: number,
+  pageSize: number,
+  searchQuery?: string,
+): Promise<{ data: ICategory[]; count: number }> {
+  let query = supabase
+    .from("categories")
+    .select("*", { count: "exact" })
+    .is("parent_id", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (searchQuery && searchQuery.trim()) {
+    query = query.or(
+      `name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%,description_ar.ilike.%${searchQuery.trim()}%`,
+    );
+  }
+
+  const { data, error, count } = await query.range(
+    (page - 1) * pageSize,
+    page * pageSize - 1,
+  );
+
+  if (error) throw error;
+
+  return { data: (data || []) as ICategory[], count: count || 0 };
+}
+
+export async function fetchSubCategoriesByParent(
+  parentId: string,
+): Promise<ICategory[]> {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("parent_id", parentId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as ICategory[];
+}
+
+export async function fetchChildCategoryParentIds(
+  parentIds: string[],
+): Promise<string[]> {
+  if (parentIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("parent_id")
+    .in("parent_id", parentIds);
+
+  if (error) throw error;
+
+  const unique = new Set<string>();
+  (data || []).forEach((item) => {
+    if (item.parent_id) unique.add(item.parent_id);
+  });
+
+  return Array.from(unique);
+}
+
 // ✅ Get category by ID
 export async function fetchCategoryById(id: string): Promise<ICategory | null> {
   const { data, error } = await supabase

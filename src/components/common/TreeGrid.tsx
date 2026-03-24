@@ -1,4 +1,4 @@
-import { Box, IconButton, Tooltip } from "@mui/material";
+import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import {
   MaterialReactTable,
   useMaterialReactTable,
@@ -47,6 +47,16 @@ interface TreeGridProps<T extends TreeGridRow> {
   density?: "compact" | "comfortable" | "spacious";
   muiTableBodyCellProps?: MRT_TableOptions<T>["muiTableBodyCellProps"];
   muiTableBodyRowProps?: MRT_TableOptions<T>["muiTableBodyRowProps"];
+  getRowCanExpand?: (row: T) => boolean;
+  onRowExpandToggle?: (row: T, isExpanding: boolean) => void;
+  enablePagination?: boolean;
+  manualPagination?: boolean;
+  currentPage?: number;
+  pageSize?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  isRowLoading?: (row: T) => boolean;
 }
 
 export default function TreeGrid<T extends TreeGridRow>({
@@ -64,6 +74,16 @@ export default function TreeGrid<T extends TreeGridRow>({
   density = "compact",
   muiTableBodyCellProps,
   muiTableBodyRowProps,
+  getRowCanExpand,
+  onRowExpandToggle,
+  enablePagination = false,
+  manualPagination = false,
+  currentPage = 1,
+  pageSize = 10,
+  totalItems = 0,
+  onPageChange,
+  onPageSizeChange,
+  isRowLoading,
 }: TreeGridProps<T>) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === "rtl";
@@ -90,26 +110,43 @@ export default function TreeGrid<T extends TreeGridRow>({
                 }}
               >
                 {row.getCanExpand() ? (
-                  <IconButton
-                    onClick={row.getToggleExpandedHandler()}
-                    sx={{
-                      transform: row.getIsExpanded()
-                        ? isRTL
-                          ? "scaleX(-1) rotate(90deg)"
-                          : "rotate(90deg)"
-                        : isRTL
-                          ? "scaleX(-1) rotate(0deg)"
-                          : "rotate(0deg)",
-                      transition: "transform 0.2s",
-                      p: 0.25,
-                      width: 24,
-                      height: 24,
-                      color: "var(--text-secondary)",
-                    }}
-                    size='small'
-                  >
-                    <FiChevronRight size={16} />
-                  </IconButton>
+                  (() => {
+                    const rowLoading =
+                      isRowLoading?.(row.original as T) ?? false;
+                    return (
+                      <IconButton
+                        onClick={() => {
+                          const isExpanding = !row.getIsExpanded();
+                          onRowExpandToggle?.(row.original, isExpanding);
+                          row.toggleExpanded();
+                        }}
+                        disabled={rowLoading}
+                        sx={{
+                          transform: rowLoading
+                            ? "none"
+                            : row.getIsExpanded()
+                              ? isRTL
+                                ? "scaleX(-1) rotate(90deg)"
+                                : "rotate(90deg)"
+                              : isRTL
+                                ? "scaleX(-1) rotate(0deg)"
+                                : "rotate(0deg)",
+                          transition: "transform 0.2s",
+                          p: 0.25,
+                          width: 24,
+                          height: 24,
+                          color: "var(--text-secondary)",
+                        }}
+                        size='small'
+                      >
+                        {rowLoading ? (
+                          <CircularProgress size={14} thickness={5} />
+                        ) : (
+                          <FiChevronRight size={16} />
+                        )}
+                      </IconButton>
+                    );
+                  })()
                 ) : (
                   <Box sx={{ width: 24 }} />
                 )}
@@ -121,7 +158,7 @@ export default function TreeGrid<T extends TreeGridRow>({
             : undefined,
       };
     });
-  }, [columnsProp, expandIconColumn, isRTL]);
+  }, [columnsProp, expandIconColumn, isRTL, isRowLoading, onRowExpandToggle]);
 
   const table = useMaterialReactTable({
     columns,
@@ -130,10 +167,29 @@ export default function TreeGrid<T extends TreeGridRow>({
     state: {
       isLoading,
       globalFilter: searchQuery,
+      pagination: { pageIndex: currentPage - 1, pageSize },
     },
     onGlobalFilterChange: onSearchChange,
+    onPaginationChange: (updaterOrValue) => {
+      const previous = { pageIndex: currentPage - 1, pageSize };
+      const next =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(previous)
+          : updaterOrValue;
+
+      if (next.pageSize !== pageSize) {
+        onPageSizeChange?.(next.pageSize);
+      }
+
+      if (next.pageIndex !== currentPage - 1) {
+        onPageChange?.(next.pageIndex + 1);
+      }
+    },
     enableExpandAll,
     enableExpanding: true,
+    getRowCanExpand: getRowCanExpand
+      ? (row) => getRowCanExpand(row.original as T)
+      : undefined,
     getSubRows: (row: T): T[] | undefined => row.subRows as T[] | undefined,
     enableRowActions: actions.length > 0,
     positionActionsColumn: "last",
@@ -169,7 +225,6 @@ export default function TreeGrid<T extends TreeGridRow>({
             </Box>
           )
         : undefined,
-    // Styling to match Table.tsx
     muiTablePaperProps: {
       elevation: 0,
       sx: {
@@ -283,6 +338,63 @@ export default function TreeGrid<T extends TreeGridRow>({
     muiBottomToolbarProps: {
       sx: {
         backgroundColor: "var(--bg-primary)",
+        color: "var(--text-secondary)",
+        borderTop: "1px solid var(--border-color)",
+        "& .MuiInputLabel-root": {
+          color: "var(--text-secondary)",
+          fontSize: ".8rem",
+        },
+        "& .MuiTablePagination-root": {
+          color: "var(--text-secondary)",
+        },
+        "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+          {
+            color: "var(--text-muted)",
+          },
+        "& .MuiTablePagination-select": {
+          color: "var(--text-secondary)",
+        },
+        "& .MuiSvgIcon-root": {
+          color: "var(--text-secondary)",
+        },
+        "& .MuiIconButton-root": {
+          color: "var(--text-secondary)",
+          "&:hover": {
+            backgroundColor: "var(--accent-hover)",
+          },
+        },
+        "& .MuiIconButton-root.Mui-disabled": {
+          color: "var(--text-muted)",
+        },
+      },
+    },
+    muiPaginationProps: {
+      rowsPerPageOptions: [10, 25, 50, 100],
+      SelectProps: {
+        sx: {
+          color: "var(--text-secondary)",
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--border-color)",
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--text-muted)",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "var(--text-secondary)",
+          },
+        },
+        MenuProps: {
+          PaperProps: {
+            sx: {
+              backgroundColor: "var(--bg-primary)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border-color)",
+              "& .MuiMenuItem-root:hover": {
+                backgroundColor: "var(--accent-hover)",
+              },
+            },
+          },
+        },
       },
     },
     muiColumnActionsButtonProps: {
@@ -316,8 +428,10 @@ export default function TreeGrid<T extends TreeGridRow>({
     },
     enableColumnResizing,
     layoutMode: "grid",
-    enablePagination: false,
-    enableBottomToolbar: false,
+    enablePagination,
+    manualPagination: enablePagination ? manualPagination : undefined,
+    rowCount: enablePagination && manualPagination ? totalItems : undefined,
+    enableBottomToolbar: enablePagination,
     enableStickyHeader: true,
     displayColumnDefOptions: {
       "mrt-row-expand": {
@@ -345,6 +459,7 @@ export default function TreeGrid<T extends TreeGridRow>({
     initialState: {
       density,
       columnVisibility: { "mrt-row-expand": false },
+      pagination: { pageIndex: currentPage - 1, pageSize },
     },
   });
 

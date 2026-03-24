@@ -34,14 +34,10 @@ export const getCouponSchema = () => {
       .number()
       .min(0, t("validations.must_be_positive"))
       .required(t("validations.usage_limit_required")),
-    starts_at: yup
-      .date()
-      .required(t("validations.starts_at_required"))
-      .min(new Date(), t("validations.starts_at_future")),
+    starts_at: yup.date().required(t("validations.starts_at_required")),
     expires_at: yup
       .date()
       .required(t("validations.expires_at_required"))
       .min(yup.ref("starts_at"), t("validations.expires_at_after_starts_at")),
-    is_active: yup.boolean().default(true),
   });
 };

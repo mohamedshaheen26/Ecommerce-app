@@ -5,15 +5,15 @@ import { FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { fetchActiveCoupons } from "../../api/coupons";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
+import Input from "../../components/common/Input";
+import Loader from "../../components/common/Loader";
 import QuantitySelector from "../../components/common/QuantitySelector";
 import Newsletter from "../../components/Newsletter";
+import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
 import { DiscountType, StockStatus, type ICoupon } from "../../types";
-import { useAuth } from "../../context/AuthContext";
-import Input from "../../components/common/Input";
-import Loader from "../../components/common/Loader";
 
 const EstimatedShippingCost: number = 50;
 const EstimatedTaxRate: number = 0.0333333333;
@@ -84,7 +84,6 @@ export default function CartPage() {
     if (subtotal >= Number(appliedCoupon.min_order_amount || 0)) return;
 
     setAppliedCoupon(null);
-    toast.error(t("Minimum order amount not met for this coupon"));
   }, [appliedCoupon, subtotal, t]);
 
   const updateQuantity = async (id: string, nextQuantity: number) => {

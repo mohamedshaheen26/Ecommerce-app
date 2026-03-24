@@ -14,8 +14,7 @@ export interface ICoupon {
   used_count: number;
   starts_at: string;
   expires_at: string;
-  is_active: boolean;
-  computed_is_active: boolean;
+  computed_is_active: "active" | "inactive";
   created_at?: string;
 }
 
@@ -29,6 +28,5 @@ export interface ICouponValidation {
   used_count: number;
   starts_at: string;
   expires_at: string;
-  is_active: boolean;
-  computed_is_active: boolean;
+  computed_is_active: "active" | "inactive";
 }

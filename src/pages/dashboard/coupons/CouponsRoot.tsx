@@ -171,12 +171,12 @@ export default function CouponsRoot() {
       accessor: (coupon: ICoupon) => (
         <span
           className={`px-2 py-1 rounded-full text-xs ${
-            coupon.computed_is_active
+            coupon.computed_is_active === "active"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
           }`}
         >
-          {coupon.computed_is_active ? t("Active") : t("Inactive")}
+          {coupon.computed_is_active}
         </span>
       ),
       sortable: true,
