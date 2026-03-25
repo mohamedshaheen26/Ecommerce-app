@@ -5,8 +5,8 @@ import type { ICustomer, IOrder } from "../types";
 export async function fetchAllCustomers(
   page: number,
   pageSize: number,
-  searchQuery: string
-): Promise<{data: ICustomer[]; count: number}> {
+  searchQuery: string,
+): Promise<{ data: ICustomer[]; count: number }> {
   let query = supabase
     .from("customers")
     .select("*")
@@ -14,12 +14,14 @@ export async function fetchAllCustomers(
     .order("id", { ascending: true });
 
   if (searchQuery && searchQuery.trim()) {
-    query = query.or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+    query = query.or(
+      `full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`,
+    );
   }
 
   const { data, error, count } = await query.range(
     (page - 1) * pageSize,
-    page * pageSize - 1
+    page * pageSize - 1,
   );
 
   if (error) throw error;
@@ -31,8 +33,8 @@ export async function fetchAllCustomers(
 export async function fetchAllCustomersWithOrders(
   page: number,
   pageSize: number,
-  searchQuery: string
-): Promise<{data:ICustomer[]; count: number}> {
+  searchQuery: string,
+): Promise<{ data: ICustomer[]; count: number }> {
   let query = supabase
     .from("customers")
     .select("*", { count: "exact" })
@@ -40,12 +42,14 @@ export async function fetchAllCustomersWithOrders(
     .order("id", { ascending: true });
 
   if (searchQuery && searchQuery.trim()) {
-    query = query.or(`full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`);
+    query = query.or(
+      `full_name.ilike.%${searchQuery.trim()}%,name_ar.ilike.%${searchQuery.trim()}%,email.ilike.%${searchQuery.trim()}%,phone.ilike.%${searchQuery.trim()}%`,
+    );
   }
 
   const { data, error, count } = await query.range(
     (page - 1) * pageSize,
-    page * pageSize - 1
+    page * pageSize - 1,
   );
 
   if (error) throw error;
@@ -57,7 +61,7 @@ export async function fetchAllCustomersWithOrders(
     const total_orders = orders.length;
     const total_spent = orders.reduce(
       (sum: number, order: IOrder) => sum + (order.total_amount || 0),
-      0
+      0,
     );
 
     customers.push({
@@ -72,7 +76,9 @@ export async function fetchAllCustomersWithOrders(
 }
 
 // ✅ Get customer by ID with orders
-export async function fetchCustomerWithOrders(id: string): Promise<ICustomer | null> {
+export async function fetchCustomerWithOrders(
+  id: string,
+): Promise<ICustomer | null> {
   const { data: customerData, error: customerError } = await supabase
     .from("customers")
     .select("*")
@@ -86,7 +92,7 @@ export async function fetchCustomerWithOrders(id: string): Promise<ICustomer | n
   const total_orders = orders.length;
   const total_spent = orders.reduce(
     (sum: number, order: IOrder) => sum + (order.total_amount || 0),
-    0
+    0,
   );
 
   return {
@@ -111,24 +117,32 @@ export async function fetchCustomerByEmail(
 }
 
 // ✅ Helper: Get orders for one customer
-export async function fetchCustomerOrders(customerId: string): Promise<IOrder[]> {
+export async function fetchCustomerOrders(
+  customerId: string,
+): Promise<IOrder[]> {
   const { data, error } = await supabase
     .from("orders")
     .select("*")
-    .eq("customer_id", customerId);
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data || [];
 }
 
 // ✅ Create customer
-export async function createCustomer(customerData: Omit<ICustomer, "orders" | "total_orders" | "total_spent">): Promise<void> {
+export async function createCustomer(
+  customerData: Omit<ICustomer, "orders" | "total_orders" | "total_spent">,
+): Promise<void> {
   const { error } = await supabase.from("customers").insert([customerData]);
   if (error) throw error;
 }
 
 // ✅ Update customer
-export async function updateCustomer(id: string, customerData: Partial<ICustomer>): Promise<void> {
+export async function updateCustomer(
+  id: string,
+  customerData: Partial<ICustomer>,
+): Promise<void> {
   const { error } = await supabase
     .from("customers")
     .update(customerData)

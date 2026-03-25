@@ -126,7 +126,6 @@ export default function EmployeesForm({
   }, [isOpen, editingEmployee, isEditing, reset, resetCredentials]);
 
   const onSubmit = async (data: IEmployeeValidation) => {
-    debugger;
     try {
       if (isEditing && editingEmployee?.id) {
         await updateEmployee(editingEmployee.id, data);

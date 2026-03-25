@@ -150,7 +150,9 @@ export default function DashboardRoot() {
       const rows: string[] = [];
       rows.push(`${escapeCsv(t("Metric"))},${escapeCsv(t("Value"))}`);
       rows.push(`${escapeCsv(t("Period"))},${escapeCsv(periodLabel)}`);
-      rows.push(`${escapeCsv(t("Total Sales"))},${escapeCsv(stats.totalSales)}`);
+      rows.push(
+        `${escapeCsv(t("Total Sales"))},${escapeCsv(stats.totalSales)}`,
+      );
       rows.push(`${escapeCsv(t("Customers"))},${escapeCsv(stats.customers)}`);
       rows.push(`${escapeCsv(t("Orders"))},${escapeCsv(stats.orders)}`);
       rows.push("");
@@ -158,7 +160,10 @@ export default function DashboardRoot() {
       rows.push(
         `${escapeCsv(t("Daily"))},${escapeCsv(t("Sales"))},${escapeCsv(t("Customers"))}`,
       );
-      const maxDays = Math.max(stats.salesPerDay?.length || 0, stats.customersPerDay?.length || 0);
+      const maxDays = Math.max(
+        stats.salesPerDay?.length || 0,
+        stats.customersPerDay?.length || 0,
+      );
       for (let i = 0; i < maxDays; i += 1) {
         rows.push(
           `${escapeCsv(i + 1)},${escapeCsv(stats.salesPerDay?.[i] ?? 0)},${escapeCsv(
@@ -168,9 +173,7 @@ export default function DashboardRoot() {
       }
       rows.push("");
 
-      rows.push(
-        `${escapeCsv(t("Best Selling"))},${escapeCsv(t("Sales"))}`,
-      );
+      rows.push(`${escapeCsv(t("Best Selling"))},${escapeCsv(t("Sales"))}`);
       stats.bestSelling.forEach((item) => {
         rows.push(
           `${escapeCsv(currentLang === "ar" ? item.name_ar : item.title)},${escapeCsv(
@@ -353,22 +356,6 @@ export default function DashboardRoot() {
       ),
     },
   ];
-
-  const authMeta = user?.user_metadata ?? {};
-  const userFullName =
-    typeof authMeta.full_name === "string" ? authMeta.full_name : "";
-  const userArabicName =
-    typeof authMeta.name_ar === "string" ? authMeta.name_ar : "";
-  const userEmail = typeof user?.email === "string" ? user.email : "";
-  const emailPrefix = userEmail.includes("@")
-    ? userEmail.split("@")[0]
-    : userEmail;
-  const displayName =
-    (currentLang === "ar" ? userArabicName : userFullName) ||
-    userFullName ||
-    userArabicName ||
-    emailPrefix ||
-    t("User");
   const periodLabel =
     period === "today"
       ? t("Today")
@@ -401,7 +388,12 @@ export default function DashboardRoot() {
               {t("Dashboard Greeting Tagline")}
             </div>
             <h2 className='text-2xl font-semibold text-[var(--text-secondary)]'>
-              {t("Welcome")}, {displayName}
+              {t("Welcome")},{" "}
+              {user?.email === "admin@example.com"
+                ? t("Super Admin")
+                : currentLang === "ar"
+                  ? user?.user_metadata?.name_ar
+                  : user?.user_metadata?.full_name || user?.email}
             </h2>
             <p className='text-sm text-[var(--text-muted)]'>
               {t("Dashboard Greeting Subtitle")}
@@ -454,7 +446,9 @@ export default function DashboardRoot() {
                   <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                     {t("Total Sales")}
                   </h3>
-                  <p className='text-[var(--text-muted)] text-xs'>{periodLabel}</p>
+                  <p className='text-[var(--text-muted)] text-xs'>
+                    {periodLabel}
+                  </p>
                   <p
                     className={`mt-1 inline-flex items-center gap-1 text-xs ${
                       salesChange >= 0 ? "text-emerald-500" : "text-red-500"
@@ -481,13 +475,19 @@ export default function DashboardRoot() {
                   <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                     {t("Customers")}
                   </h3>
-                  <p className='text-[var(--text-muted)] text-xs'>{periodLabel}</p>
+                  <p className='text-[var(--text-muted)] text-xs'>
+                    {periodLabel}
+                  </p>
                   <p
                     className={`mt-1 inline-flex items-center gap-1 text-xs ${
                       customersChange >= 0 ? "text-emerald-500" : "text-red-500"
                     }`}
                   >
-                    {customersChange >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
+                    {customersChange >= 0 ? (
+                      <FiTrendingUp />
+                    ) : (
+                      <FiTrendingDown />
+                    )}
                     {customersChange >= 0 ? "+" : ""}
                     {customersChange.toFixed(1)}% {t("vs last month")}
                   </p>
@@ -548,7 +548,9 @@ export default function DashboardRoot() {
                 <h3 className='text-md text-[var(--text-secondary)] font-semibold'>
                   {t("Best Selling")}
                 </h3>
-                <p className='text-[var(--text-muted)] text-xs'>{periodLabel}</p>
+                <p className='text-[var(--text-muted)] text-xs'>
+                  {periodLabel}
+                </p>
               </div>
               <div className='p-6'>
                 <p className='text-[var(--text-secondary)] text-2xl font-semibold mt-2'>
@@ -567,7 +569,9 @@ export default function DashboardRoot() {
                     <span className='text-sm text-[var(--text-muted)]'>
                       {currentLang == "ar" ? product.name_ar : product.title}
                     </span>
-                    <span className='text-sm text-[var(--text-muted)] mx-2'>-</span>
+                    <span className='text-sm text-[var(--text-muted)] mx-2'>
+                      -
+                    </span>
                     <span className='text-sm text-[var(--text-secondary)] font-semibold'>
                       ${product.sales_count} {t("Sales")}
                     </span>

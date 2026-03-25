@@ -220,7 +220,6 @@ export async function updateCategory(
   id: string,
   categoryData: ICategory,
 ): Promise<void> {
-  debugger;
   const { error } = await supabase
     .from("categories")
     .update(categoryData)
