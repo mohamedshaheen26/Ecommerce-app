@@ -128,7 +128,6 @@ export async function updateCartItemQuantity(
   cartItemId: string,
   quantity: number,
 ): Promise<void> {
-  debugger;
   if (quantity < 1) {
     await removeCartItem(cartItemId);
     return;

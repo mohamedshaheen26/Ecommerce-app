@@ -31,7 +31,9 @@ const ORDER_SELECT = `
 `;
 
 // 🛠️ Helper: fetch items for one order
-async function fetchOrderItems(orderId: string): Promise<IOrderItem[]> {
+export async function fetchOrderItemsByOrderId(
+  orderId: string,
+): Promise<IOrderItem[]> {
   const { data, error } = await supabase
     .from("order_items")
     .select(
@@ -94,7 +96,7 @@ export async function fetchOrders(
   const completeOrders = await Promise.all(
     (data || []).map(async (order) => ({
       ...order,
-      order_items: await fetchOrderItems(order.id),
+      order_items: await fetchOrderItemsByOrderId(order.id),
     })),
   );
 

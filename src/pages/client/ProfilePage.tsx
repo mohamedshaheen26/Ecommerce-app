@@ -17,8 +17,10 @@ import {
   fetchCustomerOrders,
   updateCustomer,
 } from "../../api/customers";
+import { fetchOrderItemsByOrderId } from "../../api/orders";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import Button from "../../components/common/Button";
+import Modal from "../../components/common/Modal";
 import VerticalTabs, {
   type VerticalTabItem,
 } from "../../components/common/VerticalTabs";
@@ -28,6 +30,7 @@ import { useFavorites } from "../../context/FavoritesContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { ICustomer, IOrder } from "../../types";
 import { formatDate } from "../../utils/formatDate";
+import { getStatusColor } from "../../utils/orderStatus";
 
 type AccountSection =
   | "orders"
@@ -74,6 +77,9 @@ export default function ProfilePage() {
   const [customer, setCustomer] = useState<ICustomer | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isOrderDetailsLoading, setIsOrderDetailsLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [formData, setFormData] = useState<AccountFormState>(initialFormState);
 
   useEffect(() => {
@@ -126,6 +132,27 @@ export default function ProfilePage() {
 
     loadAccountData();
   }, [currentLang, isAuthenticated, t, user]);
+
+  const openOrderModal = async (order: IOrder) => {
+    const orderId = order.id;
+    setSelectedOrder(order);
+    setIsOrderModalOpen(true);
+
+    if (order.order_items && order.order_items.length > 0) return;
+
+    try {
+      setIsOrderDetailsLoading(true);
+      const items = await fetchOrderItemsByOrderId(orderId);
+      setSelectedOrder((prev) => {
+        if (!prev || prev.id !== orderId) return prev;
+        return { ...prev, order_items: items };
+      });
+    } catch (error) {
+      console.error("Failed to load order items:", error);
+    } finally {
+      setIsOrderDetailsLoading(false);
+    }
+  };
 
   const accountTabs: VerticalTabItem<AccountSection>[] = useMemo(
     () => [
@@ -327,7 +354,7 @@ export default function ProfilePage() {
                 <h3 className='text-xl font-semibold text-[var(--text-secondary)] mb-10'>
                   {t("Orders")}
                 </h3>
-                {orders.map((order) => {
+                {orders.map((order: IOrder) => {
                   const firstItem = order.order_items?.[0];
                   const itemName =
                     currentLang === "ar"
@@ -362,7 +389,7 @@ export default function ProfilePage() {
                       <Button
                         variant='outline'
                         className='rounded-md'
-                        onClick={() => navigate(`/orders`)}
+                        onClick={() => openOrderModal(order)}
                       >
                         {t("View item")}
                       </Button>
@@ -647,6 +674,140 @@ export default function ProfilePage() {
   return (
     <>
       <BreadcrumbsComponents title='My Account' path='NovaStore/My Account' />
+      <Modal
+        isOpen={isOrderModalOpen}
+        onClose={() => {
+          setIsOrderModalOpen(false);
+          setIsOrderDetailsLoading(false);
+          setSelectedOrder(null);
+        }}
+        title='Order Details'
+        maxWidth='max-w-3xl'
+        showActions={false}
+        showSaveBtn={false}
+        showCancelBtn={false}
+      >
+        {!selectedOrder ? null : (
+          <div className='space-y-6'>
+            <div className='bg-[var(--bg-secondary)]/40 border border-[var(--border-color)] rounded-lg p-5'>
+              <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4'>
+                <div>
+                  <p className='text-xs text-[var(--text-muted)] mb-1'>
+                    {t("Order ID")}
+                  </p>
+                  <p className='text-lg font-semibold text-[var(--text-secondary)]'>
+                    #{selectedOrder.id}
+                  </p>
+
+                  <p className='text-xs text-[var(--text-muted)] mt-2'>
+                    {t("Ordered On")}:{" "}
+                    {selectedOrder.created_at
+                      ? formatDate(selectedOrder.created_at)
+                      : "-"}
+                  </p>
+
+                  <p className='text-sm text-[var(--text-secondary)] mt-2'>
+                    ${Number(selectedOrder.total_amount || 0).toFixed(2)}
+                  </p>
+                </div>
+
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+                    selectedOrder.status,
+                  )}`}
+                >
+                  {t(`statuses.${selectedOrder.status}`)}
+                </span>
+              </div>
+
+              {selectedOrder.shipping_address ? (
+                <div className='mt-4 grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <p className='text-xs text-[var(--text-muted)] mb-1'>
+                      {t("Shipping Address")}
+                    </p>
+                    <p className='text-sm text-[var(--text-secondary)]'>
+                      {selectedOrder.shipping_address}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='text-xs text-[var(--text-muted)] mb-1'>
+                      {t("Items")}
+                    </p>
+                    <p className='text-sm text-[var(--text-secondary)]'>
+                      {selectedOrder.order_items?.length ?? 0}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {isOrderDetailsLoading ? (
+              <div className='space-y-3'>
+                <div className='h-6 w-40 bg-[var(--bg-secondary)] rounded animate-pulse' />
+                <div className='h-4 w-full bg-[var(--bg-secondary)] rounded animate-pulse' />
+                <div className='h-4 w-full bg-[var(--bg-secondary)] rounded animate-pulse' />
+                <div className='h-4 w-2/3 bg-[var(--bg-secondary)] rounded animate-pulse' />
+              </div>
+            ) : (
+              <div>
+                <h4 className='text-sm font-semibold text-[var(--text-secondary)] mb-3'>
+                  {t("Order Items")}
+                </h4>
+                <div className='space-y-3'>
+                  {selectedOrder.order_items &&
+                  selectedOrder.order_items.length > 0 ? (
+                    selectedOrder.order_items.map((item) => {
+                      const productTitle =
+                        currentLang === "ar"
+                          ? item.product?.name_ar || item.product?.title
+                          : item.product?.title || item.product?.name_ar;
+                      const qty = Number(item.quantity || 0);
+                      const price = Number(item.price || 0);
+                      const lineTotal = qty * price;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className='flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)]'
+                        >
+                          <img
+                            src={item.product?.image_url || "/Logo.svg"}
+                            alt={productTitle || "Order item"}
+                            className='w-14 h-14 rounded bg-[var(--bg-secondary)] object-contain'
+                          />
+
+                          <div className='flex-1 min-w-0'>
+                            <p className='font-semibold text-[var(--text-secondary)] truncate'>
+                              {productTitle || "-"}
+                            </p>
+                            <p className='text-xs text-[var(--text-muted)] mt-1'>
+                              {t("Qty")}: {qty}
+                            </p>
+                          </div>
+
+                          <div className='text-right'>
+                            <p className='text-xs text-[var(--text-muted)]'>
+                              {t("Unit Price")}: ${price.toFixed(2)}
+                            </p>
+                            <p className='font-semibold text-[var(--text-secondary)]'>
+                              ${lineTotal.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className='text-sm text-[var(--text-muted)]'>
+                      {t("No order items found")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
       <section className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8'>
         <div className='bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 lg:p-10 rounded-lg'>
           <div className='grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-8 lg:gap-10'>
