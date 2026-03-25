@@ -1,7 +1,7 @@
-import express from "express";
-import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
+import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
 import { getDashboardStatsPayload } from "./lib/dashboardStats.mjs";
 
 dotenv.config();
@@ -16,7 +16,7 @@ app.use(express.json());
 // Supabase client
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 // API Routes
@@ -29,7 +29,7 @@ app.post("/change-password", async (req, res) => {
       {
         email: newEmail,
         password: newPassword,
-      }
+      },
     );
 
     if (error) throw error;
