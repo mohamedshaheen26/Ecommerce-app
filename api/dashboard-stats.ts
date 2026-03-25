@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -19,6 +18,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           "Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables",
       });
     }
+
+    // Dynamic import so any Supabase module/runtime issues surface inside our try/catch.
+    const { createClient } = await import("@supabase/supabase-js");
 
     const periodDaysMap: Record<string, number> = {
       today: 1,
