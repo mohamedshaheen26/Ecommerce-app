@@ -44,7 +44,7 @@ const Register = () => {
   const onSubmit = async (data: IRegisterValidation) => {
     setError("");
     setInfoMessage("");
-    debugger;
+    
     try {
       const signUpData = await signUpWithEmailOrUsername(
         data.email,

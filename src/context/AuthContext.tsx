@@ -106,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (hasSession) {
       const currentUser = data.session?.user || null;
+
       setUser(currentUser);
 
       const userEmail = data.session?.user?.email;
@@ -134,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const signedIn = !!session;
         setIsAuthenticated(signedIn);
         setUser(session?.user || null);
+
+        console.log(session?.user);
 
         const email = session?.user?.email;
         if (signedIn && email) {

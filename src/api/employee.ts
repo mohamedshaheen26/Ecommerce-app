@@ -64,10 +64,17 @@ export async function fetchEmployeeByEmail(email: string) {
 
 // ✅ Create Employee
 export async function createEmployee(employee: any) {
-  debugger; 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: employee.email,
     password: employee.password,
+    options: {
+      data: {
+        full_name: employee.full_name,
+        name_ar: employee.name_ar,
+        username: employee.username,
+        phone: employee.phone,
+      },
+    },
   });
 
   if (authError) throw authError;

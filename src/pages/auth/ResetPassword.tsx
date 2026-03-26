@@ -17,7 +17,6 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    debugger;
     e.preventDefault();
     setLoading(true);
     setError("");

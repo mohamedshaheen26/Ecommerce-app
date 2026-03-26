@@ -60,7 +60,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
             <MdMenu className='h-6 w-6' />
           </button>
 
-          <BreadcrumbsComponents path={location.pathname} />
+          <BreadcrumbsComponents path={location.pathname} className='!mb-0' />
         </div>
 
         <div className='flex items-center gap-4'>

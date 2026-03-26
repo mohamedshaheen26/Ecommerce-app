@@ -223,7 +223,7 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = async () => {
     if (couponLoading || !couponCode.trim()) return;
-    debugger;
+    
     try {
       setCouponLoading(true);
       const activeCoupons = await fetchActiveCoupons();

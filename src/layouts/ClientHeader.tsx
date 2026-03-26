@@ -76,7 +76,7 @@ const ClientHeader = () => {
   };
 
   return (
-    <header className='sticky top-0 z-100 bg-[var(--bg-primary)] shadow-sm border-b border-[var(--border-color)]'>
+    <header className='sticky top-0 z-[50] bg-[var(--bg-primary)] shadow-sm border-b border-[var(--border-color)]'>
       {/* Top bar */}
       <div className='bg-[var(--bg-secondary)] border-b border-[var(--border-color)]'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>

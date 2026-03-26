@@ -61,7 +61,6 @@ export default function CustomersRoot() {
   };
 
   const handleDeleteCustomer = async () => {
-    debugger;
     if (!selectedCustomer) return;
 
     try {
@@ -137,6 +136,7 @@ export default function CustomersRoot() {
       ),
       sortable: true,
       sortKey: "full_name" as keyof ICustomer,
+      width: "25%",
     },
     {
       header: `${t("Contact")}`,

@@ -68,7 +68,6 @@ export default function EmployeesRoot() {
   };
 
   const handleDelete = async () => {
-    debugger;
     if (!deletingEmployee) return;
 
     const deletePromise = new Promise(async (resolve, reject) => {
