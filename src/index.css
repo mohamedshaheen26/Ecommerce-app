@@ -50,3 +50,23 @@ body {
 [dir="rtl"] .slick-track {
   direction: rtl;
 }
+
+@keyframes borderMove {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+.animate-border {
+  background: linear-gradient(
+    90deg,
+    var(--bg-gradient),
+    transparent,
+    var(--bg-gradient)
+  );
+  background-size: 200% 100%;
+  animation: borderMove 2s linear infinite;
+}

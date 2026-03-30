@@ -27,6 +27,7 @@ import { getProductSchema } from "../../../validation/productSchema";
 import ColorsSelector from "./components/ColorsSelector";
 import ImagePreview from "./components/ImagePreview";
 import SizesSelector from "./components/SizesSelector";
+import ImageUploader from "../../../components/common/ImageUploader";
 
 const INITIAL_FORM_VALUES: IProductFormValues = {
   title: "",
@@ -108,8 +109,8 @@ export default function ProductsForm({
     }
   }, [isOpen, editingProduct, reset]);
 
-  const handleImageUpload = (files: FileList) => {
-    setNewImages((prev) => [...prev, ...Array.from(files)]);
+  const handleImagesUpload = async (files: File[]) => {
+    setNewImages((prev) => [...prev, ...files]);
   };
 
   const removeImage = (type: "old" | "new", index: number) => {
@@ -297,25 +298,9 @@ export default function ProductsForm({
             <SizesSelector selectedSizes={sizes} toggleSize={toggleSize} />
           </FormField>
           <FormField htmlFor='images' label='Images'>
-            <div className='flex items-center space-x-4'>
-              <label className='cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50'>
-                Choose Files
-                <input
-                  id='images'
-                  type='file'
-                  className='hidden'
-                  multiple
-                  accept='image/*'
-                  onChange={(e) =>
-                    e.target.files && handleImageUpload(e.target.files)
-                  }
-                />
-              </label>
-              <span className='text-sm text-gray-500'>
-                {!editingProduct
-                  ? `${newImages.length} images selected`
-                  : `${images?.length} images selected`}
-              </span>
+            <ImageUploader onUpload={handleImagesUpload} multiple />
+            <div className='mt-2 text-sm text-gray-500'>
+              {`${images.length + newImages.length} images selected`}
             </div>
             <div className='mt-4'>
               <Grid columns={4} gap={4}>
