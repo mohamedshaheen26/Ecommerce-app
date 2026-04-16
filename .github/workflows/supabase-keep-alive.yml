@@ -17,7 +17,9 @@ jobs:
             exit 1
           fi
           echo "Pinging keep-alive URL..."
-          status=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SUPABASE_KEEP_ALIVE_URL")
+          # GitHub Actions uses `bash -e`, so we must prevent `curl` non-zero exit codes from aborting
+          # the step early; treat failures as HTTP `000` for consistent handling.
+          status=$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SUPABASE_KEEP_ALIVE_URL" || echo "000")
           echo "Response: HTTP $status"
           if [ "$status" = "000" ]; then
             echo "::error::Request failed (no response or connection error)"
