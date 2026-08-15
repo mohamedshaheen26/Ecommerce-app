@@ -156,9 +156,9 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
                 <p className='text-sm'>{t("No notifications")}</p>
               </div>
             ) : (
-              <div className='overflow-y-auto flex-1'>
+              <ul className='overflow-y-auto flex-1'>
                 {notifications.map((notification, index) => (
-                  <div
+                  <li
                     key={notification.id}
                     className={`
                       ${
@@ -167,10 +167,13 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
                           : ""
                       }`}
                   >
-                    <NotificationItem notification={notification} />
-                  </div>
+                    <NotificationItem
+                      notification={notification}
+                      onSelect={handleClose}
+                    />
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </Popover>
 

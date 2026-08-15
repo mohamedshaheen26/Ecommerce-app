@@ -1,22 +1,26 @@
 import { supabase } from "../lib/supabase";
 
-export async function sendNotification(message: string, userId?: string) {
-  const { data, error } = await supabase
+export async function sendNotification(
+  message: string,
+  orderId?: string,
+) {
+  const { error } = await supabase
     .from("notifications")
-    .insert([{ message, user_id: userId }]);
+    .insert({
+      message,
+      order_id: orderId ?? null,
+      user_id: null,
+    });
 
   if (error) {
-    console.error("Notification error:", error);
+    throw error;
   }
-
-  return data;
 }
 
-export async function fetchNotifications(userId?: string): Promise<any[]> {
+export async function fetchNotifications(): Promise<any[]> {
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
-    .eq("user_id", userId)
     .order("read", { ascending: true });
   
   if (error) {

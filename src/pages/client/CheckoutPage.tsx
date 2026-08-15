@@ -25,6 +25,7 @@ import { useYupForm } from "../../hooks/useYupForm";
 import { type ICoupon, type IShippingZone } from "../../types";
 import type { ICheckout } from "../../types/checkout";
 import { getCheckoutFormSchema } from "../../validation/checkoutSchema";
+import { sendNotification } from "../../api/notifications";
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
@@ -233,6 +234,7 @@ export default function CheckoutPage() {
       await clearItems();
       setIsOrderPlaced(true);
       toast.success(t("Order placed successfully"));
+      await sendNotification(`New order #${order.order_id.slice(-8)} has been placed`, order.order_id);
     } catch (error) {
       console.error("Failed to place order:", error);
       toast.error(t("Failed to place order"));

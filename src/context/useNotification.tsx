@@ -1,8 +1,8 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from "react";
 import {
@@ -17,6 +17,7 @@ export interface Notification {
   message: string;
   created_at: string;
   read: boolean;
+  order_id?: string | null;
 }
 
 interface NotificationsContextType {
@@ -37,41 +38,41 @@ export const NotificationsProvider = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const loadNotificationsOnce = async () => {
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+
+    const loadNotifications = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        const data = await fetchNotifications(user.id);
-        setNotifications(data);
+      if (!user) return;
 
-        const channel = supabase
-          .channel("public:notifications")
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "notifications",
-              filter: `user_id=eq.${user.id}`, // ✅ فلترة باليوزر
-            },
-            (payload) => {
-              setNotifications((prev) => [
-                payload.new as Notification,
-                ...prev,
-              ]);
-            }
-          )
-          .subscribe();
+      const data = await fetchNotifications();
+      setNotifications(data);
 
-        return () => {
-          supabase.removeChannel(channel);
-        };
-      }
+      channel = supabase
+        .channel("public:notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+          },
+          (payload) => {
+            setNotifications((prev) => [payload.new as Notification, ...prev]);
+          },
+        )
+        .subscribe();
     };
 
-    loadNotificationsOnce();
+    loadNotifications();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const markAllAsRead = async () => {
@@ -81,7 +82,7 @@ export const NotificationsProvider = ({
 
   const markNotificationAsRead = async (notificationId: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
     );
     await markNotificationAsReadDB(notificationId);
   };
@@ -103,7 +104,7 @@ export const useNotifications = () => {
   const context = useContext(NotificationsContext);
   if (!context)
     throw new Error(
-      "useNotifications must be used within a NotificationsProvider"
+      "useNotifications must be used within a NotificationsProvider",
     );
   return context;
 };
