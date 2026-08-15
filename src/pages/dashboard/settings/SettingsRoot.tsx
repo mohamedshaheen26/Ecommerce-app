@@ -30,6 +30,7 @@ export default function SettingsRoot() {
     monthly_order_goal: 0,
     first_order_discount: 0,
     free_shipping_minimum: 0,
+    tax_rate: 0,
   });
   const { t } = useTranslation();
 
@@ -47,6 +48,7 @@ export default function SettingsRoot() {
         monthly_order_goal: settings.monthly_order_goal,
         first_order_discount: settings.first_order_discount,
         free_shipping_minimum: settings.free_shipping_minimum,
+        tax_rate: settings.tax_rate,
       });
     }
   }, [settings, isLoading]);
@@ -57,16 +59,31 @@ export default function SettingsRoot() {
       : formData.first_order_discount > 100
         ? t("Discount cannot be greater than 100")
         : undefined;
+
   const freeShippingError =
     formData.free_shipping_minimum < 0
       ? t("Free shipping minimum cannot be less than 0")
       : undefined;
-  const hasValidationErrors = !!discountError || !!freeShippingError;
+
+  const taxRateError =
+    formData.tax_rate < 0
+      ? t("Tax rate cannot be less than 0")
+      : formData.tax_rate > 100
+        ? t("Tax rate cannot be greater than 100")
+        : undefined;
+
+  const hasValidationErrors =
+    !!discountError || !!freeShippingError || !!taxRateError;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (hasValidationErrors) {
-      toast.error(discountError || freeShippingError || t("Invalid form data"));
+      toast.error(
+        discountError ||
+          freeShippingError ||
+          taxRateError ||
+          t("Invalid form data"),
+      );
       return;
     }
 
@@ -85,6 +102,7 @@ export default function SettingsRoot() {
           monthly_order_goal: formData?.monthly_order_goal,
           first_order_discount: formData?.first_order_discount,
           free_shipping_minimum: formData?.free_shipping_minimum,
+          tax_rate: formData?.tax_rate,
         });
         resolve("Settings updated successfully");
       } catch (error) {
@@ -290,6 +308,18 @@ export default function SettingsRoot() {
                 required
                 className='text-sm text-[var(--text-muted)]'
                 error={freeShippingError}
+              />
+            </FormField>
+            <FormField htmlFor='taxRate' label='Tax Rate'>
+              <Input
+                id='taxRate'
+                name='tax_rate'
+                type='number'
+                value={formData?.tax_rate}
+                onChange={handleChange}
+                required
+                className='text-sm text-[var(--text-muted)]'
+                error={taxRateError}
               />
             </FormField>
           </Grid>

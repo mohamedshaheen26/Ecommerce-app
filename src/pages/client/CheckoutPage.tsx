@@ -2,31 +2,36 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { fetchActiveCoupons } from "../../api/coupons";
 import { fetchCustomerByEmail } from "../../api/customers";
-import { createOrder } from "../../api/orders";
+import {
+  calculateCheckout,
+  createOrder,
+  type CheckoutCalculation,
+} from "../../api/orders";
 import { fetchActiveShippingZones } from "../../api/shippingZones";
 import BreadcrumbsComponents from "../../components/Breadcrumbs";
 import FormField from "../../components/common/FormField";
+import Grid from "../../components/common/Grid";
+import Input from "../../components/common/Input";
+import Loader from "../../components/common/Loader";
+import Select from "../../components/common/Select";
+import TextArea from "../../components/common/TextArea";
 import Newsletter from "../../components/Newsletter";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
-import { DiscountType, type ICoupon, type IShippingZone } from "../../types";
-import Grid from "../../components/common/Grid";
-import Input from "../../components/common/Input";
 import { useYupForm } from "../../hooks/useYupForm";
-import { getCheckoutFormSchema } from "../../validation/checkoutSchema";
+import { type ICoupon, type IShippingZone } from "../../types";
 import type { ICheckout } from "../../types/checkout";
-import Select from "../../components/common/Select";
-import TextArea from "../../components/common/TextArea";
-import { fetchActiveCoupons } from "../../api/coupons";
-import Loader from "../../components/common/Loader";
-
-const TAX_RATE = 0.04;
+import { getCheckoutFormSchema } from "../../validation/checkoutSchema";
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
+  const [checkoutPricing, setCheckoutPricing] =
+    useState<CheckoutCalculation | null>(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { items, clearItems } = useCart();
   const [shippingZones, setShippingZones] = useState<IShippingZone[]>([]);
@@ -35,7 +40,11 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<ICoupon | null>(null);
-
+  const subtotal = checkoutPricing?.subtotal ?? 0;
+  const shippingCost = checkoutPricing?.shipping ?? 0;
+  const tax = checkoutPricing?.tax ?? 0;
+  const couponDiscount = checkoutPricing?.discount ?? 0;
+  const total = checkoutPricing?.total ?? 0;
   const {
     register,
     handleSubmit,
@@ -52,51 +61,11 @@ export default function CheckoutPage() {
     orderNotes: "",
   });
 
-  const subtotal = useMemo(
-    () =>
-      items.reduce((acc, item) => {
-        return acc + (item.product?.price || 0) * item.quantity;
-      }, 0),
-    [items],
-  );
-
-  const tax = useMemo(
-    () => Number((subtotal * TAX_RATE).toFixed(2)),
-    [subtotal],
-  );
   const selectedShippingZoneId = watch("shippingZone");
+
   const selectedShippingZone = useMemo(
     () => shippingZones.find((zone) => zone.id === selectedShippingZoneId),
     [shippingZones, selectedShippingZoneId],
-  );
-  const shippingCost = Number(selectedShippingZone?.shipping_fee || 0);
-
-  const couponDiscount = useMemo(() => {
-    if (!appliedCoupon || subtotal <= 0) return 0;
-
-    if (subtotal < Number(appliedCoupon.min_order_amount || 0)) {
-      return 0;
-    }
-
-    if (appliedCoupon.discount_type === DiscountType.PERCENTAGE) {
-      const percentageDiscount =
-        subtotal * (Number(appliedCoupon.discount_value || 0) / 100);
-      const maxDiscount = Number(appliedCoupon.max_discount_amount || 0);
-      const discount =
-        maxDiscount > 0
-          ? Math.min(percentageDiscount, maxDiscount)
-          : percentageDiscount;
-      return Number(discount.toFixed(2));
-    }
-
-    return Number(
-      Math.min(subtotal, Number(appliedCoupon.discount_value || 0)).toFixed(2),
-    );
-  }, [appliedCoupon, subtotal]);
-
-  const total = Math.max(
-    0,
-    Number((subtotal + shippingCost + tax - couponDiscount).toFixed(2)),
   );
 
   useEffect(() => {
@@ -152,6 +121,56 @@ export default function CheckoutPage() {
   }, [currentLang, getValues, isAuthenticated, setValue, user?.email]);
 
   useEffect(() => {
+    const calculatePricing = async () => {
+      if (
+        !isAuthenticated ||
+        !user?.email ||
+        !selectedShippingZoneId ||
+        items.length === 0
+      ) {
+        setCheckoutPricing(null);
+        return;
+      }
+
+      try {
+        setPricingLoading(true);
+
+        const customer = await fetchCustomerByEmail(user.email);
+
+        if (!customer?.id) {
+          setCheckoutPricing(null);
+          return;
+        }
+
+        const pricing = await calculateCheckout({
+          customer_id: customer.id,
+          shipping_zone_id: selectedShippingZoneId,
+          items: items.map((item) => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+          })),
+          coupon_id: appliedCoupon?.id ?? null,
+        });
+
+        setCheckoutPricing(pricing);
+      } catch (error) {
+        console.error("Failed to calculate checkout:", error);
+        setCheckoutPricing(null);
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+
+    calculatePricing();
+  }, [
+    appliedCoupon?.id,
+    isAuthenticated,
+    items,
+    selectedShippingZoneId,
+    user?.email,
+  ]);
+
+  useEffect(() => {
     const loadShippingZones = async () => {
       try {
         setShippingZonesLoading(true);
@@ -202,7 +221,6 @@ export default function CheckoutPage() {
         items: items.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
-          price: item.product?.price || 0,
         })),
         coupon_id: appliedCoupon?.id || null,
       });
@@ -223,7 +241,7 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = async () => {
     if (couponLoading || !couponCode.trim()) return;
-    
+
     try {
       setCouponLoading(true);
       const activeCoupons = await fetchActiveCoupons();
@@ -504,7 +522,7 @@ export default function CheckoutPage() {
               <div className='flex items-center justify-between text-[var(--text-muted)]'>
                 <span>{t("Tax")}:</span>
                 <span className='text-[var(--text-secondary)]'>
-                  ${tax.toFixed(2)}
+                  +${tax.toFixed(2)}
                 </span>
               </div>
               {couponDiscount > 0 && (
@@ -524,16 +542,25 @@ export default function CheckoutPage() {
                 {t("Total")}
               </span>
               <span className='text-lg font-semibold text-[var(--text-secondary)]'>
-                ${total.toFixed(2)}
+                {pricingLoading ? "..." : `$${total.toFixed(2)}`}
               </span>
             </div>
 
             <button
               type='submit'
-              disabled={items.length === 0 || isSubmitting}
+              disabled={
+                items.length === 0 ||
+                isSubmitting ||
+                pricingLoading ||
+                !checkoutPricing
+              }
               className='cursor-pointer w-full h-11 rounded-md bg-[#0A122B] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {isSubmitting ? t("Processing Order...") : t("Place Order")}
+              {isSubmitting
+                ? t("Processing Order...")
+                : pricingLoading
+                  ? t("Calculating...")
+                  : t("Place Order")}
             </button>
           </aside>
         </form>

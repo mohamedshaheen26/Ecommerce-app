@@ -8,6 +8,7 @@ const ORDER_SELECT = `
   id,
   customer_id,
   shipping_zone_id,
+
   customer: customers (
     full_name,
     name_ar,
@@ -15,6 +16,7 @@ const ORDER_SELECT = `
     address,
     address_ar
   ),
+
   shipping_zone: shipping_zones (
     id,
     name,
@@ -22,8 +24,17 @@ const ORDER_SELECT = `
     shipping_fee,
     estimated_days
   ),
+
   status,
+
+  subtotal_amount,
+  discount_amount,
+  shipping_amount,
+  tax_amount,
   total_amount,
+
+  coupon_id,
+
   shipping_address,
   created_at,
   updated_at,
@@ -122,7 +133,6 @@ export async function updateOrderStatus(
 type CreateOrderItemInput = {
   product_id: string;
   quantity: number;
-  price: number;
 };
 
 type CreateOrderInput = {
@@ -136,6 +146,15 @@ type CreateOrderInput = {
   coupon_id?: string | null;
 };
 
+export type CheckoutCalculation = {
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+};
+
+
 export async function createOrder(input: CreateOrderInput) {
   try {
     const { error, data } = await supabase.rpc("create_order", {
@@ -148,9 +167,9 @@ export async function createOrder(input: CreateOrderInput) {
       p_coupon_id: input.coupon_id,
     });
 
-    if (error) {
-      toast.error(t(error.message));
-      return;
+     if (error) {
+    console.error("Failed to create order:", error);
+    throw error;
     }
 
     return data;
@@ -159,4 +178,34 @@ export async function createOrder(input: CreateOrderInput) {
     toast.error(t("Failed to create order"));
     return;
   }
+}
+
+export async function calculateCheckout(input: {
+  customer_id: string;
+  shipping_zone_id: string;
+  items: {
+    product_id: string;
+    quantity: number;
+  }[];
+  coupon_id?: string | null;
+}): Promise<CheckoutCalculation> {
+  const { data, error } = await supabase.rpc("calculate_checkout", {
+    p_customer_id: input.customer_id,
+    p_shipping_zone_id: input.shipping_zone_id,
+    p_items: input.items,
+    p_coupon_id: input.coupon_id ?? null,
+  });
+
+  if (error) {
+    console.error("Failed to calculate checkout:", error);
+    throw error;
+  }
+
+  return {
+    subtotal: Number(data.subtotal || 0),
+    discount: Number(data.discount || 0),
+    shipping: Number(data.shipping || 0),
+    tax: Number(data.tax || 0),
+    total: Number(data.total || 0),
+  };
 }

@@ -27,6 +27,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     monthly_order_goal: 1000,
     first_order_discount: 25,
     free_shipping_minimum: 100,
+    tax_rate: 4,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           monthly_order_goal: data.monthly_order_goal,
           first_order_discount: data.first_order_discount,
           free_shipping_minimum: data.free_shipping_minimum,
+          tax_rate: data.tax_rate,
         });
       }
     } catch (err) {
