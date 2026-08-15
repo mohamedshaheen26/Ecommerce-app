@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const roleChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
     null,
   );
+  const isInitializingRef = useRef(true);
 
   const SUPER_ADMIN_EMAILS: string = "admin@example.com";
 
@@ -98,18 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roleChannelRef.current = channel;
   };
 
-  const initializeAuthState = async () => {
-    setIsAuthReady(false);
-    const { data } = await supabase.auth.getSession();
-    const hasSession = !!data.session;
+  const applySession = async (session: Awaited<
+    ReturnType<typeof supabase.auth.getSession>
+  >["data"]["session"]) => {
+    const hasSession = !!session;
     setIsAuthenticated(hasSession);
 
     if (hasSession) {
-      const currentUser = data.session?.user || null;
-
+      const currentUser = session?.user || null;
       setUser(currentUser);
 
-      const userEmail = data.session?.user?.email;
+      const userEmail = session?.user?.email;
       if (userEmail) {
         if (isSuperAdmin(userEmail)) {
           setUserRole(UserRole.Admin);
@@ -124,6 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserRole(UserRole.User);
       setUser(null);
     }
+  };
+
+  const initializeAuthState = async () => {
+    const { data } = await supabase.auth.getSession();
+    await applySession(data.session);
+    isInitializingRef.current = false;
     setIsAuthReady(true);
   };
 
@@ -131,28 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuthState();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        const signedIn = !!session;
-        setIsAuthenticated(signedIn);
-        setUser(session?.user || null);
-
-        console.log(session?.user);
-
-        const email = session?.user?.email;
-        if (signedIn && email) {
-          if (isSuperAdmin(email)) {
-            setUserRole(UserRole.Admin);
-          } else {
-            fetchUserRoleByEmail(email).then((role) => {
-              setUserRole(role ?? UserRole.User);
-            });
-            subscribeToRoleChanges(email);
-          }
-        } else {
-          stopRoleSubscription();
-          setUserRole(UserRole.User);
-          setUser(null);
-        }
+      async (_event, session) => {
+        if (isInitializingRef.current) return;
+        await applySession(session);
       },
     );
     return () => {

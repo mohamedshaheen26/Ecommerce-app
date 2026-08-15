@@ -60,7 +60,14 @@ export default function AppRoutes() {
         <Route path='contact' element={<ContactPage />} />
         <Route path='favorites' element={<FavoritesPage />} />
         <Route path='orders' element={<div>Orders Page - Coming Soon</div>} />
-        <Route path='account' element={<ProfilePage />} />
+        <Route
+          path='account'
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path='help' element={<div>Help Page - Coming Soon</div>} />
         <Route path='search' element={<ProductsListingPage />} />
         <Route path=':slug' element={<ProductPage />} />
