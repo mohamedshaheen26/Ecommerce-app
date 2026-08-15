@@ -10,13 +10,18 @@ import NotFoundPage from "../pages/auth/NotFound";
 import RegisterPage from "../pages/auth/Register";
 import ResetPasswordPage from "../pages/auth/ResetPassword";
 import UnauthorizedPage from "../pages/auth/Unauthorized";
-import HomePage from "../pages/client/HomePage";
+import AboutPage from "../pages/client/AboutPage";
 import CartPage from "../pages/client/CartPage";
-import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
+import CheckoutPage from "../pages/client/CheckoutPage";
+import ContactPage from "../pages/client/ContactPage";
+import FavoritesPage from "../pages/client/FavoritesPage";
+import HomePage from "../pages/client/HomePage";
 import ProductPage from "../pages/client/ProductPage";
 import ProductsListingPage from "../pages/client/ProductsListingPage";
-import CheckoutPage from "../pages/client/CheckoutPage";
+import ProfilePage from "../pages/client/ProfilePage";
+import CatalogRoot from "../pages/dashboard/catalog/CatalogRoot";
 import CategoriesRoot from "../pages/dashboard/categories/CategoriesRoot";
+import CouponsRoot from "../pages/dashboard/coupons/CouponsRoot";
 import CustomersRoot from "../pages/dashboard/customers/CustomersRoot";
 import DashboardRoot from "../pages/dashboard/DashboardRoot";
 import EmployeesRoot from "../pages/dashboard/employees/EmployeesRoot";
@@ -27,11 +32,6 @@ import SettingsRoot from "../pages/dashboard/settings/SettingsRoot";
 import ShippingZonesRoot from "../pages/dashboard/shipping_zones/ShippingZonesRoot";
 import { UserRole } from "../types";
 import ProtectedRoute from "./ProtectedRoute";
-import AboutPage from "../pages/client/AboutPage";
-import ContactPage from "../pages/client/ContactPage";
-import FavoritesPage from "../pages/client/FavoritesPage";
-import ProfilePage from "../pages/client/ProfilePage";
-import CouponsRoot from "../pages/dashboard/coupons/CouponsRoot";
 
 export default function AppRoutes() {
   return (
@@ -55,16 +55,22 @@ export default function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path='products' element={<ProductsListingPage />} />
         <Route path='cart' element={<CartPage />} />
-        <Route path='checkout' element={<CheckoutPage />} />
         <Route path='about' element={<AboutPage />} />
         <Route path='contact' element={<ContactPage />} />
         <Route path='favorites' element={<FavoritesPage />} />
-        <Route path='orders' element={<div>Orders Page - Coming Soon</div>} />
         <Route
           path='account'
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='checkout'
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
             </ProtectedRoute>
           }
         />
