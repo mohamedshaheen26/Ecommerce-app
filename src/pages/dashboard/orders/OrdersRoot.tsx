@@ -1,22 +1,23 @@
-import { useState, useEffect } from "react";
-import Table from "../../../components/common/Table";
-import DropdownMenu from "../../../components/common/DropdownMenu";
-import type { IOrderWithUserInfo } from "../../../types";
-import { fetchOrders, updateOrderStatus } from "../../../api/orders";
-import { formatDate } from "../../../utils/formatDate";
-import OrdersForm from "./OrdersForm";
-import { getStatusColor } from "../../../utils/orderStatus";
-import { MdPhone } from "react-icons/md";
-import { FaUser } from "react-icons/fa";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../../context/LanguageContext";
+import { FaUser } from "react-icons/fa";
+import { MdPhone } from "react-icons/md";
+import { useSearchParams } from "react-router-dom";
+import { fetchOrderById, fetchOrders, updateOrderStatus } from "../../../api/orders";
+import DropdownMenu from "../../../components/common/DropdownMenu";
 import PageHeader from "../../../components/common/PageHeader";
+import Table from "../../../components/common/Table";
+import { useLanguage } from "../../../context/LanguageContext";
+import type { IOrderWithUserInfo } from "../../../types";
+import { formatDate } from "../../../utils/formatDate";
+import { getStatusColor } from "../../../utils/orderStatus";
+import OrdersForm from "./OrdersForm";
 
 export default function OrdersRoot() {
   const [orders, setOrders] = useState<IOrderWithUserInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<IOrderWithUserInfo | null>(
-    null
+    null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +27,9 @@ export default function OrdersRoot() {
   const [updating, setUpdating] = useState(false);
   const { t } = useTranslation();
   const { currentLang } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("orderId");
+  const requestKey = searchParams.get("request");
 
   useEffect(() => {
     loadOrders();
@@ -37,7 +41,7 @@ export default function OrdersRoot() {
       const { data, count } = await fetchOrders(
         currentPage,
         pageSize,
-        searchQuery
+        searchQuery,
       );
       setOrders(data);
       setTotalItems(count || 0);
@@ -48,6 +52,29 @@ export default function OrdersRoot() {
     }
   };
 
+  useEffect(() => {
+    if (!orderId) return;
+
+    const loadNotificationOrder = async () => {
+      setLoading(true);
+
+      try {
+        const order = await fetchOrderById(orderId);
+
+        if (order) {
+          setSelectedOrder(order);
+          setIsModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error fetching notification order:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotificationOrder();
+  }, [orderId, requestKey]);
+
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1);
@@ -55,7 +82,7 @@ export default function OrdersRoot() {
 
   const handleStatusChange = async (
     orderId: string,
-    newStatus: IOrderWithUserInfo["status"]
+    newStatus: IOrderWithUserInfo["status"],
   ) => {
     setUpdating(true);
     try {
@@ -63,8 +90,8 @@ export default function OrdersRoot() {
 
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
+          order.id === orderId ? { ...order, status: newStatus } : order,
+        ),
       );
 
       if (selectedOrder?.id === orderId) {
@@ -213,7 +240,7 @@ export default function OrdersRoot() {
       accessor: (order: IOrderWithUserInfo) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-            order.status
+            order.status,
           )}`}
         >
           {t(`statuses.${order.status}`)}

@@ -66,6 +66,30 @@ export async function fetchOrderItemsByOrderId(
   return (data || []) as unknown as IOrderItem[];
 }
 
+export async function fetchOrderById(
+  orderId: string,
+): Promise<IOrderWithUserInfo | null> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_SELECT)
+    .eq("id", orderId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching order:", error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  const order_items = await fetchOrderItemsByOrderId(orderId);
+
+  return {
+    ...data,
+    order_items,
+  } as unknown as IOrderWithUserInfo;
+}
+
 // ✅ Fetch all orders
 export async function fetchOrders(
   page: number,
@@ -167,9 +191,9 @@ export async function createOrder(input: CreateOrderInput) {
       p_coupon_id: input.coupon_id,
     });
 
-     if (error) {
-    console.error("Failed to create order:", error);
-    throw error;
+    if (error) {
+      console.error("Failed to create order:", error);
+      throw error;
     }
 
     return data;
