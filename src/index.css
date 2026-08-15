@@ -70,3 +70,13 @@ body {
   background-size: 200% 100%;
   animation: borderMove 2s linear infinite;
 }
+
+.rsw-btn:hover {
+  background-color: var(--accent-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.rsw-btn[data-active=true] {
+  background-color: var(--accent-primary) !important;
+  color: var(--text-primary) !important;
+}
