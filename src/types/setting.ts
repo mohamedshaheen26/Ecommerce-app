@@ -10,4 +10,5 @@ export interface ISettings {
   monthly_order_goal: number;
   first_order_discount: number;
   free_shipping_minimum: number;
+  tax_rate: number;
 }

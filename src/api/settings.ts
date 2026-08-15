@@ -32,6 +32,7 @@ export async function apiUpdateSettings(newSettings: Partial<ISettings>) {
       monthly_order_goal: newSettings.monthly_order_goal,
       first_order_discount: newSettings.first_order_discount,
       free_shipping_minimum: newSettings.free_shipping_minimum,
+      tax_rate: newSettings.tax_rate,
     })
     .eq("id", currentSettings.id);
 
