@@ -124,28 +124,28 @@ const ClientFooter = () => {
               </h5>
               <ul className='space-y-5'>
                 <li>
-                  <a
-                    href='#'
+                  <Link
+                    to='/account'
                     className='transition-colors border-b-2 text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] border-transparent'
                   >
                     {t("My Account")}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href='#'
+                  <Link
+                    to='/checkout'
                     className='transition-colors border-b-2 text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] border-transparent'
                   >
                     {t("Checkout")}
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href='#'
+                  <Link
+                    to='/cart'
                     className='transition-colors border-b-2 text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] border-transparent'
                   >
                     {t("Cart")}
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
